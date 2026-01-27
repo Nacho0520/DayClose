@@ -1,4 +1,8 @@
-import { Check, X, Circle } from 'lucide-react'
+import { useState } from 'react'
+import { Check, X, Circle, Menu } from 'lucide-react' // Importamos Menu
+import Sidebar from './Sidebar' // Importamos los nuevos componentes
+import SettingsModal from './SettingsModal'
+import { supabase } from '../lib/supabaseClient'
 
 function CircularProgress({ percentage }) {
   const radius = 70
@@ -26,6 +30,9 @@ function CircularProgress({ percentage }) {
 }
 
 function Dashboard({ user, habits, todayLogs, onStartReview, onResetToday }) {
+  const [isSidebarOpen, setSidebarOpen] = useState(false)
+  const [isSettingsOpen, setSettingsOpen] = useState(false)
+
   const logsMap = new Map()
   todayLogs.forEach((log) => logsMap.set(log.habit_id, log.status))
 
@@ -42,17 +49,45 @@ function Dashboard({ user, habits, todayLogs, onStartReview, onResetToday }) {
   }
 
   const getUserDisplayName = () => {
-    // Prioridad 1: Nombre guardado en metadatos
     if (user?.user_metadata?.full_name) return user.user_metadata.full_name
-    // Prioridad 2: Parte del email
     if (user?.email) return user.email.split('@')[0]
-    // Default
     return 'Usuario'
   }
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    window.location.reload()
+  }
+
   return (
-    <div className="min-h-screen bg-neutral-900 px-4 py-8">
-      <div className="mx-auto w-full max-w-md">
+    <div className="min-h-screen bg-neutral-900 px-4 py-8 relative">
+      
+      {/* Botón Menú (Hamburguesa) - Arriba a la izquierda */}
+      <button 
+        onClick={() => setSidebarOpen(true)}
+        className="absolute top-6 left-4 text-white p-2 hover:bg-neutral-800 rounded-full transition-colors"
+      >
+        <Menu size={28} />
+      </button>
+
+      {/* Componentes Flotantes */}
+      <Sidebar 
+        isOpen={isSidebarOpen} 
+        onClose={() => setSidebarOpen(false)} 
+        user={user}
+        onLogout={handleLogout}
+        onOpenSettings={() => setSettingsOpen(true)}
+      />
+
+      <SettingsModal 
+        isOpen={isSettingsOpen} 
+        onClose={() => setSettingsOpen(false)}
+        user={user}
+      />
+
+      <div className="mx-auto w-full max-w-md mt-6"> {/* mt-6 para dar espacio al menú */}
+        
+        {/* Botón Reset Dev */}
         {onResetToday && (
           <div className="mb-4 flex justify-end">
             <button
@@ -65,7 +100,6 @@ function Dashboard({ user, habits, todayLogs, onStartReview, onResetToday }) {
           </div>
         )}
 
-        {/* SALUDO MEJORADO */}
         <header className="mb-8 text-center">
           <h2 className="text-xl font-light text-neutral-400">Hola,</h2>
           <h1 className="text-3xl font-bold text-white capitalize">
