@@ -4,9 +4,10 @@ import Sidebar from './Sidebar'
 import SettingsModal from './SettingsModal'
 import HabitCreator from './HabitCreator'
 import { supabase } from '../lib/supabaseClient'
+import confetti from 'canvas-confetti' // <--- IMPORTAMOS LA FIESTA
 
 // --- CONSTANTE DE ADMINISTRADOR ---
-const ADMIN_EMAIL = 'hemmings.nacho@gmail.com' // <--- PON TU EMAIL AQUÍ
+const ADMIN_EMAIL = 'tu_email_real@gmail.com' 
 // ---------------------------------
 
 function CircularProgress({ percentage }) {
@@ -37,10 +38,9 @@ function CircularProgress({ percentage }) {
 function Dashboard({ user, habits, todayLogs, onStartReview, onResetToday }) {
   const [isSidebarOpen, setSidebarOpen] = useState(false)
   const [isSettingsOpen, setSettingsOpen] = useState(false)
-  
-  // Estado para el modal de Crear/Editar
   const [isCreatorOpen, setCreatorOpen] = useState(false)
-  const [editingHabit, setEditingHabit] = useState(null) // Para guardar el hábito que estamos editando
+  const [editingHabit, setEditingHabit] = useState(null)
+  const [loadingAction, setLoadingAction] = useState(null) // Para evitar doble click
 
   const logsMap = new Map()
   todayLogs.forEach((log) => logsMap.set(log.habit_id, log.status))
@@ -51,10 +51,13 @@ function Dashboard({ user, habits, todayLogs, onStartReview, onResetToday }) {
   const hasPending = habits.some((h) => !logsMap.has(h.id))
 
   const getStatusIcon = (habitId) => {
+    // Si estamos cargando ESTE hábito específico, mostramos un spinner o opacidad
+    if (loadingAction === habitId) return <div className="h-5 w-5 rounded-full border-2 border-white border-t-transparent animate-spin" />
+
     const status = logsMap.get(habitId)
     if (status === 'completed') return <Check className="h-5 w-5 text-emerald-500" />
     if (status === 'skipped') return <X className="h-5 w-5 text-red-500" />
-    return <Circle className="h-5 w-5 text-neutral-500" />
+    return <Circle className="h-5 w-5 text-neutral-500 group-hover:text-white transition-colors" />
   }
 
   const getUserDisplayName = () => {
@@ -72,17 +75,103 @@ function Dashboard({ user, habits, todayLogs, onStartReview, onResetToday }) {
     window.location.reload()
   }
 
-  // Función para abrir el modal en modo EDICIÓN
   const handleEditHabit = (habit) => {
     setEditingHabit(habit)
     setCreatorOpen(true)
   }
 
-  // Función para abrir el modal en modo NUEVO
   const handleNewHabit = () => {
     setEditingHabit(null)
     setCreatorOpen(true)
   }
+
+  // --- NUEVA FUNCIÓN: TOGGLE RÁPIDO ---
+  const handleToggleHabit = async (e, habit) => {
+    e.stopPropagation() // IMPORTANTE: Para que no se abra el editor al hacer click en el círculo
+    
+    if (loadingAction) return // Evitar doble click rapido
+
+    // 1. VIBRACIÓN HÁPTICA (Crunch!)
+    if (navigator.vibrate) {
+        navigator.vibrate(15) // Vibración corta y seca
+    }
+
+    setLoadingAction(habit.id)
+
+    const currentStatus = logsMap.get(habit.id)
+    const isCompletedNow = currentStatus === 'completed'
+
+    let error = null
+
+    if (isCompletedNow) {
+        // SI YA ESTÁ HECHO -> LO BORRAMOS (Undo)
+        const { error: delError } = await supabase
+            .from('daily_logs')
+            .delete()
+            .eq('habit_id', habit.id)
+            .eq('user_id', user.id)
+            .gte('created_at', new Date().toISOString().split('T')[0] + 'T00:00:00.000Z')
+        error = delError
+    } else {
+        // SI NO ESTÁ HECHO -> LO MARCAMOS (Do)
+        const { error: insError } = await supabase
+            .from('daily_logs')
+            .insert({
+                user_id: user.id,
+                habit_id: habit.id,
+                status: 'completed',
+                note: 'Marcado rápido',
+                created_at: new Date().toISOString()
+            })
+        error = insError
+
+        // --- LÓGICA DE CONFETI ---
+        // Si al marcar este, completamos todos...
+        // completedCount es el conteo ANTES de marcar este. Así que sumamos 1.
+        if (!error && (completedCount + 1) === totalCount) {
+            triggerConfetti()
+        }
+    }
+
+    if (error) {
+        alert('Error: ' + error.message)
+        setLoadingAction(null)
+    } else {
+        // Recargar para ver cambios. 
+        // Nota: Si lanzamos confeti, esperamos un pelín antes de recargar para que se vea
+        if (!isCompletedNow && (completedCount + 1) === totalCount) {
+             setTimeout(() => window.location.reload(), 1500) 
+        } else {
+             window.location.reload()
+        }
+    }
+  }
+
+  const triggerConfetti = () => {
+      // Vibración larga de victoria
+      if (navigator.vibrate) navigator.vibrate([100, 50, 100])
+      
+      const duration = 3 * 1000
+      const animationEnd = Date.now() + duration
+      const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 }
+
+      const randomInRange = (min, max) => Math.random() * (max - min) + min
+
+      const interval = setInterval(function() {
+        const timeLeft = animationEnd - Date.now()
+
+        if (timeLeft <= 0) {
+          return clearInterval(interval)
+        }
+
+        const particleCount = 50 * (timeLeft / duration)
+        
+        // Confeti desde dos lados
+        confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } })
+        confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } })
+      }, 250)
+  }
+  // ------------------------------------
 
   return (
     <div className="min-h-screen bg-neutral-900 px-4 py-8 relative">
@@ -108,7 +197,6 @@ function Dashboard({ user, habits, todayLogs, onStartReview, onResetToday }) {
         user={user}
       />
 
-      {/* MODAL INTELIGENTE (Sirve para Crear y Editar) */}
       <HabitCreator
         isOpen={isCreatorOpen}
         onClose={() => {
@@ -117,12 +205,11 @@ function Dashboard({ user, habits, todayLogs, onStartReview, onResetToday }) {
         }}
         userId={user.id}
         onHabitCreated={handleHabitCreated}
-        initialData={editingHabit} // <--- Pasamos los datos si estamos editando
+        initialData={editingHabit} 
       />
 
       <div className="mx-auto w-full max-w-md mt-6 pb-20">
         
-        {/* --- BOTÓN RESET (SOLO ADMIN) --- */}
         {onResetToday && user.email === ADMIN_EMAIL && (
           <div className="mb-4 flex justify-end">
             <button
@@ -158,10 +245,9 @@ function Dashboard({ user, habits, todayLogs, onStartReview, onResetToday }) {
               const isCompleted = status === 'completed'
               const isSkipped = status === 'skipped'
               return (
-                // --- TARJETA CLICABLE PARA EDITAR ---
                 <div
                   key={habit.id}
-                  onClick={() => handleEditHabit(habit)} // <--- CLICK ABRE EDICIÓN
+                  onClick={() => handleEditHabit(habit)} // Click en la tarjeta -> EDITAR
                   className={`relative group flex items-center gap-3 rounded-xl border p-4 cursor-pointer transition-all active:scale-98 ${
                     isCompleted ? 'border-emerald-700 bg-emerald-900/20'
                     : isSkipped ? 'border-red-700 bg-red-900/20'
@@ -175,7 +261,6 @@ function Dashboard({ user, habits, todayLogs, onStartReview, onResetToday }) {
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                         <p className="font-medium text-white">{habit.title}</p>
-                        {/* Pequeño indicador de edición */}
                         <Pencil size={12} className="text-neutral-600 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
                     
@@ -186,8 +271,11 @@ function Dashboard({ user, habits, todayLogs, onStartReview, onResetToday }) {
                     )}
                   </div>
                   
-                  {/* Importante: El icono de estado NO debe disparar la edición */}
-                  <div onClick={(e) => e.stopPropagation()}>
+                  {/* BOTÓN INTERACTIVO: Click en el círculo -> MARCAR/DESMARCAR */}
+                  <div 
+                    onClick={(e) => handleToggleHabit(e, habit)}
+                    className="p-2 -mr-2 rounded-full hover:bg-white/5 active:scale-90 transition-transform"
+                  >
                     {getStatusIcon(habit.id)}
                   </div>
                 </div>
@@ -207,7 +295,8 @@ function Dashboard({ user, habits, todayLogs, onStartReview, onResetToday }) {
         )}
 
         {!hasPending && totalCount > 0 && (
-          <div className="rounded-xl border border-emerald-700 bg-emerald-900/20 p-4 text-center">
+          <div className="rounded-xl border border-emerald-700 bg-emerald-900/20 p-4 text-center animate-pulse">
+             {/* Animación de pulso para celebrar */}
             <p className="text-sm font-medium text-emerald-300">
               ¡Has completado tu revisión de hoy! 🌙
             </p>
@@ -216,7 +305,7 @@ function Dashboard({ user, habits, todayLogs, onStartReview, onResetToday }) {
       </div>
 
       <button
-        onClick={handleNewHabit} // <--- Usa la nueva función
+        onClick={handleNewHabit}
         className="fixed bottom-6 right-6 h-14 w-14 bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-lg shadow-blue-900/50 flex items-center justify-center active:scale-90 transition-all z-40"
       >
         <Plus size={32} strokeWidth={2.5} />
