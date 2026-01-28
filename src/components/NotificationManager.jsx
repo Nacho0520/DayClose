@@ -1,11 +1,9 @@
 import { useState, useEffect } from 'react'
-import { Bell, BellOff, Check } from 'lucide-react'
+import { Bell, Check } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient'
 
-// ¡PEGA AQUÍ TU PUBLIC KEY DE VAPIDKEYS.COM!
 const PUBLIC_VAPID_KEY = 'BJM3Xuf-sBQSaXlrjQ442rXjLGHegavE8qhGxkhJpNQ4JQQnWnqx9f1E97lpg4n1XSpk01MwVEO1Qkr-NeVaiF4' 
 
-// Función auxiliar para convertir la clave
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - base64String.length % 4) % 4)
   const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/')
@@ -18,31 +16,44 @@ function urlBase64ToUint8Array(base64String) {
 }
 
 export default function NotificationManager({ userId }) {
-  const [permission, setPermission] = useState(Notification.permission)
+  // BLINDAJE PARA SAFARI: No accedemos a Notification.permission directamente al inicio
+  const [permission, setPermission] = useState('default')
   const [loading, setLoading] = useState(false)
   const [subscribed, setSubscribed] = useState(false)
 
+  useEffect(() => {
+    // Verificamos el permiso solo cuando el componente se monta y con seguridad
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      setPermission(Notification.permission)
+    }
+  }, [])
+
   const handleSubscribe = async () => {
-    if (!('serviceWorker' in navigator)) return alert('Tu navegador no soporta esto.')
+    // Comprobación de seguridad para navegadores antiguos o Safari sin PWA
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      return alert('Tu dispositivo no soporta notificaciones push. Asegúrate de añadir la App a la pantalla de inicio.')
+    }
     
     setLoading(true)
 
     try {
-      // 1. Pedir permiso al sistema (iOS preguntará aquí)
       const result = await Notification.requestPermission()
       setPermission(result)
 
       if (result === 'granted') {
-        // 2. Preparar el Service Worker
         const registration = await navigator.serviceWorker.ready
         
-        // 3. Suscribirse a Apple/Google Push Service
+        // Verificamos si ya existe una suscripción para no duplicar
+        const existingSub = await registration.pushManager.getSubscription()
+        if (existingSub) {
+          await existingSub.unsubscribe()
+        }
+
         const subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY)
         })
 
-        // 4. Guardar la dirección en Supabase
         const { error } = await supabase.from('push_subscriptions').insert({
           user_id: userId,
           subscription: subscription
@@ -51,18 +62,32 @@ export default function NotificationManager({ userId }) {
         if (error) throw error
         
         setSubscribed(true)
-        alert('¡Notificaciones activadas! Recibirás avisos nocturnos.')
+        alert('¡Notificaciones activadas!')
       }
     } catch (err) {
-      console.error(err)
-      alert('Error al activar: ' + err.message)
+      console.error('Error en suscripción:', err)
+      alert('Error: ' + err.message)
     } finally {
       setLoading(false)
     }
   }
 
-  // Si ya está denegado o no soportado, no mostramos nada para no molestar
-  if (permission === 'denied') return null
+  // Si no hay soporte, mostramos un aviso sutil en lugar de romper la app
+  if (typeof window !== 'undefined' && !('Notification' in window)) {
+    return (
+      <p className="text-[10px] text-neutral-500 mt-2 italic">
+        Notificaciones no disponibles en este navegador.
+      </p>
+    )
+  }
+
+  if (permission === 'denied') {
+    return (
+      <p className="text-xs text-red-400 mt-4">
+        Las notificaciones están bloqueadas en los ajustes de tu iPhone.
+      </p>
+    )
+  }
 
   if (subscribed || permission === 'granted') {
     return (
@@ -79,7 +104,7 @@ export default function NotificationManager({ userId }) {
       disabled={loading}
       className="mt-4 w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white py-3 rounded-xl transition-colors text-sm font-medium"
     >
-      {loading ? 'Activando...' : <><Bell size={18} /> Activar Recordatorio Nocturno</>}
+      {loading ? 'Activando...' : <><Bell size={18} /> Activar Recordatorio</>}
     </button>
   )
 }

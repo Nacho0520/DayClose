@@ -5,12 +5,9 @@ import SettingsModal from "./SettingsModal";
 import HabitCreator from "./HabitCreator";
 import { supabase } from "../lib/supabaseClient";
 
-// NOTA: He quitado Confetti y useWindowSize para limpiar
-
 function CircularProgress({ percentage }) {
   const radius = 70;
   const circumference = 2 * Math.PI * radius;
-  // Protección: Si percentage es NaN o null, usar 0
   const safePercentage = percentage || 0;
   const offset = circumference - (safePercentage / 100) * circumference;
 
@@ -56,7 +53,6 @@ function Dashboard({ user, habits, todayLogs, onStartReview, onResetToday }) {
   const [isSettingsOpen, setSettingsOpen] = useState(false);
   const [isCreatorOpen, setCreatorOpen] = useState(false);
 
-  // BLINDAJE 1: Asegurarnos de que habits y todayLogs sean arrays, aunque vengan null
   const safeHabits = habits || [];
   const safeLogs = todayLogs || [];
 
@@ -70,7 +66,6 @@ function Dashboard({ user, habits, todayLogs, onStartReview, onResetToday }) {
   ).length;
   const totalCount = safeHabits.length;
 
-  // Cálculo seguro del porcentaje
   const percentage =
     totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
   const hasPending = safeHabits.some((h) => !logsMap.has(h.id));
@@ -84,7 +79,6 @@ function Dashboard({ user, habits, todayLogs, onStartReview, onResetToday }) {
   };
 
   const getUserDisplayName = () => {
-    // BLINDAJE 2: Proteger acceso a user_metadata
     if (user?.user_metadata?.full_name) return user.user_metadata.full_name;
     if (user?.email) return user.email.split("@")[0];
     return "Usuario";
@@ -101,6 +95,20 @@ function Dashboard({ user, habits, todayLogs, onStartReview, onResetToday }) {
 
   return (
     <div className="min-h-screen bg-neutral-900 px-4 py-8 relative">
+      {/* BOTÓN DE SALIDA PARA REVISIÓN NOCTURNA 
+        Solo aparece si el padre nos indica que hay una revisión en curso. 
+        Si no tienes una variable 'isReviewing', este botón recarga la app para limpiar el estado.
+      */}
+      {!hasPending && totalCount > 0 && (
+        <button
+          onClick={() => window.location.reload()}
+          className="absolute top-6 right-6 text-neutral-500 hover:text-white p-2 z-50 flex items-center gap-2 text-xs"
+        >
+          <span>Salir</span>
+          <X size={20} />
+        </button>
+      )}
+
       {/* Botón Menú */}
       <button
         onClick={() => setSidebarOpen(true)}
@@ -124,7 +132,7 @@ function Dashboard({ user, habits, todayLogs, onStartReview, onResetToday }) {
         user={user}
       />
 
-      {user && ( // BLINDAJE 3: Solo renderizar creador si hay usuario
+      {user && (
         <HabitCreator
           isOpen={isCreatorOpen}
           onClose={() => setCreatorOpen(false)}
@@ -171,7 +179,6 @@ function Dashboard({ user, habits, todayLogs, onStartReview, onResetToday }) {
               const status = logsMap.get(habit.id);
               const isCompleted = status === "completed";
               const isSkipped = status === "skipped";
-              // BLINDAJE 4: Proteger acceso a logs en la búsqueda
               const note = safeLogs.find((l) => l.habit_id === habit.id)?.note;
 
               return (
