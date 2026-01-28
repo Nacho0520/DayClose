@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Check, X, Circle, Menu, Plus, Trash2, Settings, ChevronLeft } from "lucide-react";
+// Añadimos RotateCcw para el efecto visual de desmarcar
+import { Check, X, Circle, Menu, Plus, Trash2, Settings, ChevronLeft, RotateCcw } from "lucide-react";
 import Sidebar from "./Sidebar";
 import SettingsModal from "./SettingsModal";
 import HabitCreator from "./HabitCreator";
@@ -36,28 +37,45 @@ function Dashboard({ user, habits, todayLogs, onStartReview, onResetToday }) {
   const [isSettingsOpen, setSettingsOpen] = useState(false);
   const [isCreatorOpen, setCreatorOpen] = useState(false);
   const [editHabit, setEditHabit] = useState(null);
-  const [isReviewMode, setIsReviewMode] = useState(false); // <--- ESTADO PARA EL BOTÓN SALIR
+  const [isReviewMode, setIsReviewMode] = useState(false);
 
   const safeHabits = habits || [];
   const safeLogs = todayLogs || [];
+  
+  // MODIFICACIÓN: Guardamos tanto el estado como el ID del log para poder borrarlo
   const logsMap = new Map();
-  safeLogs.forEach((log) => { if (log?.habit_id) logsMap.set(log.habit_id, log.status); });
+  safeLogs.forEach((log) => { 
+    if (log?.habit_id) logsMap.set(log.habit_id, { status: log.status, logId: log.id }); 
+  });
 
-  const completedCount = safeHabits.filter((h) => logsMap.get(h.id) === "completed").length;
+  const completedCount = safeHabits.filter((h) => logsMap.get(h.id)?.status === "completed").length;
   const totalCount = safeHabits.length;
   const percentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
   const hasPending = safeHabits.some((h) => !logsMap.has(h.id));
 
-  // --- ACCIÓN: ELIMINAR HÁBITO (CORREGIDO PARA TODOS LOS CASOS) ---
+  // --- NUEVA ACCIÓN: DESMARCAR ESTADO ---
+  const handleClearStatus = async (habitId) => {
+    const logData = logsMap.get(habitId);
+    if (!logData) return;
+
+    try {
+      const { error } = await supabase
+        .from('daily_logs')
+        .delete()
+        .eq('id', logData.logId);
+      
+      if (error) throw error;
+      window.location.reload(); // Recarga para actualizar Dashboard y Círculo
+    } catch (error) {
+      console.error("Error al desmarcar:", error);
+    }
+  };
+
   const handleDeleteHabit = async (habitId) => {
     if (confirm("¿Eliminar este hábito y todo su historial? Esta acción no se puede deshacer.")) {
       try {
-        // 1. Borramos primero los logs (registros) para evitar el error de clave foránea
         await supabase.from('daily_logs').delete().eq('habit_id', habitId);
-        
-        // 2. Ahora borramos el hábito
         const { error } = await supabase.from('habits').delete().eq('id', habitId);
-        
         if (error) throw error;
         window.location.reload();
       } catch (error) {
@@ -69,25 +87,45 @@ function Dashboard({ user, habits, todayLogs, onStartReview, onResetToday }) {
 
   const handleStartReviewInternal = () => {
     setIsReviewMode(true);
-    onStartReview(); // Llamamos a la función original que tenías en App.jsx
+    onStartReview();
   };
 
+  // MODIFICACIÓN: El icono ahora es un botón interactivo para desmarcar
   const getStatusIcon = (habitId) => {
-    const status = logsMap.get(habitId);
-    if (status === "completed") return <Check className="h-5 w-5 text-emerald-500" />;
-    if (status === "skipped") return <X className="h-5 w-5 text-red-500" />;
-    return <Circle className="h-5 w-5 text-neutral-500" />;
+    const logData = logsMap.get(habitId);
+    if (!logData) return <Circle className="h-6 w-6 text-neutral-600" />;
+
+    return (
+      <button 
+        onClick={(e) => {
+          e.stopPropagation();
+          handleClearStatus(habitId);
+        }}
+        className="group/status relative flex h-8 w-8 items-center justify-center rounded-full transition-all active:scale-90"
+      >
+        {logData.status === "completed" ? (
+          <>
+            <Check className="h-6 w-6 text-emerald-500 group-hover/status:opacity-0 transition-opacity" />
+            <RotateCcw className="absolute h-5 w-5 text-emerald-400 opacity-0 group-hover/status:opacity-100 transition-opacity" />
+          </>
+        ) : (
+          <>
+            <X className="h-6 w-6 text-red-500 group-hover/status:opacity-0 transition-opacity" />
+            <RotateCcw className="absolute h-5 w-5 text-red-400 opacity-0 group-hover/status:opacity-100 transition-opacity" />
+          </>
+        )}
+      </button>
+    );
   };
 
   return (
     <div className="min-h-screen bg-neutral-900 px-4 py-8 relative">
       
-      {/* BOTÓN SALIR: Solo aparece si el usuario está en modo revisión */}
       {isReviewMode && (
         <button
           onClick={() => {
             setIsReviewMode(false);
-            window.location.reload(); // Recargamos para "volver atrás" de verdad
+            window.location.reload();
           }}
           className="absolute top-6 right-6 text-neutral-400 hover:text-white p-2 z-50 flex items-center gap-1 text-sm font-medium bg-neutral-800/50 rounded-full px-4 py-2 border border-neutral-700 backdrop-blur-md"
         >
@@ -96,7 +134,6 @@ function Dashboard({ user, habits, todayLogs, onStartReview, onResetToday }) {
         </button>
       )}
 
-      {/* Menú Hamburguesa (Oculto en revisión para limpiar interfaz) */}
       {!isReviewMode && (
         <button onClick={() => setSidebarOpen(true)} className="absolute top-6 left-4 text-white p-2 hover:bg-neutral-800 rounded-full transition-colors">
           <Menu size={28} />
@@ -126,7 +163,6 @@ function Dashboard({ user, habits, todayLogs, onStartReview, onResetToday }) {
           <CircularProgress percentage={percentage} />
         </div>
 
-        {/* LISTA DE HÁBITOS ESTILO APPLE */}
         <div className="mb-6 space-y-3">
           {safeHabits.length === 0 ? (
             <div className="text-center p-12 border border-dashed border-neutral-800 rounded-3xl bg-neutral-900/50">
@@ -134,9 +170,10 @@ function Dashboard({ user, habits, todayLogs, onStartReview, onResetToday }) {
             </div>
           ) : (
             safeHabits.map((habit) => {
-              const status = logsMap.get(habit.id);
-              const isCompleted = status === "completed";
-              const isSkipped = status === "skipped";
+              const logData = logsMap.get(habit.id);
+              const isCompleted = logData?.status === "completed";
+              const isSkipped = logData?.status === "skipped";
+              const note = safeLogs.find((l) => l.habit_id === habit.id)?.note;
 
               return (
                 <div key={habit.id} className="group relative flex items-center gap-3 rounded-2xl border border-neutral-800 bg-neutral-800/40 p-4 backdrop-blur-sm transition-all hover:bg-neutral-800/60">
@@ -148,7 +185,6 @@ function Dashboard({ user, habits, todayLogs, onStartReview, onResetToday }) {
                     <p className="font-semibold text-white truncate text-base">{habit.title}</p>
                   </div>
 
-                  {/* ACCIONES: Visibles al pasar el ratón o siempre en móvil de forma discreta */}
                   <div className="flex items-center gap-1 opacity-40 group-hover:opacity-100 transition-opacity pr-2">
                     <button onClick={() => setEditHabit(habit)} className="p-2 text-neutral-400 hover:text-blue-400 rounded-lg hover:bg-blue-400/10 transition-colors">
                       <Settings size={18} />
