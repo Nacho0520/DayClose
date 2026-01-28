@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, LogOut, Settings, ShieldCheck } from 'lucide-react'
+import { X, LogOut, Settings, ShieldCheck, Heart } from 'lucide-react' // Se añade Heart
 
 export default function Sidebar({ isOpen, onClose, user, onLogout, onOpenSettings, version, onOpenAdmin }) {
   const email = user?.email || ''
@@ -37,8 +37,29 @@ export default function Sidebar({ isOpen, onClose, user, onLogout, onOpenSetting
                 )}
               </nav>
 
+              {/* --- BLOQUE DE APOYO AÑADIDO --- */}
+              <div className="mb-4">
+                <a 
+                  href="https://ko-fi.com/nachohemmings" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="group flex items-center justify-between w-full px-5 py-5 bg-emerald-500/10 border border-emerald-500/20 rounded-[2rem] transition-all hover:bg-emerald-500/20 active:scale-95 shadow-lg shadow-emerald-500/5"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-emerald-500/20 rounded-xl group-hover:scale-110 transition-transform">
+                      <Heart size={20} className="text-emerald-400 fill-emerald-400/20" />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-xs font-black text-emerald-400 uppercase tracking-tight leading-none">Apoya el proyecto</p>
+                      <p className="text-[10px] text-emerald-500/60 font-medium mt-1">Invítame a un café</p>
+                    </div>
+                  </div>
+                  <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                </a>
+              </div>
+
               <div className="mt-auto pt-6 border-t border-neutral-800">
-                <button onClick={onLogout} className="w-full flex items-center gap-3 px-4 py-4 text-red-400 hover:bg-red-500/10 rounded-2xl transition-all font-bold text-sm mb-6" >
+                <button onClick={onLogout} className="w-full flex items-center gap-3 px-4 py-4 text-red-400 hover:bg-red-900/20 rounded-2xl transition-all font-bold text-sm mb-6" >
                   <LogOut size={20} /> <span>Cerrar Sesión</span>
                 </button>
                 <div className="text-center">
