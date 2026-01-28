@@ -10,7 +10,8 @@ import MaintenanceScreen from './components/MaintenanceScreen'
 import AdminPanel from './components/AdminPanel' 
 import { X } from 'lucide-react'
 
-const CURRENT_SOFTWARE_VERSION = '1.0.0'; 
+// --- CONFIGURACIÓN DE VERSIÓN ---
+const CURRENT_SOFTWARE_VERSION = '1.0.1'; 
 
 function getDefaultIconForTitle(title = '', index) {
   const mapping = ['📖', '💧', '🧘', '💤', '🍎', '💪', '📝', '🚶']
@@ -39,24 +40,36 @@ function App() {
   const [loadingSession, setLoadingSession] = useState(true)
   const [habits, setHabits] = useState([])
   const [loadingHabits, setLoadingHabits] = useState(false)
-  const [dataError, setDataError] = useState(null)
   const [todayLogs, setTodayLogs] = useState([])
   const [loadingTodayLogs, setLoadingTodayLogs] = useState(false)
   const [mode, setMode] = useState('dashboard') 
   const [saving, setSaving] = useState(false)
-  const [saveError, setSaveError] = useState(null)
-  const [saveSuccess, setSaveSuccess] = useState(null)
   const [hasSaved, setHasSaved] = useState(false)
   const [isMaintenance, setIsMaintenance] = useState(false)
   const ADMIN_EMAIL = 'hemmings.nacho@gmail.com' 
 
   const currentHabit = habits[currentIndex]
 
+  // --- LÓGICA DE AUTO-ACTUALIZACIÓN SEGURA ---
   useEffect(() => {
     const handleVersionCheck = (dbVersion) => {
       if (dbVersion && dbVersion !== CURRENT_SOFTWARE_VERSION) {
+        // 1. INMUNIDAD ADMIN: No recargar si eres el admin (evita bucles en desarrollo)
         if (session?.user?.email === ADMIN_EMAIL) return;
+
+        // 2. SEGURO ANTI-BUCLE: Verificamos si ya intentamos recargar esta versión exacta
+        const lastReloadAttempt = localStorage.getItem('last_version_reload');
+        if (lastReloadAttempt === dbVersion) {
+          console.log("Ya se intentó recargar la v" + dbVersion + ". El caché sigue sirviendo código viejo.");
+          return;
+        }
+
+        // 3. RECARGA: Marcamos el intento y refrescamos
+        localStorage.setItem('last_version_reload', dbVersion);
         window.location.reload(true);
+      } else if (dbVersion === CURRENT_SOFTWARE_VERSION) {
+        // Si coinciden, limpiamos el intento de recarga anterior
+        localStorage.removeItem('last_version_reload');
       }
     };
 
@@ -82,8 +95,9 @@ function App() {
         .subscribe();
       return () => subscription.unsubscribe();
     };
-    initSettings();
-  }, [session]);
+
+    if (!loadingSession) initSettings(); // Solo iniciamos si la sesión ya se cargó
+  }, [session, loadingSession]);
 
   const fetchTodayLogs = useCallback(async () => {
     if (!session) return
@@ -109,13 +123,7 @@ function App() {
     if (!session) return
     const fetchHabits = async () => {
       setLoadingHabits(true)
-      // MODIFICACIÓN CRUCIAL: Ahora filtramos explícitamente por TU id de usuario
-      const { data } = await supabase
-        .from('habits')
-        .select('*')
-        .eq('is_active', true)
-        .eq('user_id', session.user.id) // Solo tus hábitos
-      
+      const { data } = await supabase.from('habits').select('*').eq('is_active', true).eq('user_id', session.user.id)
       if (data) setHabits(data.map((h, i) => ({ ...h, icon: h.icon || getDefaultIconForTitle(h.title, i), color: h.color || getDefaultColorForIndex(i) })))
       setLoadingHabits(false)
     }
@@ -124,7 +132,19 @@ function App() {
 
   useEffect(() => { if (session) fetchTodayLogs() }, [session, habits, fetchTodayLogs])
 
-  if (loadingSession) return <div className="min-h-screen flex items-center justify-center bg-neutral-900 text-neutral-300 font-light italic">Cargando MiVida...</div>
+  useEffect(() => {
+    if (!session || !habits.length || mode !== 'reviewing' || currentIndex < habits.length || !results.length || hasSaved || saving) return
+    const saveResults = async () => {
+      setSaving(true)
+      const payload = results.map(i => ({ user_id: session.user.id, habit_id: i.id, status: i.status, note: i.note || null, created_at: new Date().toISOString() }))
+      const { error } = await supabase.from('daily_logs').insert(payload)
+      if (!error) { setHasSaved(true); setTimeout(() => { fetchTodayLogs(); setMode('dashboard'); }, 1500); }
+      setSaving(false)
+    }
+    saveResults()
+  }, [session, habits, currentIndex, results, hasSaved, saving, mode])
+
+  if (loadingSession) return <div className="min-h-screen flex items-center justify-center bg-neutral-900 text-neutral-300">Cargando MiVida...</div>
   if (isMaintenance && session?.user?.email !== ADMIN_EMAIL) return <MaintenanceScreen />
   if (!session) return <><TopBanner /><Auth /></>
   if (mode === 'admin') return <AdminPanel onClose={() => setMode('dashboard')} version={CURRENT_SOFTWARE_VERSION} />
@@ -149,7 +169,7 @@ function App() {
         <X size={18} /> <span className="text-xs font-medium uppercase tracking-widest">Salir</span>
       </button>
       <div className="w-full max-w-md mx-auto px-4 py-8 text-white">
-        {currentHabit ? <SwipeCard habit={currentHabit} onSwipeComplete={(d) => { if (d === 'right') { setResults(p => [...p, { id: currentHabit.id, title: currentHabit.title, status: 'completed' }]); setCurrentIndex(c => c + 1); } else { setPendingHabit(currentHabit); setIsModalOpen(true); } }} onDrag={(x) => setSwipeStatus(x > 100 ? 'done' : x < -100 ? 'not-done' : null)} /> : <div className="text-center">Resumen completado. <button onClick={() => setMode('dashboard')} className="mt-6 w-full py-4 bg-white text-black font-bold rounded-2xl">Volver</button></div>}
+        {currentHabit ? <SwipeCard habit={currentHabit} onSwipeComplete={(d) => { if (d === 'right') { setResults(p => [...p, { id: currentHabit.id, title: currentHabit.title, status: 'completed' }]); setCurrentIndex(c => c + 1); } else { setPendingHabit(currentHabit); setIsModalOpen(true); } }} onDrag={(x) => setSwipeStatus(x > 100 ? 'done' : x < -100 ? 'not-done' : null)} /> : <div className="text-center">¡Resumen completado! <button onClick={() => setMode('dashboard')} className="mt-6 w-full py-4 bg-white text-black font-bold rounded-2xl">Volver</button></div>}
       </div>
       <NoteModal isOpen={isModalOpen} habitTitle={pendingHabit?.title} onSave={(n) => { setResults(p => [...p, { id: pendingHabit.id, title: pendingHabit.title, status: 'skipped', note: n || '' }]); setIsModalOpen(false); setCurrentIndex(c => c + 1); }} onSkip={() => { setResults(p => [...p, { id: pendingHabit.id, title: pendingHabit.title, status: 'skipped', note: '' }]); setIsModalOpen(false); setCurrentIndex(c => c + 1); }} />
     </div>
