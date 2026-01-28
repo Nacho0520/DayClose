@@ -34,9 +34,6 @@ function Dashboard({ user, habits, todayLogs, onStartReview, onResetToday }) {
   const [isSidebarOpen, setSidebarOpen] = useState(false)
   const [isSettingsOpen, setSettingsOpen] = useState(false)
   const [isCreatorOpen, setCreatorOpen] = useState(false)
-  
-  // 1. OBTENER TAMAÑO DE PANTALLA
-  const { width, height } = useWindowSize() 
 
   const logsMap = new Map()
   todayLogs.forEach((log) => logsMap.set(log.habit_id, log.status))
@@ -71,23 +68,6 @@ function Dashboard({ user, habits, todayLogs, onStartReview, onResetToday }) {
 
   return (
     <div className="min-h-screen bg-neutral-900 px-4 py-8 relative">
-      
-      {/* --- CONFETTI AQUÍ --- 
-          Solo aparece si es 100%, hay hábitos y no está cargando 
-          Use zIndex alto para que salga POR ENCIMA de todo
-      */}
-      {percentage === 100 && totalCount > 0 && (
-        <Confetti
-          width={width}
-          height={height}
-          recycle={false} 
-          numberOfPieces={800} // Aumenté un poco la cantidad
-          gravity={0.2}
-          colors={['#10B981', '#34D399', '#6EE7B7', '#FFFFFF']}
-          style={{ position: 'fixed', top: 0, left: 0, zIndex: 9999 }} // zIndex alto vital
-        />
-      )}
-
       {/* Botón Menú */}
       <button 
         onClick={() => setSidebarOpen(true)}
