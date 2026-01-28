@@ -8,6 +8,7 @@ import ReminderPopup from './components/ReminderPopup'
 import TopBanner from './components/TopBanner'
 import MaintenanceScreen from './components/MaintenanceScreen'
 import AdminPanel from './components/AdminPanel' 
+import Tutorial from './components/Tutorial' // Importación del nuevo componente
 import { X } from 'lucide-react'
 
 // --- CONFIGURACIÓN DE VERSIÓN ---
@@ -42,7 +43,7 @@ function App() {
   const [loadingHabits, setLoadingHabits] = useState(false)
   const [todayLogs, setTodayLogs] = useState([])
   const [loadingTodayLogs, setLoadingTodayLogs] = useState(false)
-  const [mode, setMode] = useState('dashboard') 
+  const [mode, setMode] = useState('dashboard') // dashboard, reviewing, admin, tutorial
   const [saving, setSaving] = useState(false)
   const [hasSaved, setHasSaved] = useState(false)
   const [isMaintenance, setIsMaintenance] = useState(false)
@@ -54,21 +55,12 @@ function App() {
   useEffect(() => {
     const handleVersionCheck = (dbVersion) => {
       if (dbVersion && dbVersion !== CURRENT_SOFTWARE_VERSION) {
-        // 1. INMUNIDAD ADMIN: No recargar si eres el admin (evita bucles en desarrollo)
         if (session?.user?.email === ADMIN_EMAIL) return;
-
-        // 2. SEGURO ANTI-BUCLE: Verificamos si ya intentamos recargar esta versión exacta
         const lastReloadAttempt = localStorage.getItem('last_version_reload');
-        if (lastReloadAttempt === dbVersion) {
-          console.log("Ya se intentó recargar la v" + dbVersion + ". El caché sigue sirviendo código viejo.");
-          return;
-        }
-
-        // 3. RECARGA: Marcamos el intento y refrescamos
+        if (lastReloadAttempt === dbVersion) return;
         localStorage.setItem('last_version_reload', dbVersion);
         window.location.reload(true);
       } else if (dbVersion === CURRENT_SOFTWARE_VERSION) {
-        // Si coinciden, limpiamos el intento de recarga anterior
         localStorage.removeItem('last_version_reload');
       }
     };
@@ -85,19 +77,24 @@ function App() {
       const subscription = supabase
         .channel('settings_realtime')
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'app_settings' }, (payload) => {
-          if (payload.new.key === 'maintenance_mode') {
-            setIsMaintenance(payload.new.value === 'true' || payload.new.value === true);
-          }
-          if (payload.new.key === 'app_version') {
-            handleVersionCheck(payload.new.value);
-          }
+          if (payload.new.key === 'maintenance_mode') setIsMaintenance(payload.new.value === 'true' || payload.new.value === true);
+          if (payload.new.key === 'app_version') handleVersionCheck(payload.new.value);
         })
         .subscribe();
       return () => subscription.unsubscribe();
     };
 
-    if (!loadingSession) initSettings(); // Solo iniciamos si la sesión ya se cargó
+    if (!loadingSession) initSettings();
   }, [session, loadingSession]);
+
+  // --- CONTROL DEL TUTORIAL ---
+  const handleFinishTutorial = async () => {
+    // Guardamos en el metadata del usuario que ya completó el tutorial
+    await supabase.auth.updateUser({
+      data: { has_finished_tutorial: true }
+    });
+    setMode('dashboard');
+  };
 
   const fetchTodayLogs = useCallback(async () => {
     if (!session) return
@@ -111,16 +108,29 @@ function App() {
   useEffect(() => {
     const initSession = async () => {
       const { data } = await supabase.auth.getSession()
-      setSession(data?.session ?? null)
+      const currentSession = data?.session ?? null
+      setSession(currentSession)
+      
+      // Si hay sesión, verificamos si necesita el tutorial
+      if (currentSession && !currentSession.user.user_metadata?.has_finished_tutorial) {
+        setMode('tutorial')
+      }
+      
       setLoadingSession(false)
     }
     initSession()
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => setSession(newSession))
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession)
+      if (newSession && !newSession.user.user_metadata?.has_finished_tutorial) {
+        setMode('tutorial')
+      }
+    })
     return () => subscription.unsubscribe()
   }, [])
 
   useEffect(() => {
-    if (!session) return
+    if (!session || mode === 'tutorial') return
     const fetchHabits = async () => {
       setLoadingHabits(true)
       const { data } = await supabase.from('habits').select('*').eq('is_active', true).eq('user_id', session.user.id)
@@ -128,9 +138,9 @@ function App() {
       setLoadingHabits(false)
     }
     fetchHabits()
-  }, [session])
+  }, [session, mode])
 
-  useEffect(() => { if (session) fetchTodayLogs() }, [session, habits, fetchTodayLogs])
+  useEffect(() => { if (session && mode !== 'tutorial') fetchTodayLogs() }, [session, habits, fetchTodayLogs, mode])
 
   useEffect(() => {
     if (!session || !habits.length || mode !== 'reviewing' || currentIndex < habits.length || !results.length || hasSaved || saving) return
@@ -144,9 +154,17 @@ function App() {
     saveResults()
   }, [session, habits, currentIndex, results, hasSaved, saving, mode])
 
-  if (loadingSession) return <div className="min-h-screen flex items-center justify-center bg-neutral-900 text-neutral-300">Cargando MiVida...</div>
+  if (loadingSession) return <div className="min-h-screen flex items-center justify-center bg-neutral-900 text-white font-black italic tracking-tighter">MIVIDA...</div>
+  
   if (isMaintenance && session?.user?.email !== ADMIN_EMAIL) return <MaintenanceScreen />
+  
   if (!session) return <><TopBanner /><Auth /></>
+
+  // Renderizado del Tutorial
+  if (mode === 'tutorial') {
+    return <Tutorial user={session.user} onComplete={handleFinishTutorial} />
+  }
+
   if (mode === 'admin') return <AdminPanel onClose={() => setMode('dashboard')} version={CURRENT_SOFTWARE_VERSION} />
 
   if (mode === 'dashboard') {
