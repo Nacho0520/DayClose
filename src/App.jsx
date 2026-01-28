@@ -10,7 +10,7 @@ import MaintenanceScreen from './components/MaintenanceScreen'
 import AdminPanel from './components/AdminPanel' 
 import { X } from 'lucide-react'
 
-const CURRENT_SOFTWARE_VERSION = '1.0.0'; 
+const CURRENT_SOFTWARE_VERSION = '1.0.1'; 
 
 function getDefaultIconForTitle(title = '', index) {
   const mapping = ['📖', '💧', '🧘', '💤', '🍎', '💪', '📝', '🚶']
@@ -109,7 +109,13 @@ function App() {
     if (!session) return
     const fetchHabits = async () => {
       setLoadingHabits(true)
-      const { data } = await supabase.from('habits').select('*').eq('is_active', true)
+      // MODIFICACIÓN CRUCIAL: Ahora filtramos explícitamente por TU id de usuario
+      const { data } = await supabase
+        .from('habits')
+        .select('*')
+        .eq('is_active', true)
+        .eq('user_id', session.user.id) // Solo tus hábitos
+      
       if (data) setHabits(data.map((h, i) => ({ ...h, icon: h.icon || getDefaultIconForTitle(h.title, i), color: h.color || getDefaultColorForIndex(i) })))
       setLoadingHabits(false)
     }
