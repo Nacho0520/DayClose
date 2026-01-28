@@ -8,10 +8,12 @@ export default defineConfig({
     VitePWA({
       registerType: "autoUpdate",
       workbox: {
+        // 👇 AÑADE ESTA LÍNEA AQUÍ:
+        importScripts: ["/custom-sw.js"], 
+        // 👆 FIN DE LA LÍNEA NUEVA
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
-        // Esto es vital para que el móvil no borre el service worker
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,

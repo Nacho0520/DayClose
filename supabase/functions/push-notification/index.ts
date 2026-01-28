@@ -1,32 +1,86 @@
-// Follow this setup guide to integrate the Deno language server with your editor:
-// https://deno.land/manual/getting_started/setup_your_environment
-// This enables autocomplete, go to definition, etc.
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import webpush from "npm:web-push@3.6.7"
 
-// Setup type definitions for built-in Supabase Runtime APIs
-import "jsr:@supabase/functions-js/edge-runtime.d.ts"
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
 
-console.log("Hello from Functions!")
-
-Deno.serve(async (req) => {
-  const { name } = await req.json()
-  const data = {
-    message: `Hello ${name}!`,
+serve(async (req) => {
+  // Permite que cualquier web (tu app) llame a esta función sin bloqueo
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
   }
 
-  return new Response(
-    JSON.stringify(data),
-    { headers: { "Content-Type": "application/json" } },
-  )
+  try {
+    // 1. Configurar las llaves VAPID
+    // IMPORTANTE: Asegúrate de haber añadido VAPID_PUBLIC_KEY y VAPID_PRIVATE_KEY
+    // en los "Secrets" de tu panel de Supabase.
+    const vapidEmail = 'mailto:admin@mivida.app' 
+    const publicKey = Deno.env.get('VAPID_PUBLIC_KEY')
+    const privateKey = Deno.env.get('VAPID_PRIVATE_KEY')
+
+    if (!publicKey || !privateKey) {
+      throw new Error('Faltan las claves VAPID en las variables de entorno (Secrets de Supabase)')
+    }
+
+    webpush.setVapidDetails(vapidEmail, publicKey, privateKey)
+
+    // 2. Conectar a la base de datos Supabase
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    const supabase = createClient(supabaseUrl, supabaseKey)
+
+    // 3. Buscar usuarios suscritos
+    const { data: subscriptions, error } = await supabase
+      .from('push_subscriptions')
+      .select('*')
+
+    if (error) throw error
+
+    console.log(`Enviando notificaciones a ${subscriptions.length} dispositivos...`)
+
+    const results = []
+
+    // 4. Enviar notificación a cada uno
+    for (const sub of subscriptions) {
+      const payload = JSON.stringify({
+        title: '🌙 Momento de reflexión',
+        body: '¿Qué tal ha ido el día? Entra en MiVida para cerrar tus hábitos.',
+        icon: '/pwa-192x192.png', // Asegúrate de tener este icono en tu carpeta public
+        badge: '/pwa-192x192.png',
+        url: 'https://mi-vida-app.vercel.app' // TU URL REAL
+      })
+
+      try {
+        // Parsear la suscripción que guardamos en la base de datos
+        const pushSubscription = typeof sub.subscription === 'string' 
+          ? JSON.parse(sub.subscription) 
+          : sub.subscription
+
+        await webpush.sendNotification(pushSubscription, payload)
+        results.push({ status: 'success', id: sub.id })
+      } catch (err) {
+        console.error(`Error enviando a ${sub.id}:`, err)
+        
+        // Si el usuario ya no existe (error 410/404), borramos la suscripción sucia
+        if (err.statusCode === 410 || err.statusCode === 404) {
+          await supabase.from('push_subscriptions').delete().eq('id', sub.id)
+        }
+        results.push({ status: 'failed', id: sub.id, error: err.message })
+      }
+    }
+
+    return new Response(JSON.stringify(results), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200,
+    })
+
+  } catch (error) {
+    return new Response(JSON.stringify({ error: error.message }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 400, // Error del cliente o servidor
+    })
+  }
 })
-
-/* To invoke locally:
-
-  1. Run `supabase start` (see: https://supabase.com/docs/reference/cli/supabase-start)
-  2. Make an HTTP request:
-
-  curl -i --location --request POST 'http://127.0.0.1:54321/functions/v1/push-notification' \
-    --header 'Authorization: Bearer eyJhbGciOiJFUzI1NiIsImtpZCI6ImI4MTI2OWYxLTIxZDgtNGYyZS1iNzE5LWMyMjQwYTg0MGQ5MCIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjIwODQ5MTc0NzJ9.iRlJc_xK-MlL0syI_H7q_aprBDEmzJgeII0cU1nNve6JWjScLCX3fGZ6qWRRncjbNLgbTZtxLFQg8Qv5SOupvA' \
-    --header 'Content-Type: application/json' \
-    --data '{"name":"Functions"}'
-
-*/
