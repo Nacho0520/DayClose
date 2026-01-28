@@ -7,11 +7,11 @@ import { supabase } from './lib/supabaseClient'
 import ReminderPopup from './components/ReminderPopup'
 import TopBanner from './components/TopBanner'
 import MaintenanceScreen from './components/MaintenanceScreen'
+import AdminPanel from './components/AdminPanel' // Importamos el nuevo panel
 import { X } from 'lucide-react'
 
 // --- CONFIGURACIÓN DE VERSIÓN ---
-// Aumenta este número cuando subas cambios importantes (ej: '1.0.1')
-const CURRENT_SOFTWARE_VERSION = '1.0.0'; 
+const CURRENT_SOFTWARE_VERSION = '1.0.1'; 
 
 function getDefaultIconForTitle(title = '', index) {
   const mapping = ['📖', '💧', '🧘', '💤', '🍎', '💪', '📝', '🚶']
@@ -46,7 +46,7 @@ function App() {
   const [dataError, setDataError] = useState(null)
   const [todayLogs, setTodayLogs] = useState([])
   const [loadingTodayLogs, setLoadingTodayLogs] = useState(false)
-  const [mode, setMode] = useState('dashboard')
+  const [mode, setMode] = useState('dashboard') // dashboard, reviewing, admin
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState(null)
   const [saveSuccess, setSaveSuccess] = useState(null)
@@ -56,35 +56,26 @@ function App() {
 
   const currentHabit = habits[currentIndex]
 
-  // --- LÓGICA DE AUTO-ACTUALIZACIÓN Y MANTENIMIENTO ---
+  // LÓGICA DE ACTUALIZACIÓN Y MANTENIMIENTO
   useEffect(() => {
     const handleVersionCheck = (dbVersion) => {
       if (dbVersion && dbVersion !== CURRENT_SOFTWARE_VERSION) {
-        console.log('Nueva versión detectada:', dbVersion);
         window.location.reload(true);
       }
     };
 
     const initSettings = async () => {
-      const { data } = await supabase
-        .from('app_settings')
-        .select('key, value');
-      
+      const { data } = await supabase.from('app_settings').select('key, value');
       if (data) {
         const maint = data.find(s => s.key === 'maintenance_mode');
         const vers = data.find(s => s.key === 'app_version');
-        
         if (maint) setIsMaintenance(maint.value === 'true' || maint.value === true);
         if (vers) handleVersionCheck(vers.value);
       }
 
       const subscription = supabase
         .channel('settings_realtime')
-        .on('postgres_changes', { 
-          event: 'UPDATE', 
-          schema: 'public', 
-          table: 'app_settings' 
-        }, (payload) => {
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'app_settings' }, (payload) => {
           if (payload.new.key === 'maintenance_mode') {
             setIsMaintenance(payload.new.value === 'true' || payload.new.value === true);
           }
@@ -100,30 +91,20 @@ function App() {
     initSettings();
   }, []);
 
-  const getTodayDateString = () => {
-      const today = new Date()
-      return today.toISOString().split('T')[0]
-  }
+  const getTodayDateString = () => new Date().toISOString().split('T')[0]
   
   const fetchTodayLogs = useCallback(async () => {
     if (!session) return
     setLoadingTodayLogs(true)
     const todayStart = `${getTodayDateString()}T00:00:00.000Z`
     const todayEnd = `${getTodayDateString()}T23:59:59.999Z`
-
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('daily_logs')
       .select('*')
       .eq('user_id', session.user.id)
       .gte('created_at', todayStart)
       .lte('created_at', todayEnd)
-
-    if (error) {
-      console.error('Error fetching today logs:', error)
-      setTodayLogs([])
-    } else {
-      setTodayLogs(data || [])
-    }
+    setTodayLogs(data || [])
     setLoadingTodayLogs(false)
   }, [session])
 
@@ -131,25 +112,9 @@ function App() {
     if (!session) return
     const todayStart = `${getTodayDateString()}T00:00:00.000Z`
     const todayEnd = `${getTodayDateString()}T23:59:59.999Z`
-
-    const { error } = await supabase
-      .from('daily_logs')
-      .delete()
-      .eq('user_id', session.user.id)
-      .gte('created_at', todayStart)
-      .lte('created_at', todayEnd)
-
-    if (error) {
-      alert(`Error al resetear: ${error.message}`)
-    } else {
-      await fetchTodayLogs()
-      setCurrentIndex(0)
-      setResults([])
-      setHasSaved(false)
-      setSaveError(null)
-      setSaveSuccess(null)
-      setMode('dashboard')
-    }
+    await supabase.from('daily_logs').delete().eq('user_id', session.user.id).gte('created_at', todayStart).lte('created_at', todayEnd)
+    await fetchTodayLogs()
+    setMode('dashboard')
   }
 
   const handleStartReview = () => {
@@ -157,23 +122,16 @@ function App() {
     setCurrentIndex(0)
     setResults([])
     setHasSaved(false)
-    setSaveError(null)
-    setSaveSuccess(null)
   }
 
   useEffect(() => {
     const initSession = async () => {
-      setLoadingSession(true)
-      const { data, error } = await supabase.auth.getSession()
-      if (error) console.error(error)
+      const { data } = await supabase.auth.getSession()
       setSession(data?.session ?? null)
       setLoadingSession(false)
     }
     initSession()
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      setSession(newSession)
-    })
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => setSession(newSession))
     return () => subscription.unsubscribe()
   }, [])
 
@@ -181,24 +139,9 @@ function App() {
     if (!session) return
     const fetchHabits = async () => {
       setLoadingHabits(true)
-      setDataError(null)
-      setCurrentIndex(0)
-      setResults([])
-      setHasSaved(false)
-      setSaveError(null)
-      setSaveSuccess(null)
-      setMode('dashboard')
-
-      const { data, error } = await supabase
-        .from('habits')
-        .select('*')
-        .eq('is_active', true)
-
-      if (error) {
-        setDataError(error.message)
-        setHabits([])
-      } else {
-        const normalized = (data || []).map((habit, index) => ({
+      const { data } = await supabase.from('habits').select('*').eq('is_active', true)
+      if (data) {
+        const normalized = data.map((habit, index) => ({
           ...habit,
           icon: habit.icon || getDefaultIconForTitle(habit.title, index),
           color: habit.color || getDefaultColorForIndex(index),
@@ -210,23 +153,12 @@ function App() {
     fetchHabits()
   }, [session])
 
-  useEffect(() => {
-    if (!session) return 
-    fetchTodayLogs()
-  }, [session, habits, fetchTodayLogs])
+  useEffect(() => { if (session) fetchTodayLogs() }, [session, habits, fetchTodayLogs])
 
   useEffect(() => {
-    if (!session) return
-    if (!habits.length) return
-    if (mode !== 'reviewing') return
-    if (currentIndex < habits.length) return
-    if (!results.length) return
-    if (hasSaved || saving) return
-
+    if (!session || !habits.length || mode !== 'reviewing' || currentIndex < habits.length || !results.length || hasSaved || saving) return
     const saveResults = async () => {
       setSaving(true)
-      setSaveError(null)
-      setSaveSuccess(null)
       const payload = results.map((item) => ({
         user_id: session.user.id,
         habit_id: item.id,
@@ -234,35 +166,20 @@ function App() {
         note: item.note || null,
         created_at: new Date().toISOString(),
       }))
-
       const { error } = await supabase.from('daily_logs').insert(payload)
-
-      if (error) {
-        setSaveError(error.message)
-      } else {
-        setSaveSuccess('¡Guardado con éxito!')
+      if (!error) {
         setHasSaved(true)
-        setTimeout(async () => {
-          await fetchTodayLogs()
-          setMode('dashboard')
-        }, 1500)
+        setTimeout(() => { fetchTodayLogs(); setMode('dashboard'); }, 1500)
       }
       setSaving(false)
     }
     saveResults()
   }, [session, habits, currentIndex, results, hasSaved, saving, mode])
 
-  const handleDrag = (x) => {
-    if (x > 100) setSwipeStatus('done')
-    else if (x < -100) setSwipeStatus('not-done')
-    else setSwipeStatus(null)
-  }
-
   const handleSwipeComplete = (direction) => {
     if (!currentHabit) return
     if (direction === 'right') {
       setResults((prev) => [...prev, { id: currentHabit.id, title: currentHabit.title, status: 'completed' }])
-      setSwipeStatus(null)
       setCurrentIndex((prev) => prev + 1)
     } else if (direction === 'left') {
       setPendingHabit(currentHabit)
@@ -270,72 +187,15 @@ function App() {
     }
   }
 
-  const handleSaveNote = (note) => {
-    if (!pendingHabit) {
-      setIsModalOpen(false)
-      return
-    }
-    setResults((prev) => [
-      ...prev,
-      { id: pendingHabit.id, title: pendingHabit.title, status: 'skipped', note: note || '' },
-    ])
-    setIsModalOpen(false)
-    setSwipeStatus(null)
-    setPendingHabit(null)
-    setCurrentIndex((prev) => prev + 1)
-  }
+  if (loadingSession) return <div className="min-h-screen flex items-center justify-center bg-neutral-900 text-neutral-300">Cargando sesión...</div>
 
-  const handleSkipNote = () => handleSaveNote('')
+  if (isMaintenance && session?.user?.email !== ADMIN_EMAIL) return <MaintenanceScreen />
 
-  const bgColorClass =
-    swipeStatus === 'done' ? 'bg-emerald-900'
-      : swipeStatus === 'not-done' ? 'bg-red-900'
-        : 'bg-neutral-900'
+  if (!session) return <><TopBanner /><Auth /></>
 
-  const completed = results.filter((r) => r.status === 'completed')
-  const skipped = results.filter((r) => r.status === 'skipped')
-
-  if (loadingSession) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-neutral-900">
-        <p className="text-neutral-300">Cargando sesión...</p>
-      </div>
-    )
-  }
-
-  if (isMaintenance && session?.user?.email !== ADMIN_EMAIL) {
-    return <MaintenanceScreen />
-  }
-
-  if (!session) {
-    if (isMaintenance) return <MaintenanceScreen />
-    return (
-        <>
-            <TopBanner /> 
-            <Auth />
-        </>
-    )
-  }
+  if (mode === 'admin') return <AdminPanel onClose={() => setMode('dashboard')} version={CURRENT_SOFTWARE_VERSION} />
 
   if (mode === 'dashboard') {
-    if (loadingHabits || loadingTodayLogs) {
-      return (
-        <div className="min-h-screen flex items-center justify-center bg-neutral-900">
-          <p className="text-neutral-300">Cargando...</p>
-        </div>
-      )
-    }
-
-    if (dataError) {
-      return (
-        <div className="min-h-screen flex items-center justify-center bg-neutral-900 px-4">
-          <div className="w-full max-w-md rounded-2xl bg-neutral-800 p-6">
-            <p className="text-center text-sm text-red-400">Error: {dataError}</p>
-          </div>
-        </div>
-      )
-    }
-
     return (
       <>
         <TopBanner />
@@ -345,7 +205,8 @@ function App() {
           todayLogs={todayLogs}
           onStartReview={handleStartReview}
           onResetToday={handleResetToday}
-          version={CURRENT_SOFTWARE_VERSION} // <-- PASAMOS LA VERSIÓN
+          version={CURRENT_SOFTWARE_VERSION}
+          onOpenAdmin={() => setMode('admin')}
         />
         <ReminderPopup session={session} />
       </>
@@ -353,60 +214,15 @@ function App() {
   }
 
   return (
-    <div className={`min-h-screen flex items-center justify-center ${bgColorClass} transition-colors duration-300 relative`}>
-      <button
-        onClick={() => window.location.reload()}
-        className="fixed top-6 right-6 z-[100] flex items-center gap-1 px-4 py-2 bg-neutral-800/80 backdrop-blur-md border border-neutral-700 rounded-full text-neutral-400 hover:text-white transition-all shadow-lg"
-      >
-        <X size={18} />
-        <span className="text-xs font-medium">Salir</span>
+    <div className={`min-h-screen flex items-center justify-center ${swipeStatus === 'done' ? 'bg-emerald-900' : swipeStatus === 'not-done' ? 'bg-red-900' : 'bg-neutral-900'} transition-colors duration-300 relative`}>
+      <button onClick={() => window.location.reload()} className="fixed top-6 right-6 z-[100] flex items-center gap-1 px-4 py-2 bg-neutral-800/80 backdrop-blur-md border border-neutral-700 rounded-full text-neutral-400 hover:text-white transition-all shadow-lg">
+        <X size={18} /> <span className="text-xs font-medium">Salir</span>
       </button>
-
       <div className="w-full max-w-md mx-auto px-4 py-8">
         <h1 className="mb-2 text-center text-2xl font-semibold text-white">Revisión nocturna</h1>
-        {/* ... (resto del modo revisión sin cambios) */}
-        {currentHabit ? (
-          <SwipeCard habit={currentHabit} onDrag={handleDrag} onSwipeComplete={handleSwipeComplete} />
-        ) : (
-          <div className="rounded-2xl bg-neutral-800 p-6">
-            <p className="mb-2 text-center text-xl font-semibold text-white">¡Resumen completado!</p>
-            {saving && <p className="mb-2 text-center text-sm text-neutral-300">Guardando resultados...</p>}
-            {saveError && <p className="mb-2 text-center text-sm text-red-400">Error: {saveError}</p>}
-            {saveSuccess && <p className="mb-2 text-center text-sm text-emerald-400">{saveSuccess}</p>}
-            
-            <div className="mt-3 space-y-4 text-sm text-neutral-100">
-               <div>
-                <h2 className="mb-1 text-sm font-semibold text-emerald-300">Hechos</h2>
-                {completed.length ? (
-                  <ul className="list-inside list-disc space-y-1 text-emerald-100">
-                    {completed.map((item) => <li key={item.id}>{item.title}</li>)}
-                  </ul>
-                ) : <p className="text-neutral-400">Ninguno.</p>}
-              </div>
-              
-              <div>
-                <h2 className="mb-1 text-sm font-semibold text-red-300">No hechos</h2>
-                {skipped.length ? (
-                  <ul className="list-inside list-disc space-y-1 text-red-100">
-                    {skipped.map((item) => (
-                      <li key={item.id}>
-                        <span className="font-medium">{item.title}</span>
-                        {item.note && <span className="ml-1 text-xs text-neutral-300">— {item.note}</span>}
-                      </li>
-                    ))}
-                  </ul>
-                ) : <p className="text-neutral-400">Ninguno.</p>}
-              </div>
-            </div>
-            
-            <button onClick={() => setMode('dashboard')} className="mt-6 w-full py-3 bg-neutral-700 rounded-xl text-white hover:bg-neutral-600 transition-colors">
-                Volver al inicio
-            </button>
-          </div>
-        )}
+        {currentHabit ? <SwipeCard habit={currentHabit} onSwipeComplete={handleSwipeComplete} onDrag={(x) => setSwipeStatus(x > 100 ? 'done' : x < -100 ? 'not-done' : null)} /> : <div className="rounded-2xl bg-neutral-800 p-6 text-center text-white">¡Resumen completado! <button onClick={() => setMode('dashboard')} className="mt-6 w-full py-3 bg-neutral-700 rounded-xl">Volver al inicio</button></div>}
       </div>
-      <NoteModal isOpen={isModalOpen} habitTitle={pendingHabit?.title} onSave={handleSaveNote} onSkip={handleSkipNote} />
-      <ReminderPopup session={session} />
+      <NoteModal isOpen={isModalOpen} habitTitle={pendingHabit?.title} onSave={(note) => { setResults((prev) => [...prev, { id: pendingHabit.id, title: pendingHabit.title, status: 'skipped', note: note || '' }]); setIsModalOpen(false); setCurrentIndex((prev) => prev + 1); }} onSkip={() => { setResults((prev) => [...prev, { id: pendingHabit.id, title: pendingHabit.title, status: 'skipped', note: '' }]); setIsModalOpen(false); setCurrentIndex((prev) => prev + 1); }} />
     </div>
   )
 }
