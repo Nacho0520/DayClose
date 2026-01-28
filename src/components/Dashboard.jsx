@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, X, Circle, Menu, Plus, Trash2, Settings, ChevronLeft } from "lucide-react";
+import { Check, X, Circle, Menu, Plus, Trash2, Settings, ChevronLeft, RotateCcw } from "lucide-react";
 import Sidebar from "./Sidebar";
 import SettingsModal from "./SettingsModal";
 import HabitCreator from "./HabitCreator";
@@ -8,179 +8,92 @@ import { supabase } from "../lib/supabaseClient";
 function CircularProgress({ percentage }) {
   const radius = 70;
   const circumference = 2 * Math.PI * radius;
-  const safePercentage = percentage || 0;
-  const offset = circumference - (safePercentage / 100) * circumference;
-
+  const offset = circumference - (percentage / 100) * circumference;
   return (
     <div className="relative flex h-48 w-48 items-center justify-center">
       <svg className="h-full w-full -rotate-90 transform" viewBox="0 0 160 160">
-        <circle cx="80" cy="80" r={radius} stroke="currentColor" strokeWidth="12" fill="none" className="text-neutral-700" />
-        <circle
-          cx="80" cy="80" r={radius} stroke="currentColor" strokeWidth="12" fill="none"
-          strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round"
-          className="text-emerald-500 transition-all duration-500"
-        />
+        <circle cx="80" cy="80" r={radius} stroke="currentColor" strokeWidth="12" fill="none" className="text-neutral-800" />
+        <circle cx="80" cy="80" r={radius} stroke="currentColor" strokeWidth="12" fill="none" strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round" className="text-emerald-500 transition-all duration-500" />
       </svg>
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-4xl font-bold text-white">{Math.round(safePercentage)}%</p>
-          <p className="mt-1 text-xs text-neutral-400">Completado</p>
-        </div>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <p className="text-4xl font-bold text-white tracking-tighter">{Math.round(percentage)}%</p>
+        <p className="text-[10px] uppercase font-bold text-neutral-500 tracking-widest mt-1">Hoy</p>
       </div>
     </div>
   );
 }
 
-function Dashboard({ user, habits, todayLogs, onStartReview, onResetToday, version }) { // <-- RECIBE VERSION
+// CORRECCIÓN: Añadido onOpenAdmin aquí
+function Dashboard({ user, habits, todayLogs, onStartReview, onResetToday, version, onOpenAdmin }) {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isSettingsOpen, setSettingsOpen] = useState(false);
   const [isCreatorOpen, setCreatorOpen] = useState(false);
   const [editHabit, setEditHabit] = useState(null);
-  const [isReviewMode, setIsReviewMode] = useState(false);
 
-  const safeHabits = habits || [];
-  const safeLogs = todayLogs || [];
-  
   const logsMap = new Map();
-  safeLogs.forEach((log) => { 
-    if (log?.habit_id) logsMap.set(log.habit_id, { status: log.status, logId: log.id }); 
-  });
+  (todayLogs || []).forEach(l => logsMap.set(l.habit_id, { status: l.status, logId: l.id }));
 
-  const completedCount = safeHabits.filter((h) => logsMap.get(h.id)?.status === "completed").length;
-  const totalCount = safeHabits.length;
-  const percentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
-  const hasPending = safeHabits.some((h) => !logsMap.has(h.id));
-
-  const handleClearStatus = async (habitId) => {
-    const logData = logsMap.get(habitId);
-    if (!logData) return;
-    try {
-      const { error } = await supabase.from('daily_logs').delete().eq('id', logData.logId);
-      if (error) throw error;
-      window.location.reload(); 
-    } catch (error) {
-      console.error("Error al desmarcar:", error);
-    }
-  };
-
-  const handleDeleteHabit = async (habitId) => {
-    if (confirm("¿Eliminar este hábito y todo su historial? Esta acción no se puede deshacer.")) {
-      try {
-        await supabase.from('daily_logs').delete().eq('habit_id', habitId);
-        const { error } = await supabase.from('habits').delete().eq('id', habitId);
-        if (error) throw error;
-        window.location.reload();
-      } catch (error) {
-        alert("No se pudo eliminar el hábito.");
-      }
-    }
-  };
-
-  const handleStartReviewInternal = () => {
-    setIsReviewMode(true);
-    onStartReview();
-  };
-
-  const getStatusIcon = (habitId) => {
-    const logData = logsMap.get(habitId);
-    if (!logData) return <Circle className="h-6 w-6 text-neutral-600" />;
-    return (
-      <button 
-        onClick={(e) => { e.stopPropagation(); handleClearStatus(habitId); }}
-        className="flex h-10 w-10 items-center justify-center rounded-full transition-all active:scale-75 active:bg-white/5"
-      >
-        {logData.status === "completed" ? (
-          <Check className="h-7 w-7 text-emerald-500 drop-shadow-[0_0_8px_rgba(16,185,129,0.3)]" />
-        ) : (
-          <X className="h-7 w-7 text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.3)]" />
-        )}
-      </button>
-    );
-  };
+  const completed = (habits || []).filter(h => logsMap.get(h.id)?.status === "completed").length;
+  const percentage = habits?.length > 0 ? (completed / habits.length) * 100 : 0;
 
   return (
     <div className="min-h-screen bg-neutral-900 px-4 py-8 relative">
-      {!isReviewMode && (
-        <button onClick={() => setSidebarOpen(true)} className="absolute top-6 left-4 text-white p-2 hover:bg-neutral-800 rounded-full transition-colors">
-          <Menu size={28} />
-        </button>
-      )}
+      <button onClick={() => setSidebarOpen(true)} className="absolute top-6 left-4 text-white p-2 hover:bg-neutral-800 rounded-full transition-colors">
+        <Menu size={28} />
+      </button>
 
       <Sidebar 
-        isOpen={isSidebarOpen} 
-        onClose={() => setSidebarOpen(false)} 
-        user={user} 
+        isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} user={user} 
         onLogout={() => supabase.auth.signOut().then(() => window.location.reload())} 
-        onOpenSettings={() => setSettingsOpen(true)}
-        version={version} // <-- PASAMOS LA VERSIÓN
+        onOpenSettings={() => setSettingsOpen(true)} version={version}
+        onOpenAdmin={onOpenAdmin} // <-- PASAMOS LA FUNCIÓN AQUÍ
       />
       
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setSettingsOpen(false)} user={user} />
+      <HabitCreator isOpen={isCreatorOpen || !!editHabit} onClose={() => { setCreatorOpen(false); setEditHabit(null); }} userId={user?.id} habitToEdit={editHabit} onHabitCreated={() => window.location.reload()} />
 
-      <HabitCreator 
-        isOpen={isCreatorOpen || !!editHabit} 
-        onClose={() => { setCreatorOpen(false); setEditHabit(null); }} 
-        userId={user?.id} 
-        habitToEdit={editHabit}
-        onHabitCreated={() => window.location.reload()} 
-      />
-
-      <div className="mx-auto w-full max-w-md mt-6 pb-20">
-        <header className="mb-8 text-center">
-          <h2 className="text-xl font-light text-neutral-400 italic">Hola,</h2>
-          <h1 className="text-3xl font-bold text-white tracking-tight capitalize">
-            {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Usuario'}
-          </h1>
+      <div className="mx-auto w-full max-w-md mt-6 pb-24">
+        <header className="mb-10 text-center">
+          <h2 className="text-lg font-light text-neutral-500 italic">Hola,</h2>
+          <h1 className="text-3xl font-black text-white tracking-tight capitalize leading-none">{user?.user_metadata?.full_name || 'Usuario'}</h1>
         </header>
 
-        <div className="mb-8 flex justify-center">
-          <CircularProgress percentage={percentage} />
-        </div>
+        <div className="mb-10 flex justify-center"><CircularProgress percentage={percentage} /></div>
 
-        <div className="mb-6 space-y-3">
-          {safeHabits.map((habit) => {
+        <div className="space-y-3">
+          {(habits || []).map((habit) => {
+            const log = logsMap.get(habit.id);
             return (
-              <div key={habit.id} className="group relative flex items-center gap-3 rounded-2xl border border-neutral-800 bg-neutral-800/40 p-4 backdrop-blur-sm transition-all hover:bg-neutral-800/60">
-                <div className={`flex h-11 w-11 items-center justify-center rounded-full ${habit.color} shadow-inner flex-shrink-0`}>
+              <div key={habit.id} className="group flex items-center gap-3 rounded-[2rem] border border-neutral-800 bg-neutral-800/30 p-4 backdrop-blur-md transition-all">
+                <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${habit.color} shadow-inner flex-shrink-0`}>
                   <span className="text-2xl">{habit.icon}</span>
                 </div>
-                <div className="flex-1 overflow-hidden">
-                  <p className="font-semibold text-white truncate text-base">{habit.title}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-white truncate text-base tracking-tight">{habit.title}</p>
                 </div>
-                <div className="flex items-center gap-1 opacity-40 group-hover:opacity-100 transition-opacity pr-2">
-                  <button onClick={() => setEditHabit(habit)} className="p-2 text-neutral-400 hover:text-blue-400 rounded-lg hover:bg-blue-400/10 transition-colors">
-                    <Settings size={18} />
-                  </button>
-                  <button onClick={() => handleDeleteHabit(habit.id)} className="p-2 text-neutral-400 hover:text-red-500 rounded-lg hover:bg-red-500/10 transition-colors">
-                    <Trash2 size={18} />
-                  </button>
+                <div className="flex items-center gap-1 opacity-20 group-hover:opacity-100 transition-opacity">
+                  <button onClick={() => setEditHabit(habit)} className="p-2 text-neutral-400 hover:text-blue-400 rounded-lg"><Settings size={18} /></button>
+                  <button onClick={async () => { if(confirm('¿Eliminar?')){ await supabase.from('daily_logs').delete().eq('habit_id', habit.id); await supabase.from('habits').delete().eq('id', habit.id); window.location.reload(); }}} className="p-2 text-neutral-400 hover:text-red-500 rounded-lg"><Trash2 size={18} /></button>
                 </div>
-                <div className="flex-shrink-0 ml-2">
-                  {getStatusIcon(habit.id)}
+                <div className="flex-shrink-0 ml-1">
+                  {log ? (
+                    <button onClick={async () => { await supabase.from('daily_logs').delete().eq('id', log.logId); window.location.reload(); }} className="flex h-10 w-10 items-center justify-center rounded-full transition-all active:scale-75 bg-white/5 shadow-lg">
+                      {log.status === "completed" ? <Check className="h-6 w-6 text-emerald-500" /> : <X className="h-6 w-6 text-red-500" />}
+                    </button>
+                  ) : <Circle className="h-6 w-6 text-neutral-700" />}
                 </div>
               </div>
             );
           })}
         </div>
 
-        {hasPending && (
-          <button 
-            onClick={handleStartReviewInternal} 
-            className="w-full rounded-2xl bg-white px-6 py-5 text-lg font-bold text-neutral-950 shadow-[0_10px_30px_rgba(255,255,255,0.1)] active:scale-95 transition-all"
-          >
-            Comenzar Revisión Nocturna
-          </button>
-        )}
-
-        {!hasPending && totalCount > 0 && (
-          <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-5 text-center backdrop-blur-sm">
-            <p className="text-sm font-semibold text-emerald-400">Has completado tu revisión de hoy. 🌙</p>
-          </div>
+        {(habits || []).some(h => !logsMap.has(h.id)) && (
+          <button onClick={onStartReview} className="mt-8 w-full rounded-[2rem] bg-white px-6 py-5 text-lg font-black text-black shadow-2xl active:scale-95 transition-all">Comenzar Revisión</button>
         )}
       </div>
 
-      <button onClick={() => setCreatorOpen(true)} className="fixed bottom-8 right-6 h-16 w-16 bg-blue-600 text-white rounded-2xl shadow-[0_10px_25px_rgba(37,99,235,0.4)] flex items-center justify-center active:scale-90 transition-all z-40">
-        <Plus size={36} strokeWidth={2.5} />
+      <button onClick={() => setCreatorOpen(true)} className="fixed bottom-8 right-6 h-16 w-16 bg-blue-600 text-white rounded-[1.5rem] shadow-2xl flex items-center justify-center active:scale-90 transition-all z-40">
+        <Plus size={36} strokeWidth={3} />
       </button>
     </div>
   );
