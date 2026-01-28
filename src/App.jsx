@@ -59,7 +59,6 @@ function App() {
   // --- LÓGICA DE AUTO-ACTUALIZACIÓN Y MANTENIMIENTO ---
   useEffect(() => {
     const handleVersionCheck = (dbVersion) => {
-      // Si la versión en la DB es distinta a la de este código, forzamos recarga
       if (dbVersion && dbVersion !== CURRENT_SOFTWARE_VERSION) {
         console.log('Nueva versión detectada:', dbVersion);
         window.location.reload(true);
@@ -67,7 +66,6 @@ function App() {
     };
 
     const initSettings = async () => {
-      // 1. Carga inicial de Mantenimiento y Versión
       const { data } = await supabase
         .from('app_settings')
         .select('key, value');
@@ -80,7 +78,6 @@ function App() {
         if (vers) handleVersionCheck(vers.value);
       }
 
-      // 2. Suscripción Realtime para cambios instantáneos
       const subscription = supabase
         .channel('settings_realtime')
         .on('postgres_changes', { 
@@ -348,13 +345,13 @@ function App() {
           todayLogs={todayLogs}
           onStartReview={handleStartReview}
           onResetToday={handleResetToday}
+          version={CURRENT_SOFTWARE_VERSION} // <-- PASAMOS LA VERSIÓN
         />
         <ReminderPopup session={session} />
       </>
     )
   }
 
-  // --- MODO REVIEWING ---
   return (
     <div className={`min-h-screen flex items-center justify-center ${bgColorClass} transition-colors duration-300 relative`}>
       <button
@@ -367,18 +364,8 @@ function App() {
 
       <div className="w-full max-w-md mx-auto px-4 py-8">
         <h1 className="mb-2 text-center text-2xl font-semibold text-white">Revisión nocturna</h1>
-
-        {dataError && <p className="mb-3 text-center text-sm text-red-400">{dataError}</p>}
-        
-        {loadingHabits ? (
-          <div className="mt-6 flex h-64 items-center justify-center rounded-2xl bg-neutral-800">
-            <p className="text-neutral-300">Cargando hábitos...</p>
-          </div>
-        ) : !habits.length ? (
-          <div className="mt-6 flex h-64 items-center justify-center rounded-2xl bg-neutral-800">
-            <p className="text-center text-neutral-300">No hay hábitos configurados.</p>
-          </div>
-        ) : currentHabit ? (
+        {/* ... (resto del modo revisión sin cambios) */}
+        {currentHabit ? (
           <SwipeCard habit={currentHabit} onDrag={handleDrag} onSwipeComplete={handleSwipeComplete} />
         ) : (
           <div className="rounded-2xl bg-neutral-800 p-6">
