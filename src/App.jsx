@@ -45,6 +45,8 @@ function App() {
   const [loadingTodayLogs, setLoadingTodayLogs] = useState(false)
   const [mode, setMode] = useState('dashboard') // dashboard, reviewing, admin, tutorial
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState(null)
+  const [saveSuccess, setSaveSuccess] = useState(null)
   const [hasSaved, setHasSaved] = useState(false)
   const [isMaintenance, setIsMaintenance] = useState(false)
   const ADMIN_EMAIL = 'hemmings.nacho@gmail.com' 
@@ -89,37 +91,64 @@ function App() {
 
   // --- CONTROL DEL TUTORIAL ---
   const handleFinishTutorial = async () => {
-    // Guardamos en el metadata del usuario que ya completó el tutorial
     await supabase.auth.updateUser({
       data: { has_finished_tutorial: true }
     });
     setMode('dashboard');
   };
 
+  const getTodayDateString = () => new Date().toISOString().split('T')[0]
+
   const fetchTodayLogs = useCallback(async () => {
     if (!session) return
     setLoadingTodayLogs(true)
-    const today = new Date().toISOString().split('T')[0]
-    const { data } = await supabase.from('daily_logs').select('*').eq('user_id', session.user.id).gte('created_at', `${today}T00:00:00.000Z`).lte('created_at', `${today}T23:59:59.999Z`)
+    const today = getTodayDateString()
+    const { data } = await supabase
+      .from('daily_logs')
+      .select('*')
+      .eq('user_id', session.user.id)
+      .gte('created_at', `${today}T00:00:00.000Z`)
+      .lte('created_at', `${today}T23:59:59.999Z`)
     setTodayLogs(data || [])
     setLoadingTodayLogs(false)
   }, [session])
+
+  const handleResetToday = async () => {
+    if (!session) return
+    const today = getTodayDateString()
+    const { error } = await supabase
+      .from('daily_logs')
+      .delete()
+      .eq('user_id', session.user.id)
+      .gte('created_at', `${today}T00:00:00.000Z`)
+      .lte('created_at', `${today}T23:59:59.999Z`)
+    
+    if (!error) {
+      await fetchTodayLogs()
+      setMode('dashboard')
+    }
+  }
+
+  const handleStartReview = () => {
+    setMode('reviewing')
+    setCurrentIndex(0)
+    setResults([])
+    setHasSaved(false)
+    setSaveError(null)
+    setSaveSuccess(null)
+  }
 
   useEffect(() => {
     const initSession = async () => {
       const { data } = await supabase.auth.getSession()
       const currentSession = data?.session ?? null
       setSession(currentSession)
-      
-      // Si hay sesión, verificamos si necesita el tutorial
       if (currentSession && !currentSession.user.user_metadata?.has_finished_tutorial) {
         setMode('tutorial')
       }
-      
       setLoadingSession(false)
     }
     initSession()
-    
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession)
       if (newSession && !newSession.user.user_metadata?.has_finished_tutorial) {
@@ -146,9 +175,16 @@ function App() {
     if (!session || !habits.length || mode !== 'reviewing' || currentIndex < habits.length || !results.length || hasSaved || saving) return
     const saveResults = async () => {
       setSaving(true)
+      setSaveError(null)
       const payload = results.map(i => ({ user_id: session.user.id, habit_id: i.id, status: i.status, note: i.note || null, created_at: new Date().toISOString() }))
       const { error } = await supabase.from('daily_logs').insert(payload)
-      if (!error) { setHasSaved(true); setTimeout(() => { fetchTodayLogs(); setMode('dashboard'); }, 1500); }
+      if (!error) { 
+        setSaveSuccess('¡Guardado con éxito!')
+        setHasSaved(true); 
+        setTimeout(() => { fetchTodayLogs(); setMode('dashboard'); }, 1500); 
+      } else {
+        setSaveError(error.message)
+      }
       setSaving(false)
     }
     saveResults()
@@ -160,7 +196,6 @@ function App() {
   
   if (!session) return <><TopBanner /><Auth /></>
 
-  // Renderizado del Tutorial
   if (mode === 'tutorial') {
     return <Tutorial user={session.user} onComplete={handleFinishTutorial} />
   }
@@ -173,7 +208,7 @@ function App() {
         <TopBanner />
         <Dashboard
           user={session.user} habits={habits} todayLogs={todayLogs}
-          onStartReview={() => setMode('reviewing')} onResetToday={() => window.location.reload()}
+          onStartReview={handleStartReview} onResetToday={handleResetToday}
           version={CURRENT_SOFTWARE_VERSION} onOpenAdmin={() => setMode('admin')}
         />
         <ReminderPopup session={session} />
@@ -187,9 +222,45 @@ function App() {
         <X size={18} /> <span className="text-xs font-medium uppercase tracking-widest">Salir</span>
       </button>
       <div className="w-full max-w-md mx-auto px-4 py-8 text-white">
-        {currentHabit ? <SwipeCard habit={currentHabit} onSwipeComplete={(d) => { if (d === 'right') { setResults(p => [...p, { id: currentHabit.id, title: currentHabit.title, status: 'completed' }]); setCurrentIndex(c => c + 1); } else { setPendingHabit(currentHabit); setIsModalOpen(true); } }} onDrag={(x) => setSwipeStatus(x > 100 ? 'done' : x < -100 ? 'not-done' : null)} /> : <div className="text-center">¡Resumen completado! <button onClick={() => setMode('dashboard')} className="mt-6 w-full py-4 bg-white text-black font-bold rounded-2xl">Volver</button></div>}
+        <h1 className="mb-2 text-center text-2xl font-semibold">Revisión nocturna</h1>
+        {currentHabit ? (
+          <SwipeCard 
+            habit={currentHabit} 
+            onSwipeComplete={(d) => { 
+              if (d === 'right') { 
+                setResults(p => [...p, { id: currentHabit.id, title: currentHabit.title, status: 'completed' }]); 
+                setCurrentIndex(c => c + 1); 
+              } else { 
+                setPendingHabit(currentHabit); 
+                setIsModalOpen(true); 
+              } 
+            }} 
+            onDrag={(x) => setSwipeStatus(x > 100 ? 'done' : x < -100 ? 'not-done' : null)} 
+          />
+        ) : (
+          <div className="rounded-2xl bg-neutral-800 p-6 text-center">
+            <p className="text-xl font-bold mb-2">¡Resumen completado!</p>
+            {saving && <p className="text-sm text-neutral-400">Guardando...</p>}
+            {saveSuccess && <p className="text-sm text-emerald-400">{saveSuccess}</p>}
+            {saveError && <p className="text-sm text-red-400">Error: {saveError}</p>}
+            <button onClick={() => setMode('dashboard')} className="mt-6 w-full py-4 bg-white text-black font-bold rounded-2xl active:scale-95 transition-all">Volver</button>
+          </div>
+        )}
       </div>
-      <NoteModal isOpen={isModalOpen} habitTitle={pendingHabit?.title} onSave={(n) => { setResults(p => [...p, { id: pendingHabit.id, title: pendingHabit.title, status: 'skipped', note: n || '' }]); setIsModalOpen(false); setCurrentIndex(c => c + 1); }} onSkip={() => { setResults(p => [...p, { id: pendingHabit.id, title: pendingHabit.title, status: 'skipped', note: '' }]); setIsModalOpen(false); setCurrentIndex(c => c + 1); }} />
+      <NoteModal 
+        isOpen={isModalOpen} 
+        habitTitle={pendingHabit?.title} 
+        onSave={(n) => { 
+          setResults(p => [...p, { id: pendingHabit.id, title: pendingHabit.title, status: 'skipped', note: n || '' }]); 
+          setIsModalOpen(false); 
+          setCurrentIndex(c => c + 1); 
+        }} 
+        onSkip={() => { 
+          setResults(p => [...p, { id: pendingHabit.id, title: pendingHabit.title, status: 'skipped', note: '' }]); 
+          setIsModalOpen(false); 
+          setCurrentIndex(c => c + 1); 
+        }} 
+      />
     </div>
   )
 }
