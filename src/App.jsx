@@ -6,7 +6,8 @@ import Auth from './components/Auth'
 import { supabase } from './lib/supabaseClient'
 import ReminderPopup from './components/ReminderPopup'
 import TopBanner from './components/TopBanner'
-import MaintenanceScreen from './components/MaintenanceScreen' // <--- IMPORTANTE
+import MaintenanceScreen from './components/MaintenanceScreen'
+import { X } from 'lucide-react' // Asegúrate de importar X para el botón salir
 
 function getDefaultIconForTitle(title = '', index) {
   const mapping = ['📖', '💧', '🧘', '💤', '🍎', '💪', '📝', '🚶']
@@ -53,11 +54,9 @@ function App() {
   const [hasSaved, setHasSaved] = useState(false)
 
   const currentHabit = habits[currentIndex]
-
-  // Estado para el modo mantenimiento
   const [isMaintenance, setIsMaintenance] = useState(false)
+  const ADMIN_EMAIL = 'hemmings.nacho@gmail.com' 
 
-  // --- NUEVO: Comprobar si hay mantenimiento activo ---
   useEffect(() => {
     const checkMaintenance = async () => {
       const { data } = await supabase
@@ -65,14 +64,10 @@ function App() {
         .select('value')
         .eq('key', 'maintenance_mode')
         .single()
-      
-      if (data) {
-        setIsMaintenance(data.value)
-      }
+      if (data) setIsMaintenance(data.value)
     }
     checkMaintenance()
   }, [])
-  // ----------------------------------------------------
 
   const getTodayDateString = () => {
       const today = new Date()
@@ -277,21 +272,12 @@ function App() {
     )
   }
 
-  // --- NUEVO: LÓGICA DE BLOQUEO DE MANTENIMIENTO ---
-  // IMPORTANTE: Pon aquí tu email real para poder entrar
-  const ADMIN_EMAIL = 'hemmings.nacho@gmail.com' 
-
-  // Si hay mantenimiento y NO eres tú, bloqueamos
   if (isMaintenance && session?.user?.email !== ADMIN_EMAIL) {
     return <MaintenanceScreen />
   }
-  // ------------------------------------------------
 
-  // SI NO HAY SESIÓN, MOSTRAMOS LOGIN
   if (!session) {
-    // Si hay mantenimiento, también bloqueamos el login a extraños
     if (isMaintenance) return <MaintenanceScreen />
-    
     return (
         <>
             <TopBanner /> 
@@ -300,7 +286,6 @@ function App() {
     )
   }
 
-  // Modo Dashboard
   if (mode === 'dashboard') {
     if (loadingHabits || loadingTodayLogs) {
       return (
@@ -335,9 +320,19 @@ function App() {
     )
   }
 
-  // Modo Reviewing
+  // --- MODO REVIEWING (CON BOTÓN SALIR ACTUALIZADO) ---
   return (
     <div className={`min-h-screen flex items-center justify-center ${bgColorClass} transition-colors duration-300 relative`}>
+      
+      {/* BOTÓN SALIR: Visible durante todo el proceso de deslizar tarjetas */}
+      <button
+        onClick={() => window.location.reload()}
+        className="fixed top-6 right-6 z-[100] flex items-center gap-1 px-4 py-2 bg-neutral-800/80 backdrop-blur-md border border-neutral-700 rounded-full text-neutral-400 hover:text-white transition-all shadow-lg"
+      >
+        <X size={18} />
+        <span className="text-xs font-medium">Salir</span>
+      </button>
+
       <div className="w-full max-w-md mx-auto px-4 py-8">
         <h1 className="mb-2 text-center text-2xl font-semibold text-white">Revisión nocturna</h1>
 

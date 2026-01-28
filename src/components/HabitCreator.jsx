@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Check, Calendar, Clock, Palette, Sparkles, Trash2, Save } from 'lucide-react' // Añadido Trash2 y Save
+import { X, Check, Calendar, Clock, Palette, Sparkles, Trash2, Save } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient'
 
 const COLORS = [
@@ -13,8 +13,8 @@ const DAYS = [
   { id: 'J', label: 'J' }, { id: 'V', label: 'V' }, { id: 'S', label: 'S' }, { id: 'D', label: 'D' }
 ]
 
-// Añadimos prop 'initialData' para cuando vamos a editar
-export default function HabitCreator({ isOpen, onClose, userId, onHabitCreated, initialData = null }) {
+// CORRECCIÓN: Ahora el prop se llama 'habitToEdit' para coincidir con Dashboard
+export default function HabitCreator({ isOpen, onClose, userId, onHabitCreated, habitToEdit = null }) {
   const [title, setTitle] = useState('')
   const [selectedDays, setSelectedDays] = useState(['L', 'M', 'X', 'J', 'V'])
   const [timeOfDay, setTimeOfDay] = useState('night')
@@ -22,17 +22,16 @@ export default function HabitCreator({ isOpen, onClose, userId, onHabitCreated, 
   const [selectedIcon, setSelectedIcon] = useState(ICONS[0])
   const [loading, setLoading] = useState(false)
 
-  // Efecto para rellenar datos si estamos editando
+  // Sincronizar datos si estamos editando
   useEffect(() => {
     if (isOpen) {
-      if (initialData) {
-        setTitle(initialData.title)
-        setSelectedDays(initialData.frequency || [])
-        setTimeOfDay(initialData.time_of_day || 'night')
-        setSelectedColor(initialData.color || COLORS[0])
-        setSelectedIcon(initialData.icon || ICONS[0])
+      if (habitToEdit) {
+        setTitle(habitToEdit.title)
+        setSelectedDays(habitToEdit.frequency || [])
+        setTimeOfDay(habitToEdit.time_of_day || 'night')
+        setSelectedColor(habitToEdit.color || COLORS[0])
+        setSelectedIcon(habitToEdit.icon || ICONS[0])
       } else {
-        // Reset si es nuevo
         setTitle('')
         setSelectedDays(['L', 'M', 'X', 'J', 'V'])
         setTimeOfDay('night')
@@ -40,7 +39,7 @@ export default function HabitCreator({ isOpen, onClose, userId, onHabitCreated, 
         setSelectedIcon(ICONS[0])
       }
     }
-  }, [isOpen, initialData])
+  }, [isOpen, habitToEdit])
 
   const toggleDay = (dayId) => {
     if (selectedDays.includes(dayId)) {
@@ -67,48 +66,45 @@ export default function HabitCreator({ isOpen, onClose, userId, onHabitCreated, 
       is_active: true
     }
 
-    let error
-    
-    if (initialData) {
-      // MODO EDICIÓN: Update
-      const { error: updateError } = await supabase
-        .from('habits')
-        .update(habitData)
-        .eq('id', initialData.id)
-      error = updateError
-    } else {
-      // MODO CREACIÓN: Insert
-      const { error: insertError } = await supabase
-        .from('habits')
-        .insert(habitData)
-      error = insertError
-    }
+    try {
+      if (habitToEdit) {
+        // ACTUALIZAR EXISTENTE
+        const { error } = await supabase
+          .from('habits')
+          .update(habitData)
+          .eq('id', habitToEdit.id)
+        if (error) throw error
+      } else {
+        // INSERTAR NUEVO
+        const { error } = await supabase
+          .from('habits')
+          .insert(habitData)
+        if (error) throw error
+      }
 
-    setLoading(false)
-    if (error) {
-      alert('Error: ' + error.message)
-    } else {
-      onHabitCreated() // Refrescar lista
+      onHabitCreated()
       onClose()
+    } catch (err) {
+      alert('Error: ' + err.message)
+    } finally {
+      setLoading(false)
     }
   }
 
   const handleDelete = async () => {
     if (!confirm('¿Seguro que quieres borrar este hábito y todo su historial?')) return
-
     setLoading(true)
-    // Primero borramos logs para evitar errores de llave foránea (si no hay cascada configurada)
-    await supabase.from('daily_logs').delete().eq('habit_id', initialData.id)
-    
-    // Luego borramos el hábito
-    const { error } = await supabase.from('habits').delete().eq('id', initialData.id)
-    
-    setLoading(false)
-    if (error) {
-      alert('Error al borrar: ' + error.message)
-    } else {
+    try {
+      // Borramos logs para evitar errores de clave foránea
+      await supabase.from('daily_logs').delete().eq('habit_id', habitToEdit.id)
+      const { error } = await supabase.from('habits').delete().eq('id', habitToEdit.id)
+      if (error) throw error
       onHabitCreated()
       onClose()
+    } catch (err) {
+      alert('Error al borrar: ' + err.message)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -130,12 +126,12 @@ export default function HabitCreator({ isOpen, onClose, userId, onHabitCreated, 
         >
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              {initialData ? <Palette className="text-blue-400" size={20} /> : <Sparkles className="text-yellow-400" size={20} />}
-              <span className="text-white">{initialData ? 'Editar Hábito' : 'Nuevo Hábito'}</span>
+              {habitToEdit ? <Palette className="text-blue-400" size={20} /> : <Sparkles className="text-yellow-400" size={20} />}
+              <span className="text-white">{habitToEdit ? 'Editar Hábito' : 'Nuevo Hábito'}</span>
             </h2>
             
             <div className="flex gap-2">
-              {initialData && (
+              {habitToEdit && (
                 <button 
                   onClick={handleDelete}
                   className="p-2 bg-red-900/30 rounded-full text-red-400 hover:bg-red-900/50 transition-colors"
@@ -151,9 +147,8 @@ export default function HabitCreator({ isOpen, onClose, userId, onHabitCreated, 
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Título e Icono */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider">¿Qué quieres lograr?</label>
+              <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider">Nombre del hábito</label>
               <div className="flex gap-3">
                 <button type="button" className="h-14 w-14 flex items-center justify-center rounded-2xl text-3xl bg-neutral-700 border border-neutral-600">
                   {selectedIcon}
@@ -163,20 +158,8 @@ export default function HabitCreator({ isOpen, onClose, userId, onHabitCreated, 
                   placeholder="Ej. Leer, Gym..." 
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="flex-1 bg-neutral-900 border border-neutral-600 rounded-2xl px-4 text-white text-lg placeholder-neutral-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                  className="flex-1 bg-neutral-900 border border-neutral-600 rounded-2xl px-4 text-white text-lg placeholder-neutral-500 focus:border-blue-500 focus:outline-none"
                 />
-              </div>
-              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide pt-2">
-                {ICONS.map(icon => (
-                  <button
-                    key={icon}
-                    type="button"
-                    onClick={() => setSelectedIcon(icon)}
-                    className={`min-w-[44px] h-11 rounded-xl text-xl transition-colors flex items-center justify-center ${selectedIcon === icon ? 'bg-blue-600/30 border-2 border-blue-500' : 'bg-neutral-700/50 hover:bg-neutral-700'}`}
-                  >
-                    {icon}
-                  </button>
-                ))}
               </div>
             </div>
 
@@ -195,7 +178,7 @@ export default function HabitCreator({ isOpen, onClose, userId, onHabitCreated, 
                       onClick={() => toggleDay(day.id)}
                       className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
                         isSelected 
-                          ? 'bg-blue-500 text-white shadow-lg shadow-blue-900/50' 
+                          ? 'bg-blue-500 text-white shadow-lg' 
                           : 'text-neutral-500 hover:text-white'
                       }`}
                     >
@@ -240,7 +223,7 @@ export default function HabitCreator({ isOpen, onClose, userId, onHabitCreated, 
                     key={color}
                     type="button"
                     onClick={() => setSelectedColor(color)}
-                    className={`w-8 h-8 rounded-full ${color} transition-transform ${selectedColor === color ? 'ring-2 ring-white ring-offset-2 ring-offset-neutral-900 scale-110' : 'opacity-50 hover:opacity-100'}`}
+                    className={`w-8 h-8 rounded-full ${color} transition-transform ${selectedColor === color ? 'ring-2 ring-white scale-110' : 'opacity-50 hover:opacity-100'}`}
                   />
                 ))}
               </div>
@@ -249,9 +232,9 @@ export default function HabitCreator({ isOpen, onClose, userId, onHabitCreated, 
             <button
               type="submit"
               disabled={loading || !title}
-              className="w-full bg-white text-black font-bold py-4 rounded-xl text-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-4"
+              className="w-full bg-white text-black font-bold py-4 rounded-xl text-lg hover:bg-gray-200 disabled:opacity-50 flex items-center justify-center gap-2 mt-4"
             >
-              {loading ? 'Guardando...' : initialData ? <><Save size={20} /> Guardar Cambios</> : <><Check size={20} /> Crear Hábito</>}
+              {loading ? 'Guardando...' : habitToEdit ? <><Save size={20} /> Guardar Cambios</> : <><Check size={20} /> Crear Hábito</>}
             </button>
           </form>
         </motion.div>
