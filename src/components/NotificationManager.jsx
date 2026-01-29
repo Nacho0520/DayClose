@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Bell, Check } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient'
+import { useLanguage } from '../context/LanguageContext' // <-- Importamos el contexto
 
 const PUBLIC_VAPID_KEY = 'BJM3Xuf-sBQSaXlrjQ442rXjLGHegavE8qhGxkhJpNQ4JQQnWnqx9f1E97lpg4n1XSpk01MwVEO1Qkr-NeVaiF4' 
 
@@ -20,6 +21,8 @@ export default function NotificationManager({ userId }) {
   const [permission, setPermission] = useState('default')
   const [loading, setLoading] = useState(false)
   const [subscribed, setSubscribed] = useState(false)
+  
+  const { language } = useLanguage() // <-- Obtenemos el idioma actual ('es' o 'en')
 
   useEffect(() => {
     // Verificamos el permiso solo cuando el componente se monta y con seguridad
@@ -27,6 +30,22 @@ export default function NotificationManager({ userId }) {
       setPermission(Notification.permission)
     }
   }, [])
+
+  // --- NUEVA FUNCIÓN: Sincronizar idioma ---
+  // Si el usuario cambia el idioma en Ajustes, actualizamos su registro en la BD de notificaciones
+  // para que los futuros mensajes le lleguen en el nuevo idioma.
+  useEffect(() => {
+    const updateLanguagePreference = async () => {
+      // Solo actualizamos si ya tiene permiso concedido y hay un usuario
+      if (userId && permission === 'granted') {
+        await supabase.from('push_subscriptions')
+          .update({ language: language }) // <-- Actualizamos la columna language
+          .eq('user_id', userId)
+      }
+    }
+    updateLanguagePreference()
+  }, [language, userId, permission])
+  // ----------------------------------------
 
   const handleSubscribe = async () => {
     // Comprobación de seguridad para navegadores antiguos o Safari sin PWA
@@ -54,9 +73,11 @@ export default function NotificationManager({ userId }) {
           applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY)
         })
 
+        // MODIFICACIÓN: Guardamos también el idioma
         const { error } = await supabase.from('push_subscriptions').insert({
           user_id: userId,
-          subscription: subscription
+          subscription: subscription,
+          language: language // <-- Guardamos 'es' o 'en'
         })
 
         if (error) throw error

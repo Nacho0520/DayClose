@@ -1,11 +1,15 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabaseClient'
-import { X, ShieldAlert, RefreshCw, Megaphone, CheckCircle, Activity, Save, ChevronLeft, AlertCircle, Users, Trash2 } from 'lucide-react' // Añadido Trash2
+import { X, ShieldAlert, RefreshCw, Megaphone, CheckCircle, Activity, Save, ChevronLeft, AlertCircle, Users, Trash2, Globe } from 'lucide-react'
 
 export default function AdminPanel({ onClose, version }) {
   const [maintenance, setMaintenance] = useState(false)
   const [appVersion, setAppVersion] = useState(version || '1.0.0')
-  const [bannerText, setBannerText] = useState('')
+  
+  // AHORA TENEMOS DOS ESTADOS PARA EL MENSAJE
+  const [bannerTextES, setBannerTextES] = useState('')
+  const [bannerTextEN, setBannerTextEN] = useState('')
+  
   const [stats, setStats] = useState({ habits: 0, logs: 0, users: 0 })
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState(null)
@@ -14,7 +18,6 @@ export default function AdminPanel({ onClose, version }) {
 
   const fetchAdminData = async () => {
     try {
-      // 1. Cargar Ajustes
       const { data: settings } = await supabase.from('app_settings').select('*')
       if (settings) {
         const m = settings.find(s => s.key === 'maintenance_mode')
@@ -23,45 +26,48 @@ export default function AdminPanel({ onClose, version }) {
         if (v) setAppVersion(v.value)
       }
 
-      // 2. Cargar Anuncio
       const { data: announcement } = await supabase.from('announcements').select('message').eq('is_active', true).order('created_at', { ascending: false }).limit(1).single()
-      if (announcement) setBannerText(announcement.message)
-
-      // 3. Cargar Estadísticas GLOBALES usando la función RPC
-      const { data: rpcStats, error: rpcError } = await supabase.rpc('get_admin_stats')
       
-      if (rpcError) {
-        console.error("Error cargando estadísticas RPC:", rpcError)
-      } else if (rpcStats && rpcStats[0]) {
-        setStats({
-          users: rpcStats[0].total_users || 0,
-          habits: rpcStats[0].total_habits || 0,
-          logs: rpcStats[0].total_logs || 0
-        })
+      if (announcement) {
+        // INTENTAMOS DETECTAR SI ES UN MENSAJE BILINGÜE (JSON)
+        try {
+          const parsed = JSON.parse(announcement.message)
+          if (parsed.es && parsed.en) {
+            setBannerTextES(parsed.es)
+            setBannerTextEN(parsed.en)
+          } else {
+            setBannerTextES(announcement.message) // Si es texto antiguo, lo ponemos en español
+          }
+        } catch (e) {
+          setBannerTextES(announcement.message) // Fallback para texto plano
+        }
       }
 
-    } catch (error) {
-      console.error("Error crítico en el panel admin:", error)
-    }
+      const { data: rpcStats, error: rpcError } = await supabase.rpc('get_admin_stats')
+      if (rpcStats && rpcStats[0]) {
+        setStats({ users: rpcStats[0].total_users || 0, habits: rpcStats[0].total_habits || 0, logs: rpcStats[0].total_logs || 0 })
+      }
+    } catch (error) { console.error("Error crítico:", error) }
   }
 
   const handleUpdateSettings = async () => {
     setLoading(true)
     setMessage(null)
     try {
-      // 1. Actualizar Ajustes Generales
       const updates = [
         supabase.from('app_settings').update({ value: maintenance.toString() }).eq('key', 'maintenance_mode'),
         supabase.from('app_settings').update({ value: appVersion }).eq('key', 'app_version')
       ]
       
-      // 2. Lógica de Anuncios Mejorada (Desactivar anteriores primero)
-      // Primero desactivamos TODOS los anuncios para limpiar el estado
       await supabase.from('announcements').update({ is_active: false }).neq('id', 0)
 
-      // Si hay texto, insertamos el nuevo anuncio activo
-      if (bannerText.trim().length > 0) {
-        updates.push(supabase.from('announcements').insert([{ message: bannerText, is_active: true }]))
+      // GUARDAMOS COMO OBJETO JSON BILINGÜE
+      if (bannerTextES.trim().length > 0) {
+        const finalMessage = JSON.stringify({
+          es: bannerTextES,
+          en: bannerTextEN || bannerTextES // Si no escribes inglés, usa el español por defecto
+        })
+        updates.push(supabase.from('announcements').insert([{ message: finalMessage, is_active: true }]))
       }
       
       await Promise.all(updates)
@@ -72,9 +78,9 @@ export default function AdminPanel({ onClose, version }) {
     } finally { setLoading(false) }
   }
 
-  // Función para limpiar el campo rápidamente
   const clearAnnouncement = () => {
-    setBannerText('')
+    setBannerTextES('')
+    setBannerTextEN('')
   }
 
   return (
@@ -92,21 +98,9 @@ export default function AdminPanel({ onClose, version }) {
       {message && <div className={`mb-8 p-4 rounded-2xl text-sm font-bold border flex items-center gap-3 ${message.type === 'success' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'}`}>{message.text}</div>}
 
       <div className="grid grid-cols-3 gap-3 mb-10">
-        <div className="bg-neutral-800/40 p-4 rounded-3xl border border-neutral-800 text-center">
-          <Users className="text-blue-400 mx-auto mb-2" size={20} />
-          <p className="text-xl font-black">{stats.users}</p>
-          <p className="text-[8px] text-neutral-500 uppercase font-black">Usuarios</p>
-        </div>
-        <div className="bg-neutral-800/40 p-4 rounded-3xl border border-neutral-800 text-center">
-          <CheckCircle className="text-purple-400 mx-auto mb-2" size={20} />
-          <p className="text-xl font-black">{stats.habits}</p>
-          <p className="text-[8px] text-neutral-500 uppercase font-black">Hábitos</p>
-        </div>
-        <div className="bg-neutral-800/40 p-4 rounded-3xl border border-neutral-800 text-center">
-          <Activity className="text-emerald-400 mx-auto mb-2" size={20} />
-          <p className="text-xl font-black">{stats.logs}</p>
-          <p className="text-[8px] text-neutral-500 uppercase font-black">Registros</p>
-        </div>
+        <div className="bg-neutral-800/40 p-4 rounded-3xl border border-neutral-800 text-center"><Users className="text-blue-400 mx-auto mb-2" size={20} /><p className="text-xl font-black">{stats.users}</p><p className="text-[8px] text-neutral-500 uppercase font-black">Usuarios</p></div>
+        <div className="bg-neutral-800/40 p-4 rounded-3xl border border-neutral-800 text-center"><CheckCircle className="text-purple-400 mx-auto mb-2" size={20} /><p className="text-xl font-black">{stats.habits}</p><p className="text-[8px] text-neutral-500 uppercase font-black">Hábitos</p></div>
+        <div className="bg-neutral-800/40 p-4 rounded-3xl border border-neutral-800 text-center"><Activity className="text-emerald-400 mx-auto mb-2" size={20} /><p className="text-xl font-black">{stats.logs}</p><p className="text-[8px] text-neutral-500 uppercase font-black">Registros</p></div>
       </div>
 
       <div className="space-y-6">
@@ -132,21 +126,35 @@ export default function AdminPanel({ onClose, version }) {
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
                <div className="p-4 bg-indigo-500/10 rounded-[1.5rem] border border-indigo-500/10"><Megaphone className="text-indigo-500" size={28} /></div>
-               <div><h3 className="font-black text-sm uppercase tracking-tight">Anuncio Forzoso</h3><p className="text-[10px] text-neutral-500 font-bold uppercase">Sin opción de cierre</p></div>
+               <div><h3 className="font-black text-sm uppercase tracking-tight">Anuncio Forzoso</h3><p className="text-[10px] text-neutral-500 font-bold uppercase">Multi-idioma activo</p></div>
             </div>
-            {/* Botón para limpiar el anuncio */}
-            {bannerText && (
+            {bannerTextES && (
               <button onClick={clearAnnouncement} className="p-3 bg-red-500/10 text-red-400 rounded-xl hover:bg-red-500/20 transition-colors" title="Borrar y desactivar">
                 <Trash2 size={18} />
               </button>
             )}
           </div>
-          <textarea 
-            value={bannerText} 
-            onChange={(e) => setBannerText(e.target.value)} 
-            placeholder="Escribe aquí para mostrar un mensaje a TODOS. Deja vacío y guarda para quitar el anuncio." 
-            className="w-full bg-neutral-900 border border-neutral-700 rounded-[2rem] p-6 text-sm font-medium outline-none h-32 resize-none focus:border-indigo-500 transition-colors" 
-          />
+          
+          <div className="space-y-4">
+            <div>
+              <label className="text-[10px] font-bold text-neutral-500 uppercase ml-2 mb-1 block flex items-center gap-1"><Globe size={10} /> Mensaje en Español</label>
+              <textarea 
+                value={bannerTextES} 
+                onChange={(e) => setBannerTextES(e.target.value)} 
+                placeholder="Escribe el mensaje en Español..." 
+                className="w-full bg-neutral-900 border border-neutral-700 rounded-[1.5rem] p-4 text-sm font-medium outline-none h-24 resize-none focus:border-indigo-500 transition-colors" 
+              />
+            </div>
+            <div>
+              <label className="text-[10px] font-bold text-neutral-500 uppercase ml-2 mb-1 block flex items-center gap-1"><Globe size={10} /> Mensaje en Inglés</label>
+              <textarea 
+                value={bannerTextEN} 
+                onChange={(e) => setBannerTextEN(e.target.value)} 
+                placeholder="Write the message in English..." 
+                className="w-full bg-neutral-900 border border-neutral-700 rounded-[1.5rem] p-4 text-sm font-medium outline-none h-24 resize-none focus:border-indigo-500 transition-colors" 
+              />
+            </div>
+          </div>
         </section>
 
         <button onClick={handleUpdateSettings} disabled={loading} className="w-full bg-white text-black font-black py-6 rounded-[2.5rem] text-lg active:scale-95 transition-all flex items-center justify-center gap-3 shadow-[0_20px_40px_rgba(255,255,255,0.1)]">

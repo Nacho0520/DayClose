@@ -2,10 +2,26 @@ import { useState, useEffect } from 'react'
 import { Megaphone } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useLanguage } from '../context/LanguageContext' // <-- Importar contexto
 
 export default function TopBanner() {
-  const [message, setMessage] = useState('')
+  const [rawMessage, setRawMessage] = useState(null)
   const [isVisible, setIsVisible] = useState(false)
+  const { language } = useLanguage() // <-- Obtener idioma actual ('es' o 'en')
+
+  // Función auxiliar para extraer el texto correcto
+  const getTranslatedMessage = (raw) => {
+    if (!raw) return ''
+    try {
+      // Intentamos leerlo como JSON bilingüe
+      const parsed = JSON.parse(raw)
+      // Devolvemos el idioma actual, o español por defecto
+      return parsed[language] || parsed['es'] || raw
+    } catch (e) {
+      // Si no es JSON (mensaje antiguo), lo devolvemos tal cual
+      return raw
+    }
+  }
 
   useEffect(() => {
     const fetchAnnouncement = async () => {
@@ -18,7 +34,7 @@ export default function TopBanner() {
         .single()
 
       if (data && data.message) {
-        setMessage(data.message)
+        setRawMessage(data.message)
         setIsVisible(true)
       } else {
         setIsVisible(false)
@@ -39,28 +55,25 @@ export default function TopBanner() {
     }
   }, [])
 
+  const displayMessage = getTranslatedMessage(rawMessage)
+
   return (
     <AnimatePresence>
-      {isVisible && message && (
+      {isVisible && displayMessage && (
         <motion.div
-          // Animación de altura para que empuje el contenido suavemente al aparecer
           initial={{ height: 0, opacity: 0 }}
           animate={{ height: 'auto', opacity: 1 }}
           exit={{ height: 0, opacity: 0 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          // CAMBIO CLAVE: Quitamos 'fixed'. Ahora es un bloque flexible centrado.
-          // pt-6: Margen superior para separarse del techo.
-          // mb-2: Margen inferior para separarse del dashboard.
           className="w-full flex justify-center pt-6 mb-2 px-4 relative z-30"
         >
-          {/* Mantenemos la estética 'Pill' de Apple pero estática en flujo */}
           <div className="flex items-center gap-4 bg-neutral-900/90 backdrop-blur-xl pl-5 pr-8 py-3 rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.3)] border border-white/5 max-w-4xl mx-auto">
             <div className="p-1.5 bg-white/5 rounded-full shrink-0">
               <Megaphone size={14} className="text-neutral-400" />
             </div>
             
             <p className="text-xs font-medium text-neutral-200 tracking-wide leading-snug text-left min-w-[200px] md:min-w-[300px]">
-              {message}
+              {displayMessage}
             </p>
           </div>
         </motion.div>
