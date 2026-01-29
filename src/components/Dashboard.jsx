@@ -23,7 +23,6 @@ function CircularProgress({ percentage }) {
   );
 }
 
-// CORRECCIÓN: Añadido onOpenAdmin aquí
 function Dashboard({ user, habits, todayLogs, onStartReview, onResetToday, version, onOpenAdmin }) {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isSettingsOpen, setSettingsOpen] = useState(false);
@@ -38,7 +37,7 @@ function Dashboard({ user, habits, todayLogs, onStartReview, onResetToday, versi
 
   return (
     <div className="min-h-screen bg-neutral-900 px-4 py-8 relative">
-      <button onClick={() => setSidebarOpen(true)} className="absolute top-6 left-4 text-white p-2 hover:bg-neutral-800 rounded-full transition-colors">
+      <button onClick={() => setSidebarOpen(true)} className="absolute top-6 left-4 text-white p-2 hover:bg-neutral-800 rounded-full transition-colors z-30">
         <Menu size={28} />
       </button>
 
@@ -46,13 +45,14 @@ function Dashboard({ user, habits, todayLogs, onStartReview, onResetToday, versi
         isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} user={user} 
         onLogout={() => supabase.auth.signOut().then(() => window.location.reload())} 
         onOpenSettings={() => setSettingsOpen(true)} version={version}
-        onOpenAdmin={onOpenAdmin} // <-- PASAMOS LA FUNCIÓN AQUÍ
+        onOpenAdmin={onOpenAdmin} 
       />
       
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setSettingsOpen(false)} user={user} />
       <HabitCreator isOpen={isCreatorOpen || !!editHabit} onClose={() => { setCreatorOpen(false); setEditHabit(null); }} userId={user?.id} habitToEdit={editHabit} onHabitCreated={() => window.location.reload()} />
 
-      <div className="mx-auto w-full max-w-md mt-6 pb-24">
+      {/* Aumento del padding-bottom para el Dock (pb-32) */}
+      <div className="mx-auto w-full max-w-md mt-6 pb-32">
         <header className="mb-10 text-center">
           <h2 className="text-lg font-light text-neutral-500 italic">Hola,</h2>
           <h1 className="text-3xl font-black text-white tracking-tight capitalize leading-none">{user?.user_metadata?.full_name || 'Usuario'}</h1>
@@ -71,7 +71,7 @@ function Dashboard({ user, habits, todayLogs, onStartReview, onResetToday, versi
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-white truncate text-base tracking-tight">{habit.title}</p>
                 </div>
-                <div className="flex items-center gap-1 opacity-20 group-hover:opacity-100 transition-opacity">
+                <div className="flex items-center gap-1 opacity-20 group-hover:opacity-100 transition-opacity pr-2">
                   <button onClick={() => setEditHabit(habit)} className="p-2 text-neutral-400 hover:text-blue-400 rounded-lg"><Settings size={18} /></button>
                   <button onClick={async () => { if(confirm('¿Eliminar?')){ await supabase.from('daily_logs').delete().eq('habit_id', habit.id); await supabase.from('habits').delete().eq('id', habit.id); window.location.reload(); }}} className="p-2 text-neutral-400 hover:text-red-500 rounded-lg"><Trash2 size={18} /></button>
                 </div>
@@ -92,7 +92,8 @@ function Dashboard({ user, habits, todayLogs, onStartReview, onResetToday, versi
         )}
       </div>
 
-      <button onClick={() => setCreatorOpen(true)} className="fixed bottom-8 right-6 h-16 w-16 bg-blue-600 text-white rounded-[1.5rem] shadow-2xl flex items-center justify-center active:scale-90 transition-all z-40">
+      {/* Ajuste de posición del botón + para que no se pise con el Dock */}
+      <button onClick={() => setCreatorOpen(true)} className="fixed bottom-32 right-6 h-16 w-16 bg-blue-600 text-white rounded-[1.5rem] shadow-2xl flex items-center justify-center active:scale-90 transition-all z-40">
         <Plus size={36} strokeWidth={3} />
       </button>
     </div>

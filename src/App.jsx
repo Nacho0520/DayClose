@@ -8,12 +8,13 @@ import ReminderPopup from './components/ReminderPopup'
 import TopBanner from './components/TopBanner'
 import MaintenanceScreen from './components/MaintenanceScreen'
 import AdminPanel from './components/AdminPanel' 
-import Tutorial from './components/Tutorial' // Importación del nuevo componente
+import Tutorial from './components/Tutorial'
+import Dock from './components/Dock' // Importamos el Dock
 import { X } from 'lucide-react'
 
-// --- CONFIGURACIÓN DE VERSIÓN ---
-const CURRENT_SOFTWARE_VERSION = '1.0.1'; 
+const CURRENT_SOFTWARE_VERSION = '1.0.2'; 
 
+// ... (getDefaultIconForTitle y getDefaultColorForIndex se mantienen igual)
 function getDefaultIconForTitle(title = '', index) {
   const mapping = ['📖', '💧', '🧘', '💤', '🍎', '💪', '📝', '🚶']
   const lower = title.toLowerCase()
@@ -43,7 +44,8 @@ function App() {
   const [loadingHabits, setLoadingHabits] = useState(false)
   const [todayLogs, setTodayLogs] = useState([])
   const [loadingTodayLogs, setLoadingTodayLogs] = useState(false)
-  const [mode, setMode] = useState('dashboard') // dashboard, reviewing, admin, tutorial
+  const [mode, setMode] = useState('dashboard') 
+  const [activeTab, setActiveTab] = useState('home') // Nuevo estado para el Dock
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState(null)
   const [saveSuccess, setSaveSuccess] = useState(null)
@@ -53,7 +55,6 @@ function App() {
 
   const currentHabit = habits[currentIndex]
 
-  // --- LÓGICA DE AUTO-ACTUALIZACIÓN SEGURA ---
   useEffect(() => {
     const handleVersionCheck = (dbVersion) => {
       if (dbVersion && dbVersion !== CURRENT_SOFTWARE_VERSION) {
@@ -89,11 +90,8 @@ function App() {
     if (!loadingSession) initSettings();
   }, [session, loadingSession]);
 
-  // --- CONTROL DEL TUTORIAL ---
   const handleFinishTutorial = async () => {
-    await supabase.auth.updateUser({
-      data: { has_finished_tutorial: true }
-    });
+    await supabase.auth.updateUser({ data: { has_finished_tutorial: true } });
     setMode('dashboard');
   };
 
@@ -103,12 +101,7 @@ function App() {
     if (!session) return
     setLoadingTodayLogs(true)
     const today = getTodayDateString()
-    const { data } = await supabase
-      .from('daily_logs')
-      .select('*')
-      .eq('user_id', session.user.id)
-      .gte('created_at', `${today}T00:00:00.000Z`)
-      .lte('created_at', `${today}T23:59:59.999Z`)
+    const { data } = await supabase.from('daily_logs').select('*').eq('user_id', session.user.id).gte('created_at', `${today}T00:00:00.000Z`).lte('created_at', `${today}T23:59:59.999Z`)
     setTodayLogs(data || [])
     setLoadingTodayLogs(false)
   }, [session])
@@ -116,26 +109,12 @@ function App() {
   const handleResetToday = async () => {
     if (!session) return
     const today = getTodayDateString()
-    const { error } = await supabase
-      .from('daily_logs')
-      .delete()
-      .eq('user_id', session.user.id)
-      .gte('created_at', `${today}T00:00:00.000Z`)
-      .lte('created_at', `${today}T23:59:59.999Z`)
-    
-    if (!error) {
-      await fetchTodayLogs()
-      setMode('dashboard')
-    }
+    const { error } = await supabase.from('daily_logs').delete().eq('user_id', session.user.id).gte('created_at', `${today}T00:00:00.000Z`).lte('created_at', `${today}T23:59:59.999Z`)
+    if (!error) { await fetchTodayLogs(); setMode('dashboard'); }
   }
 
   const handleStartReview = () => {
-    setMode('reviewing')
-    setCurrentIndex(0)
-    setResults([])
-    setHasSaved(false)
-    setSaveError(null)
-    setSaveSuccess(null)
+    setMode('reviewing'); setCurrentIndex(0); setResults([]); setHasSaved(false); setSaveError(null); setSaveSuccess(null);
   }
 
   useEffect(() => {
@@ -143,17 +122,13 @@ function App() {
       const { data } = await supabase.auth.getSession()
       const currentSession = data?.session ?? null
       setSession(currentSession)
-      if (currentSession && !currentSession.user.user_metadata?.has_finished_tutorial) {
-        setMode('tutorial')
-      }
+      if (currentSession && !currentSession.user.user_metadata?.has_finished_tutorial) setMode('tutorial')
       setLoadingSession(false)
     }
     initSession()
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession)
-      if (newSession && !newSession.user.user_metadata?.has_finished_tutorial) {
-        setMode('tutorial')
-      }
+      if (newSession && !newSession.user.user_metadata?.has_finished_tutorial) setMode('tutorial')
     })
     return () => subscription.unsubscribe()
   }, [])
@@ -174,45 +149,55 @@ function App() {
   useEffect(() => {
     if (!session || !habits.length || mode !== 'reviewing' || currentIndex < habits.length || !results.length || hasSaved || saving) return
     const saveResults = async () => {
-      setSaving(true)
-      setSaveError(null)
+      setSaving(true); setSaveError(null);
       const payload = results.map(i => ({ user_id: session.user.id, habit_id: i.id, status: i.status, note: i.note || null, created_at: new Date().toISOString() }))
       const { error } = await supabase.from('daily_logs').insert(payload)
-      if (!error) { 
-        setSaveSuccess('¡Guardado con éxito!')
-        setHasSaved(true); 
-        setTimeout(() => { fetchTodayLogs(); setMode('dashboard'); }, 1500); 
-      } else {
-        setSaveError(error.message)
-      }
+      if (!error) { setSaveSuccess('¡Guardado con éxito!'); setHasSaved(true); setTimeout(() => { fetchTodayLogs(); setMode('dashboard'); }, 1500); } 
+      else { setSaveError(error.message) }
       setSaving(false)
     }
     saveResults()
   }, [session, habits, currentIndex, results, hasSaved, saving, mode])
 
   if (loadingSession) return <div className="min-h-screen flex items-center justify-center bg-neutral-900 text-white font-black italic tracking-tighter">MIVIDA...</div>
-  
   if (isMaintenance && session?.user?.email !== ADMIN_EMAIL) return <MaintenanceScreen />
-  
   if (!session) return <><TopBanner /><Auth /></>
 
-  if (mode === 'tutorial') {
-    return <Tutorial user={session.user} onComplete={handleFinishTutorial} />
-  }
-
+  if (mode === 'tutorial') return <Tutorial user={session.user} onComplete={handleFinishTutorial} />
   if (mode === 'admin') return <AdminPanel onClose={() => setMode('dashboard')} version={CURRENT_SOFTWARE_VERSION} />
 
   if (mode === 'dashboard') {
     return (
-      <>
+      <div className="relative min-h-screen bg-neutral-900">
         <TopBanner />
-        <Dashboard
-          user={session.user} habits={habits} todayLogs={todayLogs}
-          onStartReview={handleStartReview} onResetToday={handleResetToday}
-          version={CURRENT_SOFTWARE_VERSION} onOpenAdmin={() => setMode('admin')}
-        />
+        
+        {/* Lógica de cambio de vista según el Dock */}
+        {activeTab === 'home' ? (
+          <Dashboard
+            user={session.user} habits={habits} todayLogs={todayLogs}
+            onStartReview={handleStartReview} onResetToday={handleResetToday}
+            version={CURRENT_SOFTWARE_VERSION} onOpenAdmin={() => setMode('admin')}
+          />
+        ) : activeTab === 'stats' ? (
+          <div className="flex items-center justify-center min-h-[80vh] text-white">
+            <div className="text-center">
+              <h2 className="text-2xl font-black mb-2 tracking-tighter uppercase">Mis Estadísticas</h2>
+              <p className="text-neutral-500 font-medium italic">Próximamente: Gráficos y Rachas</p>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center justify-center min-h-[80vh] text-white">
+            <div className="text-center">
+              <h2 className="text-2xl font-black mb-2 tracking-tighter uppercase">Funciones</h2>
+              <p className="text-neutral-500 font-medium italic">Explora nuevas herramientas</p>
+            </div>
+          </div>
+        )}
+
+        {/* Dock siempre visible en dashboard */}
+        <Dock activeTab={activeTab} onTabChange={setActiveTab} />
         <ReminderPopup session={session} />
-      </>
+      </div>
     )
   }
 
@@ -221,20 +206,12 @@ function App() {
       <button onClick={() => window.location.reload()} className="fixed top-6 right-6 z-[100] flex items-center gap-1 px-4 py-2 bg-neutral-800/80 backdrop-blur-md border border-neutral-700 rounded-full text-neutral-400 hover:text-white transition-all shadow-lg">
         <X size={18} /> <span className="text-xs font-medium uppercase tracking-widest">Salir</span>
       </button>
-      <div className="w-full max-w-md mx-auto px-4 py-8 text-white">
+      <div className="w-full max-md mx-auto px-4 py-8 text-white">
         <h1 className="mb-2 text-center text-2xl font-semibold">Revisión nocturna</h1>
         {currentHabit ? (
           <SwipeCard 
             habit={currentHabit} 
-            onSwipeComplete={(d) => { 
-              if (d === 'right') { 
-                setResults(p => [...p, { id: currentHabit.id, title: currentHabit.title, status: 'completed' }]); 
-                setCurrentIndex(c => c + 1); 
-              } else { 
-                setPendingHabit(currentHabit); 
-                setIsModalOpen(true); 
-              } 
-            }} 
+            onSwipeComplete={(d) => { if (d === 'right') { setResults(p => [...p, { id: currentHabit.id, title: currentHabit.title, status: 'completed' }]); setCurrentIndex(c => c + 1); } else { setPendingHabit(currentHabit); setIsModalOpen(true); } }} 
             onDrag={(x) => setSwipeStatus(x > 100 ? 'done' : x < -100 ? 'not-done' : null)} 
           />
         ) : (
@@ -242,25 +219,11 @@ function App() {
             <p className="text-xl font-bold mb-2">¡Resumen completado!</p>
             {saving && <p className="text-sm text-neutral-400">Guardando...</p>}
             {saveSuccess && <p className="text-sm text-emerald-400">{saveSuccess}</p>}
-            {saveError && <p className="text-sm text-red-400">Error: {saveError}</p>}
             <button onClick={() => setMode('dashboard')} className="mt-6 w-full py-4 bg-white text-black font-bold rounded-2xl active:scale-95 transition-all">Volver</button>
           </div>
         )}
       </div>
-      <NoteModal 
-        isOpen={isModalOpen} 
-        habitTitle={pendingHabit?.title} 
-        onSave={(n) => { 
-          setResults(p => [...p, { id: pendingHabit.id, title: pendingHabit.title, status: 'skipped', note: n || '' }]); 
-          setIsModalOpen(false); 
-          setCurrentIndex(c => c + 1); 
-        }} 
-        onSkip={() => { 
-          setResults(p => [...p, { id: pendingHabit.id, title: pendingHabit.title, status: 'skipped', note: '' }]); 
-          setIsModalOpen(false); 
-          setCurrentIndex(c => c + 1); 
-        }} 
-      />
+      <NoteModal isOpen={isModalOpen} habitTitle={pendingHabit?.title} onSave={(n) => { setResults(p => [...p, { id: pendingHabit.id, title: pendingHabit.title, status: 'skipped', note: n || '' }]); setIsModalOpen(false); setCurrentIndex(c => c + 1); }} onSkip={() => { setResults(p => [...p, { id: pendingHabit.id, title: pendingHabit.title, status: 'skipped', note: '' }]); setIsModalOpen(false); setCurrentIndex(c => c + 1); }} />
     </div>
   )
 }
