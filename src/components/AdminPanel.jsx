@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabaseClient'
-import { X, ShieldAlert, RefreshCw, Megaphone, CheckCircle, Activity, Save, ChevronLeft, AlertCircle, Users } from 'lucide-react'
+import { X, ShieldAlert, RefreshCw, Megaphone, CheckCircle, Activity, Save, ChevronLeft, AlertCircle, Users, Trash2 } from 'lucide-react' // Añadido Trash2
 
 export default function AdminPanel({ onClose, version }) {
   const [maintenance, setMaintenance] = useState(false)
@@ -49,11 +49,20 @@ export default function AdminPanel({ onClose, version }) {
     setLoading(true)
     setMessage(null)
     try {
+      // 1. Actualizar Ajustes Generales
       const updates = [
         supabase.from('app_settings').update({ value: maintenance.toString() }).eq('key', 'maintenance_mode'),
         supabase.from('app_settings').update({ value: appVersion }).eq('key', 'app_version')
       ]
-      if (bannerText) updates.push(supabase.from('announcements').insert([{ message: bannerText, is_active: true }]))
+      
+      // 2. Lógica de Anuncios Mejorada (Desactivar anteriores primero)
+      // Primero desactivamos TODOS los anuncios para limpiar el estado
+      await supabase.from('announcements').update({ is_active: false }).neq('id', 0)
+
+      // Si hay texto, insertamos el nuevo anuncio activo
+      if (bannerText.trim().length > 0) {
+        updates.push(supabase.from('announcements').insert([{ message: bannerText, is_active: true }]))
+      }
       
       await Promise.all(updates)
       setMessage({ type: 'success', text: 'Sincronización global completada.' })
@@ -61,6 +70,11 @@ export default function AdminPanel({ onClose, version }) {
     } catch (err) {
       setMessage({ type: 'error', text: 'Error en la sincronización' })
     } finally { setLoading(false) }
+  }
+
+  // Función para limpiar el campo rápidamente
+  const clearAnnouncement = () => {
+    setBannerText('')
   }
 
   return (
@@ -115,12 +129,28 @@ export default function AdminPanel({ onClose, version }) {
         </section>
 
         <section className="bg-neutral-800/20 rounded-[3rem] p-8 border border-neutral-800/50">
-          <div className="flex items-center gap-4 mb-6"><div className="p-4 bg-indigo-500/10 rounded-[1.5rem] border border-indigo-500/10"><Megaphone className="text-indigo-500" size={28} /></div><div><h3 className="font-black text-sm uppercase tracking-tight">Anuncio Global</h3><p className="text-[10px] text-neutral-500 font-bold uppercase">Push al TopBanner</p></div></div>
-          <textarea value={bannerText} onChange={(e) => setBannerText(e.target.value)} placeholder="¿Qué quieres decirles?" className="w-full bg-neutral-900 border border-neutral-700 rounded-[2rem] p-6 text-sm font-medium outline-none h-32 resize-none" />
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-4">
+               <div className="p-4 bg-indigo-500/10 rounded-[1.5rem] border border-indigo-500/10"><Megaphone className="text-indigo-500" size={28} /></div>
+               <div><h3 className="font-black text-sm uppercase tracking-tight">Anuncio Forzoso</h3><p className="text-[10px] text-neutral-500 font-bold uppercase">Sin opción de cierre</p></div>
+            </div>
+            {/* Botón para limpiar el anuncio */}
+            {bannerText && (
+              <button onClick={clearAnnouncement} className="p-3 bg-red-500/10 text-red-400 rounded-xl hover:bg-red-500/20 transition-colors" title="Borrar y desactivar">
+                <Trash2 size={18} />
+              </button>
+            )}
+          </div>
+          <textarea 
+            value={bannerText} 
+            onChange={(e) => setBannerText(e.target.value)} 
+            placeholder="Escribe aquí para mostrar un mensaje a TODOS. Deja vacío y guarda para quitar el anuncio." 
+            className="w-full bg-neutral-900 border border-neutral-700 rounded-[2rem] p-6 text-sm font-medium outline-none h-32 resize-none focus:border-indigo-500 transition-colors" 
+          />
         </section>
 
         <button onClick={handleUpdateSettings} disabled={loading} className="w-full bg-white text-black font-black py-6 rounded-[2.5rem] text-lg active:scale-95 transition-all flex items-center justify-center gap-3 shadow-[0_20px_40px_rgba(255,255,255,0.1)]">
-          {loading ? 'Sincronizando...' : <><Save size={22} /> Aplicar Cambios Maestros</>}
+          {loading ? 'Sincronizando...' : <><Save size={22} /> Ejecutar Órdenes</>}
         </button>
       </div>
     </div>
