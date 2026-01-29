@@ -8,7 +8,6 @@ export default function TopBanner() {
   const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
-    // 1. Carga inicial del anuncio
     const fetchAnnouncement = async () => {
       const { data } = await supabase
         .from('announcements')
@@ -28,7 +27,6 @@ export default function TopBanner() {
 
     fetchAnnouncement()
 
-    // 2. Escucha en tiempo real
     const channel = supabase
       .channel('public:announcements')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'announcements' }, () => {
@@ -45,20 +43,28 @@ export default function TopBanner() {
     <AnimatePresence>
       {isVisible && message && (
         <motion.div
-          initial={{ y: -50, opacity: 0, x: '-50%' }} // x: -50% es para centrarlo perfectamente
+          initial={{ y: -50, opacity: 0, x: '-50%' }}
           animate={{ y: 0, opacity: 1, x: '-50%' }}
           exit={{ y: -50, opacity: 0, x: '-50%' }}
-          transition={{ type: "spring", stiffness: 300, damping: 25 }}
-          // Posición 'fixed' en 'top-6' (misma altura que el botón sidebar) y centrado
-          // z-40 para que esté por debajo del sidebar (z-50) pero sobre el contenido
-          className="fixed top-6 left-1/2 z-40 w-auto max-w-[65%] md:max-w-md pointer-events-none"
+          transition={{ type: "spring", stiffness: 200, damping: 20 }}
+          // Ajuste de posición: top-6 para alinear con el botón menú
+          // max-w-[85%] permite que en móviles crezca si hay mucho texto
+          className="fixed top-6 left-1/2 z-40 w-auto max-w-[85%] md:max-w-md pointer-events-none"
         >
-          {/* Contenedor visual estilo 'Pill' de Apple */}
-          <div className="flex items-center gap-3 bg-indigo-600/95 backdrop-blur-xl px-5 py-3 rounded-full shadow-[0_8px_30px_rgba(79,70,229,0.4)] border border-white/10 pointer-events-auto">
-            <div className="p-1.5 bg-white/20 rounded-full animate-pulse shrink-0">
-              <Megaphone size={14} className="text-white" />
+          {/* ESTILO VISUAL ACTUALIZADO:
+             - bg-neutral-900/80: Fondo oscuro sutil (menos llamativo)
+             - backdrop-blur-xl: Efecto cristal premium
+             - border-white/10: Borde apenas visible para separar del fondo
+          */}
+          <div className="flex items-center gap-3 bg-neutral-900/80 backdrop-blur-xl pl-4 pr-5 py-3 rounded-[2rem] shadow-2xl border border-white/5 pointer-events-auto">
+            
+            {/* Icono sutil */}
+            <div className="p-1.5 bg-white/5 rounded-full shrink-0">
+              <Megaphone size={14} className="text-neutral-400" />
             </div>
-            <p className="text-xs font-bold text-white tracking-wide uppercase leading-none truncate">
+            
+            {/* Texto adaptable: quitamos 'truncate' y 'leading-none' */}
+            <p className="text-xs font-medium text-neutral-200 tracking-wide leading-snug break-words text-left">
               {message}
             </p>
           </div>
