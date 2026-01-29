@@ -1,9 +1,11 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, LogOut, Settings, ShieldCheck, Heart } from 'lucide-react' // Se añade Heart
+import { X, LogOut, Settings, ShieldCheck, Heart } from 'lucide-react'
+import { useLanguage } from '../context/LanguageContext' // Importar Hook
 
 export default function Sidebar({ isOpen, onClose, user, onLogout, onOpenSettings, version, onOpenAdmin }) {
   const email = user?.email || ''
   const isAdmin = email === 'hemmings.nacho@gmail.com'
+  const { t } = useLanguage() // Usar Hook
 
   return (
     <AnimatePresence>
@@ -13,7 +15,7 @@ export default function Sidebar({ isOpen, onClose, user, onLogout, onOpenSetting
           <motion.div initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }} transition={{ type: 'spring', damping: 25, stiffness: 200 }} className="fixed top-0 left-0 bottom-0 w-64 bg-neutral-900 border-r border-neutral-800 z-50 p-6 shadow-2xl" >
             <div className="flex flex-col h-full"> 
               <div className="flex justify-between items-center mb-10">
-                <h2 className="text-xl font-black text-white uppercase tracking-tighter">Menú</h2>
+                <h2 className="text-xl font-black text-white uppercase tracking-tighter">{t('menu')}</h2>
                 <button onClick={onClose} className="text-neutral-500 hover:text-white transition-colors"> <X size={24} /> </button>
               </div>
 
@@ -27,17 +29,16 @@ export default function Sidebar({ isOpen, onClose, user, onLogout, onOpenSetting
 
               <nav className="space-y-3 flex-1">
                 <button onClick={() => { onOpenSettings(); onClose(); }} className="w-full flex items-center gap-3 px-4 py-4 text-neutral-400 hover:bg-neutral-800 hover:text-white rounded-2xl transition-all font-medium text-sm" >
-                  <Settings size={20} /> <span>Ajustes de Perfil</span>
+                  <Settings size={20} /> <span>{t('profile_settings')}</span>
                 </button>
 
                 {isAdmin && (
                   <button onClick={() => { onOpenAdmin(); onClose(); }} className="w-full flex items-center gap-3 px-4 py-4 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 rounded-2xl transition-all font-black text-sm border border-blue-500/10" >
-                    <ShieldCheck size={20} /> <span className="uppercase tracking-widest text-[10px]">Torre de Control</span>
+                    <ShieldCheck size={20} /> <span className="uppercase tracking-widest text-[10px]">{t('control_tower')}</span>
                   </button>
                 )}
               </nav>
 
-              {/* --- BLOQUE DE APOYO AÑADIDO --- */}
               <div className="mb-4">
                 <a 
                   href="https://ko-fi.com/nachohemmings" 
@@ -50,8 +51,8 @@ export default function Sidebar({ isOpen, onClose, user, onLogout, onOpenSetting
                       <Heart size={20} className="text-emerald-400 fill-emerald-400/20" />
                     </div>
                     <div className="text-left">
-                      <p className="text-xs font-black text-emerald-400 uppercase tracking-tight leading-none">Apoya el proyecto</p>
-                      <p className="text-[10px] text-emerald-500/60 font-medium mt-1">Invítame a un café</p>
+                      <p className="text-xs font-black text-emerald-400 uppercase tracking-tight leading-none">{t('support_project')}</p>
+                      <p className="text-[10px] text-emerald-500/60 font-medium mt-1">{t('buy_coffee')}</p>
                     </div>
                   </div>
                   <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -60,10 +61,10 @@ export default function Sidebar({ isOpen, onClose, user, onLogout, onOpenSetting
 
               <div className="mt-auto pt-6 border-t border-neutral-800">
                 <button onClick={onLogout} className="w-full flex items-center gap-3 px-4 py-4 text-red-400 hover:bg-red-900/20 rounded-2xl transition-all font-bold text-sm mb-6" >
-                  <LogOut size={20} /> <span>Cerrar Sesión</span>
+                  <LogOut size={20} /> <span>{t('logout')}</span>
                 </button>
                 <div className="text-center">
-                  <span className="text-[10px] font-black text-neutral-700 uppercase tracking-[0.2em]">Build v{version || '1.0.0'}</span>
+                  <span className="text-[10px] font-black text-neutral-700 uppercase tracking-[0.2em]">{t('build_version')}{version || '1.0.0'}</span>
                 </div>
               </div>
             </div>

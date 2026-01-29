@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Check, Calendar, Clock, Palette, Sparkles, Trash2, Save } from 'lucide-react'
 import { supabase } from '../lib/supabaseClient'
+import { useLanguage } from '../context/LanguageContext' // Importar
 
 const COLORS = [
   'bg-blue-600', 'bg-emerald-600', 'bg-purple-600', 
@@ -13,7 +14,6 @@ const DAYS = [
   { id: 'J', label: 'J' }, { id: 'V', label: 'V' }, { id: 'S', label: 'S' }, { id: 'D', label: 'D' }
 ]
 
-// CORRECCIÓN: Ahora el prop se llama 'habitToEdit' para coincidir con Dashboard
 export default function HabitCreator({ isOpen, onClose, userId, onHabitCreated, habitToEdit = null }) {
   const [title, setTitle] = useState('')
   const [selectedDays, setSelectedDays] = useState(['L', 'M', 'X', 'J', 'V'])
@@ -21,8 +21,8 @@ export default function HabitCreator({ isOpen, onClose, userId, onHabitCreated, 
   const [selectedColor, setSelectedColor] = useState(COLORS[0])
   const [selectedIcon, setSelectedIcon] = useState(ICONS[0])
   const [loading, setLoading] = useState(false)
+  const { t } = useLanguage() // Hook
 
-  // Sincronizar datos si estamos editando
   useEffect(() => {
     if (isOpen) {
       if (habitToEdit) {
@@ -68,20 +68,12 @@ export default function HabitCreator({ isOpen, onClose, userId, onHabitCreated, 
 
     try {
       if (habitToEdit) {
-        // ACTUALIZAR EXISTENTE
-        const { error } = await supabase
-          .from('habits')
-          .update(habitData)
-          .eq('id', habitToEdit.id)
+        const { error } = await supabase.from('habits').update(habitData).eq('id', habitToEdit.id)
         if (error) throw error
       } else {
-        // INSERTAR NUEVO
-        const { error } = await supabase
-          .from('habits')
-          .insert(habitData)
+        const { error } = await supabase.from('habits').insert(habitData)
         if (error) throw error
       }
-
       onHabitCreated()
       onClose()
     } catch (err) {
@@ -92,17 +84,16 @@ export default function HabitCreator({ isOpen, onClose, userId, onHabitCreated, 
   }
 
   const handleDelete = async () => {
-    if (!confirm('¿Seguro que quieres borrar este hábito y todo su historial?')) return
+    if (!confirm(t('confirm_delete'))) return
     setLoading(true)
     try {
-      // Borramos logs para evitar errores de clave foránea
       await supabase.from('daily_logs').delete().eq('habit_id', habitToEdit.id)
       const { error } = await supabase.from('habits').delete().eq('id', habitToEdit.id)
       if (error) throw error
       onHabitCreated()
       onClose()
     } catch (err) {
-      alert('Error al borrar: ' + err.message)
+      alert(t('error_delete') + err.message)
     } finally {
       setLoading(false)
     }
@@ -127,16 +118,12 @@ export default function HabitCreator({ isOpen, onClose, userId, onHabitCreated, 
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-bold text-white flex items-center gap-2">
               {habitToEdit ? <Palette className="text-blue-400" size={20} /> : <Sparkles className="text-yellow-400" size={20} />}
-              <span className="text-white">{habitToEdit ? 'Editar Hábito' : 'Nuevo Hábito'}</span>
+              <span className="text-white">{habitToEdit ? t('edit_habit') : t('new_habit')}</span>
             </h2>
             
             <div className="flex gap-2">
               {habitToEdit && (
-                <button 
-                  onClick={handleDelete}
-                  className="p-2 bg-red-900/30 rounded-full text-red-400 hover:bg-red-900/50 transition-colors"
-                  type="button"
-                >
+                <button onClick={handleDelete} className="p-2 bg-red-900/30 rounded-full text-red-400 hover:bg-red-900/50 transition-colors" type="button">
                   <Trash2 size={20} />
                 </button>
               )}
@@ -148,14 +135,14 @@ export default function HabitCreator({ isOpen, onClose, userId, onHabitCreated, 
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider">Nombre del hábito</label>
+              <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider">{t('habit_name_label')}</label>
               <div className="flex gap-3">
                 <button type="button" className="h-14 w-14 flex items-center justify-center rounded-2xl text-3xl bg-neutral-700 border border-neutral-600">
                   {selectedIcon}
                 </button>
                 <input 
                   type="text" 
-                  placeholder="Ej. Leer, Gym..." 
+                  placeholder={t('habit_placeholder')}
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   className="flex-1 bg-neutral-900 border border-neutral-600 rounded-2xl px-4 text-white text-lg placeholder-neutral-500 focus:border-blue-500 focus:outline-none"
@@ -163,10 +150,9 @@ export default function HabitCreator({ isOpen, onClose, userId, onHabitCreated, 
               </div>
             </div>
 
-            {/* Frecuencia */}
             <div className="space-y-3">
               <label className="flex items-center gap-2 text-xs font-bold text-neutral-400 uppercase tracking-wider">
-                <Calendar size={14} /> Frecuencia
+                <Calendar size={14} /> {t('frequency')}
               </label>
               <div className="flex justify-between bg-neutral-900 p-2 rounded-2xl border border-neutral-700">
                 {DAYS.map((day) => {
@@ -176,11 +162,7 @@ export default function HabitCreator({ isOpen, onClose, userId, onHabitCreated, 
                       key={day.id}
                       type="button"
                       onClick={() => toggleDay(day.id)}
-                      className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
-                        isSelected 
-                          ? 'bg-blue-500 text-white shadow-lg' 
-                          : 'text-neutral-500 hover:text-white'
-                      }`}
+                      className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all ${isSelected ? 'bg-blue-500 text-white shadow-lg' : 'text-neutral-500 hover:text-white'}`}
                     >
                       {day.label}
                     </button>
@@ -189,22 +171,17 @@ export default function HabitCreator({ isOpen, onClose, userId, onHabitCreated, 
               </div>
             </div>
 
-            {/* Momento */}
             <div className="space-y-3">
               <label className="flex items-center gap-2 text-xs font-bold text-neutral-400 uppercase tracking-wider">
-                <Clock size={14} /> Momento
+                <Clock size={14} /> {t('time_of_day')}
               </label>
               <div className="grid grid-cols-3 gap-2">
-                {[ { id: 'morning', label: 'Mañana' }, { id: 'afternoon', label: 'Tarde' }, { id: 'night', label: 'Noche' } ].map(time => (
+                {[ { id: 'morning', label: t('morning') }, { id: 'afternoon', label: t('afternoon') }, { id: 'night', label: t('night') } ].map(time => (
                   <button
                     key={time.id}
                     type="button"
                     onClick={() => setTimeOfDay(time.id)}
-                    className={`py-2 rounded-xl text-sm font-medium border transition-colors ${
-                      timeOfDay === time.id 
-                        ? 'bg-white text-black border-white' 
-                        : 'bg-neutral-700 text-neutral-300 border-transparent hover:bg-neutral-600'
-                    }`}
+                    className={`py-2 rounded-xl text-sm font-medium border transition-colors ${timeOfDay === time.id ? 'bg-white text-black border-white' : 'bg-neutral-700 text-neutral-300 border-transparent hover:bg-neutral-600'}`}
                   >
                     {time.label}
                   </button>
@@ -212,10 +189,9 @@ export default function HabitCreator({ isOpen, onClose, userId, onHabitCreated, 
               </div>
             </div>
 
-            {/* Color */}
             <div className="space-y-3">
               <label className="flex items-center gap-2 text-xs font-bold text-neutral-400 uppercase tracking-wider">
-                <Palette size={14} /> Color
+                <Palette size={14} /> {t('color')}
               </label>
               <div className="flex gap-3 justify-center bg-neutral-900 p-3 rounded-2xl border border-neutral-700">
                 {COLORS.map(color => (
@@ -234,7 +210,7 @@ export default function HabitCreator({ isOpen, onClose, userId, onHabitCreated, 
               disabled={loading || !title}
               className="w-full bg-white text-black font-bold py-4 rounded-xl text-lg hover:bg-gray-200 disabled:opacity-50 flex items-center justify-center gap-2 mt-4"
             >
-              {loading ? 'Guardando...' : habitToEdit ? <><Save size={20} /> Guardar Cambios</> : <><Check size={20} /> Crear Hábito</>}
+              {loading ? t('saving') : habitToEdit ? <><Save size={20} /> {t('save_changes_btn')}</> : <><Check size={20} /> {t('create_habit_btn')}</>}
             </button>
           </form>
         </motion.div>

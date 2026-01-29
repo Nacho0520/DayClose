@@ -1,14 +1,16 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
-import { X } from 'lucide-react'
+import { X, Globe } from 'lucide-react'
 import NotificationManager from './NotificationManager'
+import { useLanguage } from '../context/LanguageContext' // Importar
 
 export default function SettingsModal({ isOpen, onClose, user }) {
-  // BLINDAJE 1: Safari puede fallar si intentamos usar user.user_metadata inmediatamente
   const [fullName, setFullName] = useState(user?.user_metadata?.full_name || '')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState(null)
+  
+  const { t, language, switchLanguage } = useLanguage() // Hook
 
   if (!isOpen) return null
 
@@ -18,7 +20,6 @@ export default function SettingsModal({ isOpen, onClose, user }) {
     setMessage(null)
 
     const updates = {}
-    // Solo actualizar si hay datos para evitar errores de red en móvil
     if (fullName.trim()) updates.data = { full_name: fullName }
     if (password) updates.password = password
 
@@ -27,8 +28,8 @@ export default function SettingsModal({ isOpen, onClose, user }) {
     if (error) {
       setMessage({ type: 'error', text: error.message })
     } else {
-      setMessage({ type: 'success', text: '¡Perfil actualizado!' })
-      if (password) setMessage({ type: 'success', text: 'Contraseña cambiada. Vuelve a iniciar sesión.' })
+      setMessage({ type: 'success', text: t('profile_updated') })
+      if (password) setMessage({ type: 'success', text: t('password_changed') })
       setTimeout(() => {
         onClose()
         window.location.reload()
@@ -44,7 +45,7 @@ export default function SettingsModal({ isOpen, onClose, user }) {
           <X size={24} />
         </button>
 
-        <h2 className="text-xl font-bold text-white mb-6">Ajustes de Perfil</h2>
+        <h2 className="text-xl font-bold text-white mb-6">{t('settings_title')}</h2>
 
         {message && (
           <div className={`mb-4 p-3 rounded-lg text-sm ${message.type === 'error' ? 'bg-red-900/30 text-red-300' : 'bg-emerald-900/30 text-emerald-300'}`}>
@@ -53,8 +54,24 @@ export default function SettingsModal({ isOpen, onClose, user }) {
         )}
 
         <form onSubmit={handleUpdate} className="space-y-4">
+          
+          {/* SELECCIÓN DE IDIOMA AÑADIDA */}
+          <div className="bg-neutral-900/50 p-4 rounded-xl border border-neutral-700">
+             <label className="flex items-center gap-2 text-sm text-neutral-400 mb-3">
+               <Globe size={14} /> {t('language_label')}
+             </label>
+             <div className="grid grid-cols-2 gap-2">
+                <button type="button" onClick={() => switchLanguage('es')} className={`py-2 px-3 rounded-lg text-xs font-bold transition-all border ${language === 'es' ? 'bg-blue-600 text-white border-blue-500' : 'bg-neutral-800 text-neutral-400 border-transparent hover:bg-neutral-700'}`}>
+                  🇪🇸 Español
+                </button>
+                <button type="button" onClick={() => switchLanguage('en')} className={`py-2 px-3 rounded-lg text-xs font-bold transition-all border ${language === 'en' ? 'bg-blue-600 text-white border-blue-500' : 'bg-neutral-800 text-neutral-400 border-transparent hover:bg-neutral-700'}`}>
+                  🇺🇸 English
+                </button>
+             </div>
+          </div>
+
           <div>
-            <label className="block text-sm text-neutral-400 mb-1">Nombre visible</label>
+            <label className="block text-sm text-neutral-400 mb-1">{t('display_name')}</label>
             <input
               type="text"
               value={fullName}
@@ -64,34 +81,31 @@ export default function SettingsModal({ isOpen, onClose, user }) {
           </div>
 
           <div>
-            <label className="block text-sm text-neutral-400 mb-1">Nueva contraseña (opcional)</label>
+            <label className="block text-sm text-neutral-400 mb-1">{t('new_password')}</label>
             <input
               type="password"
-              placeholder="Deja vacío para no cambiar"
+              placeholder={t('password_placeholder')}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full bg-neutral-900 border border-neutral-700 rounded-xl px-4 py-2 text-white focus:border-blue-500 focus:outline-none"
             />
           </div>
 
-          {/* --- BLINDAJE PARA IPHONE (SAFARI) --- */}
           <div className="pt-2 border-t border-neutral-700 mt-4">
-            <p className="text-xs text-neutral-400 mb-2">Permisos del Sistema</p>
-            {/* Solo cargamos el manager si existe el ID del usuario para evitar el error 500 en Safari */}
+            <p className="text-xs text-neutral-400 mb-2">{t('system_permissions')}</p>
             {user?.id ? (
               <NotificationManager userId={user.id} />
             ) : (
-              <p className="text-xs text-neutral-500 italic">Cargando permisos...</p>
+              <p className="text-xs text-neutral-500 italic">{t('loading_permissions')}</p>
             )}
           </div>
-          {/* ------------------------------------- */}
 
           <button
             type="submit"
             disabled={loading}
             className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition-colors disabled:opacity-50 mt-4"
           >
-            {loading ? 'Guardando...' : 'Guardar Cambios'}
+            {loading ? t('saving') : t('save_changes')}
           </button>
         </form>
       </div>
