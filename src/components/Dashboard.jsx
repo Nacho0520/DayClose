@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { Check, X, Circle, Menu, Plus, Trash2, Settings, RotateCcw } from "lucide-react";
+import { Check, X, Circle, Menu, Plus, Trash2, Settings } from "lucide-react";
 import Sidebar from "./Sidebar";
 import SettingsModal from "./SettingsModal";
 import HabitCreator from "./HabitCreator";
 import { supabase } from "../lib/supabaseClient";
+import { useLanguage } from "../context/LanguageContext"; // Importar hook
 
 function CircularProgress({ percentage }) {
+  const { t } = useLanguage();
   const radius = 70;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (percentage / 100) * circumference;
@@ -17,7 +19,7 @@ function CircularProgress({ percentage }) {
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <p className="text-4xl font-bold text-white tracking-tighter">{Math.round(percentage)}%</p>
-        <p className="text-[10px] uppercase font-bold text-neutral-500 tracking-widest mt-1">Hoy</p>
+        <p className="text-[10px] uppercase font-bold text-neutral-500 tracking-widest mt-1">{t('today_caps')}</p>
       </div>
     </div>
   );
@@ -28,6 +30,8 @@ function Dashboard({ user, habits, todayLogs, onStartReview, onResetToday, versi
   const [isSettingsOpen, setSettingsOpen] = useState(false);
   const [isCreatorOpen, setCreatorOpen] = useState(false);
   const [editHabit, setEditHabit] = useState(null);
+  
+  const { t } = useLanguage(); // Hook
 
   const logsMap = new Map();
   (todayLogs || []).forEach(l => logsMap.set(l.habit_id, { status: l.status, logId: l.id }));
@@ -37,12 +41,8 @@ function Dashboard({ user, habits, todayLogs, onStartReview, onResetToday, versi
 
   return (
     <div className="min-h-screen bg-neutral-900 px-4 pt-8 pb-40 relative">
-      {/* MODIFICACIÓN: El botón solo se renderiza si el Sidebar está CERRADO */}
       {!isSidebarOpen && (
-        <button 
-          onClick={() => setSidebarOpen(true)} 
-          className="absolute top-6 left-4 text-white p-2 hover:bg-neutral-800 rounded-full transition-colors z-[100]"
-        >
+        <button onClick={() => setSidebarOpen(true)} className="absolute top-6 left-4 text-white p-2 hover:bg-neutral-800 rounded-full transition-colors z-[100]">
           <Menu size={28} />
         </button>
       )}
@@ -59,7 +59,7 @@ function Dashboard({ user, habits, todayLogs, onStartReview, onResetToday, versi
 
       <div className="mx-auto w-full max-w-md mt-6">
         <header className="mb-10 text-center">
-          <h2 className="text-lg font-light text-neutral-500 italic">Hola,</h2>
+          <h2 className="text-lg font-light text-neutral-500 italic">{t('hello')}</h2>
           <h1 className="text-3xl font-black text-white tracking-tight capitalize leading-none">{user?.user_metadata?.full_name || 'Usuario'}</h1>
         </header>
 
@@ -78,7 +78,7 @@ function Dashboard({ user, habits, todayLogs, onStartReview, onResetToday, versi
                 </div>
                 <div className="flex items-center gap-1 opacity-20 group-hover:opacity-100 transition-opacity pr-2">
                   <button onClick={() => setEditHabit(habit)} className="p-2 text-neutral-400 hover:text-blue-400 rounded-lg"><Settings size={18} /></button>
-                  <button onClick={async () => { if(confirm('¿Eliminar?')){ await supabase.from('daily_logs').delete().eq('habit_id', habit.id); await supabase.from('habits').delete().eq('id', habit.id); window.location.reload(); }}} className="p-2 text-neutral-400 hover:text-red-500 rounded-lg"><Trash2 size={18} /></button>
+                  <button onClick={async () => { if(confirm(t('confirm_delete'))){ await supabase.from('daily_logs').delete().eq('habit_id', habit.id); await supabase.from('habits').delete().eq('id', habit.id); window.location.reload(); }}} className="p-2 text-neutral-400 hover:text-red-500 rounded-lg"><Trash2 size={18} /></button>
                 </div>
                 <div className="flex-shrink-0 ml-1">
                   {log ? (
@@ -93,7 +93,7 @@ function Dashboard({ user, habits, todayLogs, onStartReview, onResetToday, versi
         </div>
 
         {(habits || []).some(h => !logsMap.has(h.id)) && (
-          <button onClick={onStartReview} className="mt-8 w-full rounded-[2rem] bg-white px-6 py-5 text-lg font-black text-black shadow-2xl active:scale-95 transition-all">Comenzar Revisión</button>
+          <button onClick={onStartReview} className="mt-8 w-full rounded-[2rem] bg-white px-6 py-5 text-lg font-black text-black shadow-2xl active:scale-95 transition-all">{t('start_review')}</button>
         )}
       </div>
 

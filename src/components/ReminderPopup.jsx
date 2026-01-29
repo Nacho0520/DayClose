@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '../lib/supabaseClient'
 import { Check, Clock, X } from 'lucide-react'
+import { useLanguage } from '../context/LanguageContext'
 
-// CONFIGURACIÓN: ¿Cada cuántas horas permitimos un aviso?
 const HOURS_COOLDOWN = 4 
 const COOLDOWN_MS = HOURS_COOLDOWN * 60 * 60 * 1000
 
@@ -11,154 +11,60 @@ export default function ReminderPopup({ session }) {
   const [visible, setVisible] = useState(false)
   const [currentHabit, setCurrentHabit] = useState(null)
   const [snoozedHabits, setSnoozedHabits] = useState([]) 
+  const { t } = useLanguage()
 
   const checkPendingHabits = async () => {
     if (!session) return
-
-    // --- NUEVO: LÓGICA DE ENFRIAMIENTO ---
     const lastShownStr = localStorage.getItem('lastPopupTime')
     if (lastShownStr) {
-      const lastShown = parseInt(lastShownStr)
-      const now = Date.now()
-      
-      // Si ha pasado menos tiempo del estipulado, NO hacemos nada
-      if (now - lastShown < COOLDOWN_MS) {
-        return 
-      }
+      if (Date.now() - parseInt(lastShownStr) < COOLDOWN_MS) return 
     }
-    // -------------------------------------
-
-    // 1. Obtener hábitos activos
-    const { data: habits } = await supabase
-      .from('habits')
-      .select('*')
-      .eq('is_active', true)
-
+    const { data: habits } = await supabase.from('habits').select('*').eq('is_active', true)
     if (!habits || habits.length === 0) return
-
-    // 2. Obtener lo hecho hoy
     const today = new Date().toISOString().split('T')[0]
-    const todayStart = `${today}T00:00:00.000Z`
-    const todayEnd = `${today}T23:59:59.999Z`
-
-    const { data: logs } = await supabase
-      .from('daily_logs')
-      .select('habit_id')
-      .eq('user_id', session.user.id)
-      .gte('created_at', todayStart)
-      .lte('created_at', todayEnd)
-
+    const { data: logs } = await supabase.from('daily_logs').select('habit_id').eq('user_id', session.user.id).gte('created_at', `${today}T00:00:00.000Z`).lte('created_at', `${today}T23:59:59.999Z`)
     const completedIds = logs?.map(l => l.habit_id) || []
-
-    // 3. Buscar pendiente
-    const pending = habits.find(h => 
-      !completedIds.includes(h.id) && 
-      !snoozedHabits.includes(h.id)
-    )
-
+    const pending = habits.find(h => !completedIds.includes(h.id) && !snoozedHabits.includes(h.id))
     if (pending) {
       setCurrentHabit(pending)
       setVisible(true)
-      // Guardamos la marca de tiempo de "Aviso Mostrado"
       localStorage.setItem('lastPopupTime', Date.now().toString())
     }
   }
 
-  // Comprobar periódicamente
   useEffect(() => {
-    // Comprobar a los 5 segundos de entrar
     const initialTimer = setTimeout(checkPendingHabits, 5000)
-    
-    // Y luego cada 5 minutos (para no saturar el navegador)
     const interval = setInterval(checkPendingHabits, 300000)
-
-    return () => {
-      clearTimeout(initialTimer)
-      clearInterval(interval)
-    }
+    return () => { clearTimeout(initialTimer); clearInterval(interval) }
   }, [session, snoozedHabits])
 
   const handleAction = async (action) => {
     if (!currentHabit) return
-
     if (action === 'done') {
-      const { error } = await supabase.from('daily_logs').insert({
-        user_id: session.user.id,
-        habit_id: currentHabit.id,
-        status: 'completed',
-        note: 'Marcado desde recordatorio',
-        created_at: new Date().toISOString()
-      })
-      if (!error) {
-        setVisible(false)
-        window.location.reload() 
-      }
-    } 
-    else if (action === 'later') {
+      const { error } = await supabase.from('daily_logs').insert({ user_id: session.user.id, habit_id: currentHabit.id, status: 'completed', note: 'Marcado desde recordatorio', created_at: new Date().toISOString() })
+      if (!error) { setVisible(false); window.location.reload() }
+    } else if (action === 'later') {
       setSnoozedHabits(prev => [...prev, currentHabit.id])
       setVisible(false)
-      // Nota: Al dar a "Más tarde", el cooldown de 4 horas ya se activó al mostrarse.
-      // Si quieres que "Más tarde" ignore el cooldown y avise antes, habría que borrar el localStorage aquí.
-    } 
-    else if (action === 'skip') {
-      const { error } = await supabase.from('daily_logs').insert({
-        user_id: session.user.id,
-        habit_id: currentHabit.id,
-        status: 'skipped',
-        note: 'Omitido desde pop-up',
-        created_at: new Date().toISOString()
-      })
-      if (!error) {
-        setVisible(false)
-        window.location.reload()
-      }
+    } else if (action === 'skip') {
+      const { error } = await supabase.from('daily_logs').insert({ user_id: session.user.id, habit_id: currentHabit.id, status: 'skipped', note: 'Omitido desde pop-up', created_at: new Date().toISOString() })
+      if (!error) { setVisible(false); window.location.reload() }
     }
   }
 
   return (
     <AnimatePresence>
       {visible && currentHabit && (
-        <motion.div
-          initial={{ y: 100, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 100, opacity: 0 }}
-          className="fixed bottom-4 left-4 right-4 z-50"
-        >
+        <motion.div initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 100, opacity: 0 }} className="fixed bottom-4 left-4 right-4 z-50">
           <div className="bg-neutral-800 border border-neutral-700 rounded-2xl p-4 shadow-2xl flex flex-col gap-3">
             <div className="flex items-center gap-3">
-              <div className={`flex h-10 w-10 items-center justify-center rounded-full ${currentHabit.color || 'bg-blue-500'}`}>
-                <span className="text-xl">{currentHabit.icon || '📝'}</span>
-              </div>
-              <div>
-                <p className="text-xs text-neutral-400 uppercase font-bold tracking-wide">Recordatorio</p>
-                <p className="text-white font-medium text-lg">{currentHabit.title}</p>
-              </div>
+              <div className={`flex h-10 w-10 items-center justify-center rounded-full ${currentHabit.color || 'bg-blue-500'}`}><span className="text-xl">{currentHabit.icon || '📝'}</span></div>
+              <div><p className="text-xs text-neutral-400 uppercase font-bold tracking-wide">{t('reminder_title')}</p><p className="text-white font-medium text-lg">{currentHabit.title}</p></div>
             </div>
-
             <div className="grid grid-cols-3 gap-2">
-              <button
-                onClick={() => handleAction('done')}
-                className="flex flex-col items-center justify-center bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30 py-2 rounded-xl border border-emerald-600/50 transition-colors"
-              >
-                <Check size={18} className="mb-1" />
-                <span className="text-xs font-medium">Hecho</span>
-              </button>
-
-              <button
-                onClick={() => handleAction('later')}
-                className="flex flex-col items-center justify-center bg-neutral-700 text-neutral-300 hover:bg-neutral-600 py-2 rounded-xl border border-neutral-600 transition-colors"
-              >
-                <Clock size={18} className="mb-1" />
-                <span className="text-xs font-medium">Luego</span>
-              </button>
-
-              <button
-                onClick={() => handleAction('skip')}
-                className="flex flex-col items-center justify-center bg-red-900/20 text-red-400 hover:bg-red-900/30 py-2 rounded-xl border border-red-900/50 transition-colors"
-              >
-                <X size={18} className="mb-1" />
-                <span className="text-xs font-medium">Saltar</span>
-              </button>
+              <button onClick={() => handleAction('done')} className="flex flex-col items-center justify-center bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30 py-2 rounded-xl border border-emerald-600/50 transition-colors"><Check size={18} className="mb-1" /><span className="text-xs font-medium">{t('btn_done')}</span></button>
+              <button onClick={() => handleAction('later')} className="flex flex-col items-center justify-center bg-neutral-700 text-neutral-300 hover:bg-neutral-600 py-2 rounded-xl border border-neutral-600 transition-colors"><Clock size={18} className="mb-1" /><span className="text-xs font-medium">{t('btn_later')}</span></button>
+              <button onClick={() => handleAction('skip')} className="flex flex-col items-center justify-center bg-red-900/20 text-red-400 hover:bg-red-900/30 py-2 rounded-xl border border-red-900/50 transition-colors"><X size={18} className="mb-1" /><span className="text-xs font-medium">{t('btn_skip')}</span></button>
             </div>
           </div>
         </motion.div>

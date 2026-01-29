@@ -1,10 +1,42 @@
 export const translations = {
   es: {
-    // TopBanner
-    // El banner usa el texto de la base de datos, no necesita traducción fija aquí.
+    // Auth & General
+    app_name: "MiVida",
+    create_account: "Crear Cuenta",
+    login_subtitle: "Inicia sesión para continuar",
+    signup_subtitle: "Empieza a organizar tu rutina",
+    success_verified: "¡Correo verificado con éxito! Ya puedes iniciar sesión.",
+    success_check_email: "¡Casi listo! Revisa tu email para confirmar tu cuenta y poder entrar.",
+    your_name: "Tu Nombre",
+    name_placeholder: "Ej. Nacho",
+    email_label: "Email",
+    email_placeholder: "tu@email.com",
+    password_label: "Contraseña",
+    pass_placeholder: "••••••••",
+    syncing: "Sincronizando...",
+    btn_signup: "CREAR CUENTA",
+    btn_login: "ENTRAR",
+    switch_to_login: "¿Ya tienes cuenta? Inicia Sesión",
+    switch_to_signup: "¿No tienes cuenta? Regístrate",
+    
+    // Dashboard
+    hello: "Hola,",
+    today_caps: "HOY",
+    start_review: "Comenzar Revisión",
+    review_night: "Revisión nocturna",
+    review_completed: "¡Resumen completado!",
+    saving: "Guardando...",
+    saved_success: "¡Guardado con éxito!",
+    back_dashboard: "Volver",
+    exit: "Salir",
     
     // Sidebar
     menu: "Menú",
+    progress: "Progreso",
+    performance: "Mi Rendimiento",
+    management: "Gestión",
+    archive: "Archivo",
+    export: "Exportar Datos",
     profile_settings: "Ajustes de Perfil",
     control_tower: "Torre de Control",
     support_project: "Apoya el proyecto",
@@ -14,16 +46,15 @@ export const translations = {
     
     // SettingsModal
     settings_title: "Ajustes de Perfil",
+    language_label: "Idioma",
     display_name: "Nombre visible",
     new_password: "Nueva contraseña (opcional)",
-    password_placeholder: "Deja vacío para no cambiar",
+    password_placeholder_settings: "Deja vacío para no cambiar",
     system_permissions: "Permisos del Sistema",
     loading_permissions: "Cargando permisos...",
-    saving: "Guardando...",
     save_changes: "Guardar Cambios",
     profile_updated: "¡Perfil actualizado!",
     password_changed: "Contraseña cambiada. Vuelve a iniciar sesión.",
-    language_label: "Idioma", // Nuevo
     
     // HabitCreator
     edit_habit: "Editar Hábito",
@@ -41,24 +72,30 @@ export const translations = {
     confirm_delete: "¿Seguro que quieres borrar este hábito y todo su historial?",
     error_delete: "Error al borrar: ",
     
-    // Tutorial
-    tut_step1_title: "El gesto del éxito",
-    tut_step1_desc: "Cuando cumplas un objetivo, desliza hacia la DERECHA. Es rápido y satisfactorio.",
-    tut_step1_instr: "Desliza a la DERECHA para completar",
-    tut_step2_title: "Añade contexto",
-    tut_step2_desc: "Si no pudiste cumplirlo, desliza a la IZQUIERDA. Podrás explicar qué te detuvo.",
-    tut_step2_instr: "Desliza a la IZQUIERDA para poner una nota",
-    tut_welcome_title: "MiVida",
-    tut_welcome_desc: "La función de MiVida es hacer que tu vida sea más organizada cumpliendo 'mini-retos' que usted mismo se propone. Vamos a aprender a usar la App en 30 segundos.",
-    tut_teach_me: "¡ENSEÑAME!",
-    tut_note_title: "Escribe una nota",
-    tut_sim: "Simulación",
-    tut_note_placeholder: "Ej: Hoy no pude porque tuve una reunión...",
-    tut_save_note: "GUARDAR NOTA",
-    tut_congrats_title: "¡Enhorabuena!",
-    tut_congrats_desc: "Ya eres un experto en MiVida. Estás listo para tomar el control de tu rutina.",
-    tut_enter_app: "ENTRAR A LA APP",
-    hello: "Hola",
+    // Stats
+    stats_title: "Mis Estadísticas",
+    stats_subtitle: "Tus rachas y rendimiento aparecerán aquí pronto.",
+    streak_label: "Días en Racha",
+    total_wins: "Victorias Totales",
+    this_week: "Esta Semana",
+    weekly_perf: "Rendimiento Semanal",
+    
+    // Dock & More
+    dock_home: "Inicio",
+    dock_stats: "Stats",
+    dock_more: "Más",
+    more_title: "Más Funciones",
+    more_subtitle: "Estamos preparando nuevas herramientas para ti.",
+    
+    // Admin
+    maintenance: "Mantenimiento",
+    emergency_close: "Cierre de emergencia",
+    forced_announcement: "Anuncio Forzoso",
+    no_close_option: "Sin opción de cierre",
+    execute_orders: "Ejecutar Órdenes",
+    users: "Usuarios",
+    habits: "Hábitos",
+    logs: "Registros",
     
     // NoteModal
     what_happened: "¿Qué pasó?",
@@ -66,16 +103,63 @@ export const translations = {
     note_placeholder: "Escribe una nota rápida (opcional)...",
     skip: "Omitir",
     save: "Guardar",
-    
-    // Stats
-    streak_label: "Días en Racha",
-    total_wins: "Victorias Totales",
-    this_week: "Esta Semana",
-    weekly_perf: "Rendimiento Semanal",
+
+    // Reminder
+    reminder_title: "Recordatorio",
+    btn_done: "Hecho",
+    btn_later: "Luego",
+    btn_skip: "Saltar",
+
+    // Tutorial
+    tut_welcome_title: "MiVida",
+    tut_welcome_desc: "La función de MiVida es hacer que tu vida sea más organizada cumpliendo 'mini-retos'.",
+    tut_teach_me: "¡ENSEÑAME!",
+    tut_step1_title: "El gesto del éxito",
+    tut_step1_instr: "Desliza a la DERECHA para completar",
+    tut_step2_title: "Añade contexto",
+    tut_step2_instr: "Desliza a la IZQUIERDA para poner una nota",
+    tut_congrats_title: "¡Enhorabuena!",
+    tut_congrats_desc: "Ya eres un experto en MiVida.",
+    tut_enter_app: "ENTRAR A LA APP"
   },
   en: {
+    // Auth & General
+    app_name: "MiVida",
+    create_account: "Create Account",
+    login_subtitle: "Log in to continue",
+    signup_subtitle: "Start organizing your routine",
+    success_verified: "Email verified successfully! You can now log in.",
+    success_check_email: "Almost there! Check your email to confirm your account.",
+    your_name: "Your Name",
+    name_placeholder: "Ex. John",
+    email_label: "Email",
+    email_placeholder: "you@email.com",
+    password_label: "Password",
+    pass_placeholder: "••••••••",
+    syncing: "Syncing...",
+    btn_signup: "CREATE ACCOUNT",
+    btn_login: "LOG IN",
+    switch_to_login: "Already have an account? Log In",
+    switch_to_signup: "No account? Sign Up",
+    
+    // Dashboard
+    hello: "Hello,",
+    today_caps: "TODAY",
+    start_review: "Start Review",
+    review_night: "Nightly Review",
+    review_completed: "Review completed!",
+    saving: "Saving...",
+    saved_success: "Saved successfully!",
+    back_dashboard: "Go Back",
+    exit: "Exit",
+    
     // Sidebar
     menu: "Menu",
+    progress: "Progress",
+    performance: "My Performance",
+    management: "Management",
+    archive: "Archive",
+    export: "Export Data",
     profile_settings: "Profile Settings",
     control_tower: "Control Tower",
     support_project: "Support the project",
@@ -85,16 +169,15 @@ export const translations = {
     
     // SettingsModal
     settings_title: "Profile Settings",
+    language_label: "Language",
     display_name: "Display Name",
     new_password: "New Password (optional)",
-    password_placeholder: "Leave empty to keep current",
+    password_placeholder_settings: "Leave empty to keep current",
     system_permissions: "System Permissions",
     loading_permissions: "Loading permissions...",
-    saving: "Saving...",
     save_changes: "Save Changes",
     profile_updated: "Profile updated!",
     password_changed: "Password changed. Please log in again.",
-    language_label: "Language",
     
     // HabitCreator
     edit_habit: "Edit Habit",
@@ -112,24 +195,30 @@ export const translations = {
     confirm_delete: "Are you sure you want to delete this habit and its history?",
     error_delete: "Error deleting: ",
     
-    // Tutorial
-    tut_step1_title: "The gesture of success",
-    tut_step1_desc: "When you achieve a goal, swipe RIGHT. It's fast and satisfying.",
-    tut_step1_instr: "Swipe RIGHT to complete",
-    tut_step2_title: "Add context",
-    tut_step2_desc: "If you couldn't do it, swipe LEFT. You can explain what stopped you.",
-    tut_step2_instr: "Swipe LEFT to add a note",
-    tut_welcome_title: "MiVida",
-    tut_welcome_desc: "MiVida's function is to organize your life by fulfilling 'mini-challenges' you set for yourself. Let's learn to use the App in 30 seconds.",
-    tut_teach_me: "TEACH ME!",
-    tut_note_title: "Write a note",
-    tut_sim: "Simulation",
-    tut_note_placeholder: "Ex: I couldn't today because I had a meeting...",
-    tut_save_note: "SAVE NOTE",
-    tut_congrats_title: "Congratulations!",
-    tut_congrats_desc: "You are now a MiVida expert. You are ready to take control of your routine.",
-    tut_enter_app: "ENTER APP",
-    hello: "Hello",
+    // Stats
+    stats_title: "My Statistics",
+    stats_subtitle: "Your streaks and performance will appear here soon.",
+    streak_label: "Day Streak",
+    total_wins: "Total Wins",
+    this_week: "This Week",
+    weekly_perf: "Weekly Performance",
+    
+    // Dock & More
+    dock_home: "Home",
+    dock_stats: "Stats",
+    dock_more: "More",
+    more_title: "More Features",
+    more_subtitle: "We are preparing new tools for you.",
+    
+    // Admin
+    maintenance: "Maintenance",
+    emergency_close: "Emergency Shutdown",
+    forced_announcement: "Forced Announcement",
+    no_close_option: "No close option",
+    execute_orders: "Execute Orders",
+    users: "Users",
+    habits: "Habits",
+    logs: "Logs",
     
     // NoteModal
     what_happened: "What happened?",
@@ -137,11 +226,23 @@ export const translations = {
     note_placeholder: "Write a quick note (optional)...",
     skip: "Skip",
     save: "Save",
-    
-    // Stats
-    streak_label: "Day Streak",
-    total_wins: "Total Wins",
-    this_week: "This Week",
-    weekly_perf: "Weekly Performance",
+
+    // Reminder
+    reminder_title: "Reminder",
+    btn_done: "Done",
+    btn_later: "Later",
+    btn_skip: "Skip",
+
+    // Tutorial
+    tut_welcome_title: "MiVida",
+    tut_welcome_desc: "MiVida's function is to organize your life by fulfilling 'mini-challenges'.",
+    tut_teach_me: "TEACH ME!",
+    tut_step1_title: "The gesture of success",
+    tut_step1_instr: "Swipe RIGHT to complete",
+    tut_step2_title: "Add context",
+    tut_step2_instr: "Swipe LEFT to add a note",
+    tut_congrats_title: "Congratulations!",
+    tut_congrats_desc: "You are now a MiVida expert.",
+    tut_enter_app: "ENTER APP"
   }
 }

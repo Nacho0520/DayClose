@@ -1,16 +1,16 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { Home, BarChart3, LayoutGrid } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function Dock({ activeTab, onTabChange }) {
+  const { t } = useLanguage();
   const tabs = [
-    { id: 'home', icon: Home, label: 'Inicio' },
-    { id: 'stats', icon: BarChart3, label: 'Stats' },
-    { id: 'apps', icon: LayoutGrid, label: 'Más' },
+    { id: 'home', icon: Home, label: t('dock_home') },
+    { id: 'stats', icon: BarChart3, label: t('dock_stats') },
+    { id: 'apps', icon: LayoutGrid, label: t('dock_more') },
   ];
 
   return (
-    // "bottom-6 left-4 right-4": Crea el margen para el efecto flotante
-    // "max-w-md mx-auto": Evita que se estire demasiado en pantallas grandes
     <div className="fixed bottom-6 left-4 right-4 z-40 flex justify-center pointer-events-none">
       <motion.nav 
         initial={{ y: 50, opacity: 0 }}
