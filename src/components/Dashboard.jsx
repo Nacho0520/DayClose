@@ -36,11 +36,16 @@ function Dashboard({ user, habits, todayLogs, onStartReview, onResetToday, versi
   const percentage = habits?.length > 0 ? (completed / habits.length) * 100 : 0;
 
   return (
-    // pb-40 para que el contenido nunca quede tapado por el Dock
     <div className="min-h-screen bg-neutral-900 px-4 pt-8 pb-40 relative">
-      <button onClick={() => setSidebarOpen(true)} className="absolute top-6 left-4 text-white p-2 hover:bg-neutral-800 rounded-full transition-colors z-[100]">
-        <Menu size={28} />
-      </button>
+      {/* MODIFICACIÓN: El botón solo se renderiza si el Sidebar está CERRADO */}
+      {!isSidebarOpen && (
+        <button 
+          onClick={() => setSidebarOpen(true)} 
+          className="absolute top-6 left-4 text-white p-2 hover:bg-neutral-800 rounded-full transition-colors z-[100]"
+        >
+          <Menu size={28} />
+        </button>
+      )}
 
       <Sidebar 
         isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} user={user} 
@@ -92,7 +97,6 @@ function Dashboard({ user, habits, todayLogs, onStartReview, onResetToday, versi
         )}
       </div>
 
-      {/* Ajuste de posición del botón + para que no se pise con el Dock (bottom-32) */}
       <button onClick={() => setCreatorOpen(true)} className="fixed bottom-32 right-6 h-16 w-16 bg-blue-600 text-white rounded-[1.5rem] shadow-2xl flex items-center justify-center active:scale-90 transition-all z-40">
         <Plus size={36} strokeWidth={3} />
       </button>
