@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Mail, CheckCircle, AlertCircle } from 'lucide-react'
+import { Mail, CheckCircle, AlertCircle, Globe } from 'lucide-react' // <-- Añadimos Globe
+import { useLanguage } from '../context/LanguageContext' // <-- Importamos el hook
 
 export default function Auth() {
   const [loading, setLoading] = useState(false)
@@ -11,20 +12,21 @@ export default function Auth() {
   const [fullName, setFullName] = useState('')
   const [errorMsg, setErrorMsg] = useState(null)
   const [successMsg, setSuccessMsg] = useState(null)
+  
+  // Usamos el hook de idioma
+  const { t, language, switchLanguage } = useLanguage()
 
-  // DETECTOR DE VERIFICACIÓN: Detecta si el usuario vuelve tras pulsar el enlace del email
+  // DETECTOR DE VERIFICACIÓN
   useEffect(() => {
     const checkEmailVerified = () => {
-      // Supabase a veces añade fragmentos en la URL tras verificar
       const hash = window.location.hash
       if (hash.includes('access_token') || hash.includes('type=signup')) {
-        setSuccessMsg('¡Correo verificado con éxito! Ya puedes iniciar sesión.')
-        // Limpiamos la URL para que no quede el token ahí
+        setSuccessMsg(t('success_verified')) // <-- Traducido
         window.history.replaceState(null, null, window.location.pathname)
       }
     }
     checkEmailVerified()
-  }, [])
+  }, [t])
 
   const handleAuth = async (e) => {
     e.preventDefault()
@@ -35,7 +37,6 @@ export default function Auth() {
     let error
 
     if (isSignUp) {
-      // LOGICA DE REGISTRO
       const { error: signUpError } = await supabase.auth.signUp({
         email,
         password,
@@ -48,13 +49,12 @@ export default function Auth() {
       error = signUpError
       
       if (!error) {
-        setSuccessMsg('¡Casi listo! Revisa tu email para confirmar tu cuenta y poder entrar.')
+        setSuccessMsg(t('success_check_email')) // <-- Traducido
         setEmail('')
         setPassword('')
         setFullName('')
       }
     } else {
-      // LOGICA DE LOGIN
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -68,18 +68,34 @@ export default function Auth() {
     setLoading(false)
   }
 
+  // Función para cambiar idioma con el botón flotante
+  const toggleLang = () => switchLanguage(language === 'es' ? 'en' : 'es')
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-neutral-900 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-neutral-900 px-4 relative">
+      
+      {/* BOTÓN FLOTANTE DE IDIOMA */}
+      <button 
+        onClick={toggleLang}
+        className="fixed bottom-8 right-8 flex items-center gap-2 bg-neutral-800/60 backdrop-blur-md px-4 py-3 rounded-full border border-white/5 hover:bg-neutral-700 transition-all active:scale-95 group shadow-xl z-50"
+      >
+        <span className="text-xl">{language === 'es' ? '🇪🇸' : '🇬🇧'}</span>
+        <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest group-hover:text-white transition-colors">
+          {language === 'es' ? 'ES' : 'EN'}
+        </span>
+        <Globe size={14} className="text-neutral-500 group-hover:text-white transition-colors ml-1" />
+      </button>
+
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-sm rounded-[2.5rem] bg-neutral-800/50 p-8 shadow-2xl border border-neutral-700/50 backdrop-blur-xl"
       >
         <h1 className="mb-2 text-center text-3xl font-black text-white tracking-tighter">
-          {isSignUp ? 'Crear Cuenta' : 'MiVida'}
+          {isSignUp ? t('create_account') : t('app_name')} {/* <-- Traducido */}
         </h1>
         <p className="mb-8 text-center text-xs font-bold uppercase tracking-widest text-neutral-500">
-          {isSignUp ? 'Empieza a organizar tu rutina' : 'Inicia sesión para continuar'}
+          {isSignUp ? t('signup_subtitle') : t('login_subtitle')} {/* <-- Traducido */}
         </p>
 
         {/* MENSAJES DE ESTADO */}
@@ -113,7 +129,7 @@ export default function Auth() {
           {isSignUp && (
             <div>
               <label className="mb-2 ml-1 block text-[10px] font-black uppercase tracking-widest text-neutral-500">
-                Tu Nombre
+                {t('your_name')} {/* <-- Traducido */}
               </label>
               <input
                 type="text"
@@ -121,14 +137,14 @@ export default function Auth() {
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 className="w-full rounded-2xl border border-neutral-700 bg-neutral-900/50 px-4 py-3 text-sm text-white placeholder-neutral-600 focus:border-blue-500 focus:outline-none transition-all"
-                placeholder="Ej. Nacho"
+                placeholder={t('name_placeholder')}
               />
             </div>
           )}
 
           <div>
             <label className="mb-2 ml-1 block text-[10px] font-black uppercase tracking-widest text-neutral-500">
-              Email
+              {t('email_label')} {/* <-- Traducido */}
             </label>
             <input
               type="email"
@@ -136,13 +152,13 @@ export default function Auth() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full rounded-2xl border border-neutral-700 bg-neutral-900/50 px-4 py-3 text-sm text-white placeholder-neutral-600 focus:border-blue-500 focus:outline-none transition-all"
-              placeholder="tu@email.com"
+              placeholder={t('email_placeholder')}
             />
           </div>
 
           <div>
             <label className="mb-2 ml-1 block text-[10px] font-black uppercase tracking-widest text-neutral-500">
-              Contraseña
+              {t('password_label')} {/* <-- Traducido */}
             </label>
             <input
               type="password"
@@ -150,7 +166,7 @@ export default function Auth() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full rounded-2xl border border-neutral-700 bg-neutral-900/50 px-4 py-3 text-sm text-white placeholder-neutral-600 focus:border-blue-500 focus:outline-none transition-all"
-              placeholder="••••••••"
+              placeholder={t('pass_placeholder')}
             />
           </div>
 
@@ -159,7 +175,7 @@ export default function Auth() {
             disabled={loading}
             className="mt-4 flex w-full items-center justify-center rounded-2xl bg-white px-4 py-4 text-sm font-black text-neutral-900 hover:bg-neutral-200 disabled:opacity-50 transition-all active:scale-95 shadow-xl shadow-white/5"
           >
-            {loading ? 'Sincronizando...' : isSignUp ? 'CREAR CUENTA' : 'ENTRAR'}
+            {loading ? t('syncing') : isSignUp ? t('btn_signup') : t('btn_login')} {/* <-- Traducido */}
           </button>
         </form>
 
@@ -173,7 +189,7 @@ export default function Auth() {
             }}
             className="text-xs font-bold text-neutral-500 hover:text-white transition-colors uppercase tracking-widest"
           >
-            {isSignUp ? '¿Ya tienes cuenta? Inicia Sesión' : '¿No tienes cuenta? Regístrate'}
+            {isSignUp ? t('switch_to_login') : t('switch_to_signup')} {/* <-- Traducido */}
           </button>
         </div>
       </motion.div>
