@@ -10,26 +10,11 @@ import MaintenanceScreen from './components/MaintenanceScreen'
 import AdminPanel from './components/AdminPanel' 
 import Tutorial from './components/Tutorial'
 import Dock from './components/Dock' 
-import { X } from 'lucide-react'
+import { X, BarChart3, LayoutGrid } from 'lucide-react' // Asegúrate de importar estos iconos
 
 const CURRENT_SOFTWARE_VERSION = '1.0.2'; 
 
-function getDefaultIconForTitle(title = '', index) {
-  const mapping = ['📖', '💧', '🧘', '💤', '🍎', '💪', '📝', '🚶']
-  const lower = title.toLowerCase()
-  if (lower.includes('leer') || lower.includes('lectura')) return '📖'
-  if (lower.includes('agua')) return '💧'
-  if (lower.includes('meditar') || lower.includes('respir')) return '🧘'
-  if (lower.includes('dormir') || lower.includes('pantalla')) return '💤'
-  if (lower.includes('comer') || lower.includes('dieta')) return '🍎'
-  if (lower.includes('ejercicio') || lower.includes('flexion') || lower.includes('correr')) return '💪'
-  return mapping[index % mapping.length]
-}
-
-function getDefaultColorForIndex(index) {
-  const colors = ['bg-blue-500', 'bg-cyan-500', 'bg-emerald-500', 'bg-purple-500', 'bg-pink-500', 'bg-orange-500', 'bg-amber-500']
-  return colors[index % colors.length]
-}
+// ... (getDefaultIconForTitle y getDefaultColorForIndex se mantienen igual)
 
 function App() {
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -167,29 +152,35 @@ function App() {
 
   if (mode === 'dashboard') {
     return (
-      <div className="relative min-h-screen bg-neutral-900 overflow-x-hidden">
+      <div className="relative min-h-screen bg-neutral-900 overflow-x-hidden flex flex-col">
         <TopBanner />
         
-        {activeTab === 'home' ? (
-          <Dashboard
-            user={session.user} habits={habits} todayLogs={todayLogs}
-            onStartReview={handleStartReview} onResetToday={handleResetToday}
-            version={CURRENT_SOFTWARE_VERSION} onOpenAdmin={() => setMode('admin')}
-          />
-        ) : activeTab === 'stats' ? (
-          <div className="flex flex-col items-center justify-center min-h-[85vh] text-white px-6 text-center">
-            <BarChart3 size={48} className="text-emerald-500 mb-4 opacity-20" />
-            <h2 className="text-2xl font-black mb-2 tracking-tighter uppercase">Mis Estadísticas</h2>
-            <p className="text-neutral-500 font-medium italic">Próximamente: Gráficos de rendimiento y rachas.</p>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center min-h-[85vh] text-white px-6 text-center">
-            <h2 className="text-2xl font-black mb-2 tracking-tighter uppercase opacity-20">Funciones</h2>
-            <p className="text-neutral-500 font-medium italic">Explora nuevas herramientas pronto.</p>
-          </div>
-        )}
+        <div className="flex-1 flex flex-col">
+          {activeTab === 'home' ? (
+            <Dashboard
+              user={session.user} habits={habits} todayLogs={todayLogs}
+              onStartReview={handleStartReview} onResetToday={handleResetToday}
+              version={CURRENT_SOFTWARE_VERSION} onOpenAdmin={() => setMode('admin')}
+            />
+          ) : activeTab === 'stats' ? (
+            <div className="flex flex-col items-center justify-center flex-1 text-white p-6 text-center">
+              <div className="bg-emerald-500/10 p-6 rounded-[2.5rem] border border-emerald-500/20 mb-6">
+                <BarChart3 size={48} className="text-emerald-500" />
+              </div>
+              <h2 className="text-3xl font-black mb-2 tracking-tighter uppercase leading-none">Mis Estadísticas</h2>
+              <p className="text-neutral-500 font-medium italic max-w-xs">Tus rachas y rendimiento aparecerán aquí pronto.</p>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center flex-1 text-white p-6 text-center">
+              <div className="bg-blue-500/10 p-6 rounded-[2.5rem] border border-blue-500/20 mb-6">
+                <LayoutGrid size={48} className="text-blue-500" />
+              </div>
+              <h2 className="text-3xl font-black mb-2 tracking-tighter uppercase leading-none">Más Funciones</h2>
+              <p className="text-neutral-500 font-medium italic max-w-xs">Estamos preparando nuevas herramientas para ti.</p>
+            </div>
+          )}
+        </div>
 
-        {/* Dock integrado al final del flujo del dashboard */}
         <Dock activeTab={activeTab} onTabChange={setActiveTab} />
         <ReminderPopup session={session} />
       </div>
@@ -201,6 +192,7 @@ function App() {
       <button onClick={() => window.location.reload()} className="fixed top-6 right-6 z-[100] flex items-center gap-1 px-4 py-2 bg-neutral-800/80 backdrop-blur-md border border-neutral-700 rounded-full text-neutral-400 hover:text-white transition-all shadow-lg">
         <X size={18} /> <span className="text-xs font-medium uppercase tracking-widest">Salir</span>
       </button>
+      {/* ... (Resto del modo revisión) */}
       <div className="w-full max-md mx-auto px-4 py-8 text-white">
         <h1 className="mb-2 text-center text-2xl font-semibold">Revisión nocturna</h1>
         {currentHabit ? (

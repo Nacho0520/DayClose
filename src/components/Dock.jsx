@@ -9,13 +9,13 @@ export default function Dock({ activeTab, onTabChange }) {
   ];
 
   return (
-    // z-40 para quedar por debajo del Sidebar (z-50+)
-    // pb-8 para dar margen extra en dispositivos con notch inferior (iPhone)
-    <div className="fixed bottom-0 left-0 right-0 z-40 flex justify-center pointer-events-none">
+    // "bottom-6 left-4 right-4": Crea el margen para el efecto flotante
+    // "max-w-md mx-auto": Evita que se estire demasiado en pantallas grandes
+    <div className="fixed bottom-6 left-4 right-4 z-40 flex justify-center pointer-events-none">
       <motion.nav 
         initial={{ y: 50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="w-full flex items-center justify-around bg-neutral-900/80 backdrop-blur-3xl pt-4 pb-8 border-t border-white/5 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] pointer-events-auto"
+        className="w-full max-w-md flex items-center justify-around bg-neutral-800/80 backdrop-blur-2xl py-4 rounded-[2.5rem] border border-white/5 shadow-[0_20px_50px_rgba(0,0,0,0.5)] pointer-events-auto"
       >
         {tabs.map((tab) => {
           const Icon = tab.icon;
@@ -25,21 +25,26 @@ export default function Dock({ activeTab, onTabChange }) {
             <button
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
-              className="relative flex flex-col items-center flex-1 py-2 active:scale-90 transition-transform"
+              className="relative flex flex-col items-center flex-1 py-1 active:scale-90 transition-transform"
             >
               <Icon 
-                size={26} 
+                size={24} 
                 strokeWidth={isActive ? 2.5 : 2}
                 className={`transition-all duration-300 ${
                   isActive ? 'text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]' : 'text-neutral-500'
                 }`} 
               />
-              {isActive && (
-                <motion.div 
-                  layoutId="dock-dot"
-                  className="absolute -bottom-1 h-1 w-1 bg-white rounded-full"
-                />
-              )}
+              <AnimatePresence>
+                {isActive && (
+                  <motion.div 
+                    layoutId="dock-dot"
+                    className="absolute -bottom-1.5 h-1 w-1 bg-white rounded-full"
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    exit={{ scale: 0 }}
+                  />
+                )}
+              </AnimatePresence>
             </button>
           );
         })}
