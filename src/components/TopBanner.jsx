@@ -43,14 +43,18 @@ export default function TopBanner() {
     <AnimatePresence>
       {isVisible && message && (
         <motion.div
-          initial={{ y: -50, opacity: 0, x: '-50%' }}
-          animate={{ y: 0, opacity: 1, x: '-50%' }}
-          exit={{ y: -50, opacity: 0, x: '-50%' }}
-          transition={{ type: "spring", stiffness: 200, damping: 20 }}
-          // CAMBIO VISUAL: Ancho flexible hasta un máximo amplio (max-w-4xl) para ser largo horizontalmente
-          className="fixed top-6 left-1/2 z-40 w-auto max-w-[90%] md:max-w-4xl pointer-events-none"
+          // Animación de altura para que empuje el contenido suavemente al aparecer
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: 'auto', opacity: 1 }}
+          exit={{ height: 0, opacity: 0 }}
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          // CAMBIO CLAVE: Quitamos 'fixed'. Ahora es un bloque flexible centrado.
+          // pt-6: Margen superior para separarse del techo.
+          // mb-2: Margen inferior para separarse del dashboard.
+          className="w-full flex justify-center pt-6 mb-2 px-4 relative z-30"
         >
-          <div className="flex items-center gap-4 bg-neutral-900/90 backdrop-blur-xl pl-5 pr-8 py-3 rounded-full shadow-[0_10px_30px_rgba(0,0,0,0.5)] border border-white/5 pointer-events-auto">
+          {/* Mantenemos la estética 'Pill' de Apple pero estática en flujo */}
+          <div className="flex items-center gap-4 bg-neutral-900/90 backdrop-blur-xl pl-5 pr-8 py-3 rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.3)] border border-white/5 max-w-4xl mx-auto">
             <div className="p-1.5 bg-white/5 rounded-full shrink-0">
               <Megaphone size={14} className="text-neutral-400" />
             </div>
