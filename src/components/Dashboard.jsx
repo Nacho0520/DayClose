@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, X, Circle, Menu, Plus, Trash2, Settings, ChevronLeft, RotateCcw } from "lucide-react";
+import { Check, X, Circle, Menu, Plus, Trash2, Settings, RotateCcw } from "lucide-react";
 import Sidebar from "./Sidebar";
 import SettingsModal from "./SettingsModal";
 import HabitCreator from "./HabitCreator";
@@ -36,8 +36,9 @@ function Dashboard({ user, habits, todayLogs, onStartReview, onResetToday, versi
   const percentage = habits?.length > 0 ? (completed / habits.length) * 100 : 0;
 
   return (
-    <div className="min-h-screen bg-neutral-900 px-4 py-8 relative">
-      <button onClick={() => setSidebarOpen(true)} className="absolute top-6 left-4 text-white p-2 hover:bg-neutral-800 rounded-full transition-colors z-30">
+    // pb-40 para que el contenido nunca quede tapado por el Dock
+    <div className="min-h-screen bg-neutral-900 px-4 pt-8 pb-40 relative">
+      <button onClick={() => setSidebarOpen(true)} className="absolute top-6 left-4 text-white p-2 hover:bg-neutral-800 rounded-full transition-colors z-[100]">
         <Menu size={28} />
       </button>
 
@@ -51,8 +52,7 @@ function Dashboard({ user, habits, todayLogs, onStartReview, onResetToday, versi
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setSettingsOpen(false)} user={user} />
       <HabitCreator isOpen={isCreatorOpen || !!editHabit} onClose={() => { setCreatorOpen(false); setEditHabit(null); }} userId={user?.id} habitToEdit={editHabit} onHabitCreated={() => window.location.reload()} />
 
-      {/* Aumento del padding-bottom para el Dock (pb-32) */}
-      <div className="mx-auto w-full max-w-md mt-6 pb-32">
+      <div className="mx-auto w-full max-w-md mt-6">
         <header className="mb-10 text-center">
           <h2 className="text-lg font-light text-neutral-500 italic">Hola,</h2>
           <h1 className="text-3xl font-black text-white tracking-tight capitalize leading-none">{user?.user_metadata?.full_name || 'Usuario'}</h1>
@@ -92,7 +92,7 @@ function Dashboard({ user, habits, todayLogs, onStartReview, onResetToday, versi
         )}
       </div>
 
-      {/* Ajuste de posición del botón + para que no se pise con el Dock */}
+      {/* Ajuste de posición del botón + para que no se pise con el Dock (bottom-32) */}
       <button onClick={() => setCreatorOpen(true)} className="fixed bottom-32 right-6 h-16 w-16 bg-blue-600 text-white rounded-[1.5rem] shadow-2xl flex items-center justify-center active:scale-90 transition-all z-40">
         <Plus size={36} strokeWidth={3} />
       </button>

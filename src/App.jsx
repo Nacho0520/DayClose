@@ -9,12 +9,11 @@ import TopBanner from './components/TopBanner'
 import MaintenanceScreen from './components/MaintenanceScreen'
 import AdminPanel from './components/AdminPanel' 
 import Tutorial from './components/Tutorial'
-import Dock from './components/Dock' // Importamos el Dock
+import Dock from './components/Dock' 
 import { X } from 'lucide-react'
 
 const CURRENT_SOFTWARE_VERSION = '1.0.2'; 
 
-// ... (getDefaultIconForTitle y getDefaultColorForIndex se mantienen igual)
 function getDefaultIconForTitle(title = '', index) {
   const mapping = ['📖', '💧', '🧘', '💤', '🍎', '💪', '📝', '🚶']
   const lower = title.toLowerCase()
@@ -45,7 +44,7 @@ function App() {
   const [todayLogs, setTodayLogs] = useState([])
   const [loadingTodayLogs, setLoadingTodayLogs] = useState(false)
   const [mode, setMode] = useState('dashboard') 
-  const [activeTab, setActiveTab] = useState('home') // Nuevo estado para el Dock
+  const [activeTab, setActiveTab] = useState('home') 
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState(null)
   const [saveSuccess, setSaveSuccess] = useState(null)
@@ -168,10 +167,9 @@ function App() {
 
   if (mode === 'dashboard') {
     return (
-      <div className="relative min-h-screen bg-neutral-900">
+      <div className="relative min-h-screen bg-neutral-900 overflow-x-hidden">
         <TopBanner />
         
-        {/* Lógica de cambio de vista según el Dock */}
         {activeTab === 'home' ? (
           <Dashboard
             user={session.user} habits={habits} todayLogs={todayLogs}
@@ -179,22 +177,19 @@ function App() {
             version={CURRENT_SOFTWARE_VERSION} onOpenAdmin={() => setMode('admin')}
           />
         ) : activeTab === 'stats' ? (
-          <div className="flex items-center justify-center min-h-[80vh] text-white">
-            <div className="text-center">
-              <h2 className="text-2xl font-black mb-2 tracking-tighter uppercase">Mis Estadísticas</h2>
-              <p className="text-neutral-500 font-medium italic">Próximamente: Gráficos y Rachas</p>
-            </div>
+          <div className="flex flex-col items-center justify-center min-h-[85vh] text-white px-6 text-center">
+            <BarChart3 size={48} className="text-emerald-500 mb-4 opacity-20" />
+            <h2 className="text-2xl font-black mb-2 tracking-tighter uppercase">Mis Estadísticas</h2>
+            <p className="text-neutral-500 font-medium italic">Próximamente: Gráficos de rendimiento y rachas.</p>
           </div>
         ) : (
-          <div className="flex items-center justify-center min-h-[80vh] text-white">
-            <div className="text-center">
-              <h2 className="text-2xl font-black mb-2 tracking-tighter uppercase">Funciones</h2>
-              <p className="text-neutral-500 font-medium italic">Explora nuevas herramientas</p>
-            </div>
+          <div className="flex flex-col items-center justify-center min-h-[85vh] text-white px-6 text-center">
+            <h2 className="text-2xl font-black mb-2 tracking-tighter uppercase opacity-20">Funciones</h2>
+            <p className="text-neutral-500 font-medium italic">Explora nuevas herramientas pronto.</p>
           </div>
         )}
 
-        {/* Dock siempre visible en dashboard */}
+        {/* Dock integrado al final del flujo del dashboard */}
         <Dock activeTab={activeTab} onTabChange={setActiveTab} />
         <ReminderPopup session={session} />
       </div>
