@@ -112,33 +112,33 @@ function Dashboard({ user, habits, todayLogs, onStartReview, onResetToday, versi
           <h1 className="text-3xl font-black text-white tracking-tight capitalize leading-none">{user?.user_metadata?.full_name || 'Usuario'}</h1>
         </header>
 
-        <div className="mb-8 rounded-[2rem] border border-neutral-800 bg-neutral-800/30 p-5 backdrop-blur-md">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
-                <Flame className="text-orange-400" size={22} />
-              </div>
-              <div>
-                <p className="text-sm font-black text-white tracking-tight">{t('hard_day_title')}</p>
-                <p className="text-xs text-neutral-500">{t('hard_day_desc')}</p>
-              </div>
+        <div className="mb-8 flex items-center justify-between rounded-2xl border border-neutral-800/60 bg-neutral-900/40 px-4 py-3">
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 rounded-xl bg-neutral-800/80 border border-neutral-700/60 flex items-center justify-center">
+              <Flame className="text-neutral-400" size={16} />
             </div>
-            <button
-              onClick={() => setHardDayEnabled(!hardDayEnabled)}
-              className={`h-9 w-16 rounded-full transition-all relative ${hardDayEnabled ? 'bg-orange-500' : 'bg-neutral-700'}`}
-              aria-pressed={hardDayEnabled}
-            >
-              <div className={`absolute top-1.5 h-6 w-6 rounded-full bg-white shadow-md transition-all ${hardDayEnabled ? 'left-8' : 'left-2'}`} />
-            </button>
+            <div>
+              <p className="text-sm font-semibold text-neutral-200">{t('hard_day_title')}</p>
+              <p className="text-[11px] text-neutral-500">{t('hard_day_desc')}</p>
+            </div>
           </div>
-          <div className="mt-4 flex items-center justify-between text-xs text-neutral-400">
-            <span>{t('hard_day_help')}</span>
-            <span className="font-bold text-orange-300">{t('hard_day_selected')} {hardDayIds.length}/{MAX_HARD_DAY}</span>
-          </div>
-          {hardDayEnabled && hardDayIds.length === 0 && (
-            <p className="mt-3 text-xs text-neutral-500">{t('hard_day_empty')}</p>
-          )}
+          <button
+            onClick={() => setHardDayEnabled(!hardDayEnabled)}
+            className={`h-8 w-14 rounded-full transition-all relative ${hardDayEnabled ? 'bg-neutral-200' : 'bg-neutral-700'}`}
+            aria-pressed={hardDayEnabled}
+          >
+            <div className={`absolute top-1 h-6 w-6 rounded-full transition-all ${hardDayEnabled ? 'left-7 bg-neutral-900' : 'left-1 bg-neutral-200'}`} />
+          </button>
         </div>
+        {hardDayEnabled && (
+          <div className="mb-6 flex items-center justify-between text-[11px] text-neutral-500">
+            <span>{t('hard_day_help')}</span>
+            <span className="font-semibold text-neutral-400">{t('hard_day_selected')} {hardDayIds.length}/{MAX_HARD_DAY}</span>
+          </div>
+        )}
+        {hardDayEnabled && hardDayIds.length === 0 && (
+          <p className="mb-6 text-[11px] text-neutral-600">{t('hard_day_empty')}</p>
+        )}
 
         <div className="mb-10 flex justify-center"><CircularProgress percentage={percentage} /></div>
 
@@ -155,13 +155,15 @@ function Dashboard({ user, habits, todayLogs, onStartReview, onResetToday, versi
                   <p className="font-bold text-white truncate text-base tracking-tight">{habit.title}</p>
                 </div>
                 <div className="flex items-center gap-1 opacity-20 group-hover:opacity-100 transition-opacity pr-2">
-                  <button
-                    onClick={() => toggleHardDayHabit(habit.id)}
-                    className={`p-2 rounded-lg transition-colors ${isCritical ? 'text-amber-400' : 'text-neutral-500 hover:text-amber-300'}`}
-                    title={t('hard_day_title')}
-                  >
-                    <Star size={18} fill={isCritical ? 'currentColor' : 'none'} />
-                  </button>
+                  {hardDayEnabled && (
+                    <button
+                      onClick={() => toggleHardDayHabit(habit.id)}
+                      className={`p-2 rounded-lg transition-colors ${isCritical ? 'text-neutral-200' : 'text-neutral-600 hover:text-neutral-300'}`}
+                      title={t('hard_day_title')}
+                    >
+                      <Star size={18} fill={isCritical ? 'currentColor' : 'none'} />
+                    </button>
+                  )}
                   <button onClick={() => setEditHabit(habit)} className="p-2 text-neutral-400 hover:text-blue-400 rounded-lg"><Settings size={18} /></button>
                   <button onClick={async () => { if(confirm(t('confirm_delete'))){ await supabase.from('daily_logs').delete().eq('habit_id', habit.id); await supabase.from('habits').delete().eq('id', habit.id); window.location.reload(); }}} className="p-2 text-neutral-400 hover:text-red-500 rounded-lg"><Trash2 size={18} /></button>
                 </div>
