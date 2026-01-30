@@ -53,6 +53,7 @@ function App() {
   const [hasSaved, setHasSaved] = useState(false)
   const [isMaintenance, setIsMaintenance] = useState(false)
   const [updateAvailable, setUpdateAvailable] = useState(false)
+  const AUTO_UPDATE_DELAY_MS = 8000
   const ADMIN_EMAIL = 'hemmings.nacho@gmail.com' 
   
   const { t } = useLanguage()
@@ -101,6 +102,14 @@ function App() {
     };
     if (!loadingSession) initSettings();
   }, [session, loadingSession]);
+
+  useEffect(() => {
+    if (!updateAvailable) return
+    const timer = setTimeout(() => {
+      window.location.reload()
+    }, AUTO_UPDATE_DELAY_MS)
+    return () => clearTimeout(timer)
+  }, [updateAvailable, AUTO_UPDATE_DELAY_MS])
 
   const handleFinishTutorial = async () => {
     await supabase.auth.updateUser({ data: { has_finished_tutorial: true } });
