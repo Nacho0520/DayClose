@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Check, Calendar, Clock, Palette, Sparkles, Trash2, Save, Smile, ChevronDown } from 'lucide-react' // Añadido Smile
+import { X, Check, Calendar, Clock, Palette, Sparkles, Trash2, Save, Smile, ChevronDown, Settings } from 'lucide-react' // Añadido Smile
 import { supabase } from '../lib/supabaseClient'
 import { useLanguage } from '../context/LanguageContext'
 
