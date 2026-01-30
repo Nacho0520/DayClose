@@ -31,16 +31,21 @@ export default function Sidebar({ isOpen, onClose, user, onLogout, onOpenSetting
                 <ChevronRight size={18} className="text-neutral-600" />
               </button>
               <nav className="space-y-3 flex-1">
-                <button onClick={() => { onOpenSettings(); onClose(); }} className="w-full flex items-center gap-3 px-4 py-4 text-neutral-400 hover:bg-neutral-800 hover:text-white rounded-2xl transition-all font-medium text-sm" >
-                  <Settings size={20} /> <span>{t('profile_settings')}</span>
+                <button onClick={() => { onOpenSettings(); onClose(); }} className="w-full flex items-center gap-3 px-4 py-4 text-neutral-300 bg-neutral-800/60 hover:bg-neutral-800/80 hover:text-white rounded-2xl transition-all font-medium text-sm border border-white/5" >
+                  <div className="h-9 w-9 rounded-xl bg-neutral-900/70 border border-white/5 flex items-center justify-center">
+                    <Settings size={18} className="text-neutral-300" />
+                  </div>
+                  <span>{t('profile_settings')}</span>
                 </button>
                 <button
                   onClick={() => { onOpenUpdates?.(); onClose(); }}
-                  className="w-full flex items-center gap-3 px-4 py-4 text-neutral-400 hover:bg-neutral-800 hover:text-white rounded-2xl transition-all font-medium text-sm"
+                  className="w-full flex items-center gap-3 px-4 py-4 text-indigo-200 bg-indigo-500/10 hover:bg-indigo-500/20 rounded-2xl transition-all font-medium text-sm border border-indigo-500/20"
                 >
-                  <Sparkles size={20} />
+                  <div className="h-9 w-9 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
+                    <Sparkles size={18} className="text-indigo-200" />
+                  </div>
                   <span className="flex-1 text-left">{t('updates_title')}</span>
-                  {hasUpdates && <span className="h-2 w-2 rounded-full bg-emerald-400" />}
+                  {hasUpdates && <span className="h-2 w-2 rounded-full bg-indigo-300" />}
                 </button>
                 {isTestAccount && (
                   <div className="mt-2 rounded-2xl border border-white/5 bg-neutral-900/60 p-3">
