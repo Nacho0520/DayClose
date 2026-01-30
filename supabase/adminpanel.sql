@@ -164,7 +164,7 @@ $$;
 
 create or replace function public.get_admin_habit_stats()
 returns table (
-  habit_id uuid,
+  habit_id bigint,
   title text,
   completed bigint,
   skipped bigint
