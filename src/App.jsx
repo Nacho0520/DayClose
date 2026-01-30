@@ -14,7 +14,7 @@ import { X, BarChart3, LayoutGrid } from 'lucide-react'
 import Stats from './components/Stats'
 import { useLanguage } from './context/LanguageContext' 
 
-const CURRENT_SOFTWARE_VERSION = '1.0.18'; 
+const CURRENT_SOFTWARE_VERSION = '1.0.19'; 
 
 function getDefaultIconForTitle(title = '', index) {
   const mapping = ['📖', '💧', '🧘', '💤', '🍎', '💪', '📝', '🚶']
@@ -77,7 +77,6 @@ function App() {
   useEffect(() => {
     const handleVersionCheck = (dbVersion) => {
       if (dbVersion && dbVersion !== CURRENT_SOFTWARE_VERSION) {
-        if (session?.user?.email === ADMIN_EMAIL) return;
         setUpdateAvailable(true);
         return;
       }

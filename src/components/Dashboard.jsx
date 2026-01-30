@@ -90,7 +90,7 @@ function Dashboard({ user, habits, todayLogs, onStartReview, onResetToday, versi
 
   return (
     <div className="app-screen bg-neutral-900 px-4 relative">
-      {!isSidebarOpen && (
+      {!isSidebarOpen && !isCreatorOpen && !editHabit && !isSettingsOpen && (
         <button onClick={() => setSidebarOpen(true)} className="absolute top-6 left-4 text-white p-2 hover:bg-neutral-800 rounded-full transition-colors z-[100]">
           <Menu size={28} />
         </button>
