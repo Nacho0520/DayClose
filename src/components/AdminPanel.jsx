@@ -203,7 +203,21 @@ export default function AdminPanel({ onClose, version }) {
           {openSection === 'maintenance' && (
             <>
               <div className="h-px bg-white/5 my-6" />
-              <div className="mt-2 space-y-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-xl bg-neutral-900/70 border border-white/5 flex items-center justify-center">
+                    <ShieldAlert size={16} className="text-neutral-400" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Estado de mantenimiento</p>
+                    <p className="text-xs text-neutral-600">Activar o pausar el acceso global</p>
+                  </div>
+                </div>
+                <button onClick={() => setMaintenance(!maintenance)} className={`h-9 w-16 rounded-full transition-all relative ${maintenance ? 'bg-white' : 'bg-neutral-700'}`}>
+                  <div className={`absolute top-1.5 h-6 w-6 rounded-full shadow-md transition-all ${maintenance ? 'left-8 bg-neutral-900' : 'left-2 bg-white'}`} />
+                </button>
+              </div>
+              <div className="mt-6 space-y-6">
                 <div>
                   <div className="flex items-center gap-3 mb-3">
                     <div className="h-9 w-9 rounded-xl bg-neutral-900/70 border border-white/5 flex items-center justify-center">
