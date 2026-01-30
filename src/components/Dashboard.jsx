@@ -89,7 +89,7 @@ function Dashboard({ user, habits, todayLogs, onStartReview, onResetToday, versi
   const visibleHabits = shouldFilterHabits ? (habits || []).filter(h => hardDayIds.includes(h.id)) : (habits || []);
 
   return (
-    <div className="min-h-screen bg-neutral-900 px-4 pt-8 pb-40 relative">
+    <div className="app-screen bg-neutral-900 px-4 relative">
       {!isSidebarOpen && (
         <button onClick={() => setSidebarOpen(true)} className="absolute top-6 left-4 text-white p-2 hover:bg-neutral-800 rounded-full transition-colors z-[100]">
           <Menu size={28} />

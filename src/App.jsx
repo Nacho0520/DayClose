@@ -14,7 +14,7 @@ import { X, BarChart3, LayoutGrid } from 'lucide-react'
 import Stats from './components/Stats'
 import { useLanguage } from './context/LanguageContext' 
 
-const CURRENT_SOFTWARE_VERSION = '1.0.15'; 
+const CURRENT_SOFTWARE_VERSION = '1.0.16'; 
 
 function getDefaultIconForTitle(title = '', index) {
   const mapping = ['📖', '💧', '🧘', '💤', '🍎', '💪', '📝', '🚶']
@@ -239,11 +239,11 @@ function App() {
   }
 
   return (
-    <div className={`min-h-screen flex items-center justify-center ${swipeStatus === 'done' ? 'bg-emerald-900' : swipeStatus === 'not-done' ? 'bg-red-900' : 'bg-neutral-900'} transition-colors duration-300 relative`}>
+    <div className={`app-screen flex items-center justify-center ${swipeStatus === 'done' ? 'bg-emerald-900' : swipeStatus === 'not-done' ? 'bg-red-900' : 'bg-neutral-900'} transition-colors duration-300 relative`}>
       <button onClick={() => window.location.reload()} className="fixed top-6 right-6 z-[100] flex items-center gap-1 px-4 py-2 bg-neutral-800/80 backdrop-blur-md border border-neutral-700 rounded-full text-neutral-400 hover:text-white transition-all shadow-lg">
         <X size={18} /> <span className="text-xs font-medium uppercase tracking-widest">{t('exit')}</span>
       </button>
-      <div className="w-full max-md mx-auto px-4 py-8 text-white">
+      <div className="w-full max-md mx-auto px-4 py-6 text-white">
         <h1 className="mb-2 text-center text-2xl font-semibold">{t('review_night')}</h1>
         {currentHabit ? (
           <SwipeCard 
