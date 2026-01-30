@@ -17,7 +17,7 @@ import BlockedScreen from './components/BlockedScreen'
 import UpdateShowcase from './components/UpdateShowcase'
 import { useLanguage } from './context/LanguageContext' 
 
-const CURRENT_SOFTWARE_VERSION = '1.1.8'; 
+const CURRENT_SOFTWARE_VERSION = '1.1.9'; 
 
 function getDefaultIconForTitle(title = '', index) {
   const mapping = ['📖', '💧', '🧘', '💤', '🍎', '💪', '📝', '🚶']
@@ -164,6 +164,7 @@ function App() {
   const [isWhitelisted, setIsWhitelisted] = useState(false)
   const AUTO_UPDATE_DELAY_MS = 8000
   const ADMIN_EMAIL = 'hemmings.nacho@gmail.com' 
+  const TEST_EMAIL = 'test@test.com'
   
   const { t, language } = useLanguage()
   const [updatePayload, setUpdatePayload] = useState(null)
@@ -309,6 +310,24 @@ function App() {
     setMode('reviewing'); setCurrentIndex(0); setResults([]); setHasSaved(false); setSaveSuccess(null);
   }
 
+  const handleResetTutorial = async () => {
+    if (!session) return
+    await supabase.auth.updateUser({ data: { has_finished_tutorial: false } })
+    setMode('tutorial')
+  }
+
+  const handleResetUpdates = () => {
+    if (updatePayload?.id) {
+      try {
+        localStorage.removeItem(`mivida_update_seen_${updatePayload.id}`)
+      } catch {
+        // ignore
+      }
+    }
+    setUpdateUnread(Boolean(updatePayload?.id))
+    setUpdateOpen(true)
+  }
+
   useEffect(() => {
     const initSession = async () => {
       const { data } = await supabase.auth.getSession()
@@ -393,10 +412,14 @@ function App() {
   }, [session, reviewHabits, currentIndex, results, hasSaved, saving, mode, fetchTodayLogs, t])
 
   if (loadingSession) return <div className="min-h-screen flex items-center justify-center bg-neutral-900 text-white font-black italic tracking-tighter">MIVIDA...</div>
-  if (isMaintenance && session?.user?.email !== ADMIN_EMAIL && !isWhitelisted) return <MaintenanceScreen message={maintenanceMessage} />
+  const isTestAccount = session?.user?.email === TEST_EMAIL
+
+  if (isMaintenance && session?.user?.email !== ADMIN_EMAIL && !isWhitelisted && !isTestAccount) {
+    return <MaintenanceScreen message={maintenanceMessage} />
+  }
   
   if (!session) return <><Auth /></>
-  if (isBlocked && session?.user?.email !== ADMIN_EMAIL) {
+  if (isBlocked && session?.user?.email !== ADMIN_EMAIL && !isTestAccount) {
     return <BlockedScreen title={t('blocked_title')} message={t('blocked_desc')} />
   }
 
@@ -436,6 +459,9 @@ function App() {
               version={CURRENT_SOFTWARE_VERSION} onOpenAdmin={() => setMode('admin')}
               onOpenUpdates={() => setUpdateOpen(true)}
               hasUpdates={updateUnread}
+              isTestAccount={isTestAccount}
+              onResetTutorial={handleResetTutorial}
+              onResetUpdates={handleResetUpdates}
             />
           ) : activeTab === 'stats' ? (
             <Stats user={session.user} /> 

@@ -130,6 +130,9 @@ export const translations = {
     updates_title: "Novedades",
     updates_cta: "Ver novedades",
     updates_ack: "Entendido",
+    test_mode_title: "Modo pruebas",
+    test_reset_tutorial: "Reiniciar tutorial",
+    test_reset_updates: "Volver a ver novedades",
 
     // Hard Day Mode
     hard_day_title: "Día Difícil",
@@ -312,6 +315,9 @@ export const translations = {
     updates_title: "What's new",
     updates_cta: "View updates",
     updates_ack: "Got it",
+    test_mode_title: "Test mode",
+    test_reset_tutorial: "Reset tutorial",
+    test_reset_updates: "See updates again",
     // Hard Day Mode
     hard_day_title: "Hard Day",
     hard_day_desc: "Focus only on the essentials",

@@ -1,8 +1,8 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, LogOut, Settings, ShieldCheck, Heart, ChevronRight, Sparkles } from 'lucide-react'
+import { X, LogOut, Settings, ShieldCheck, Heart, ChevronRight, Sparkles, Beaker } from 'lucide-react'
 import { useLanguage } from '../context/LanguageContext'
 
-export default function Sidebar({ isOpen, onClose, user, onLogout, onOpenSettings, onOpenProfile, version, onOpenAdmin, onOpenUpdates, hasUpdates }) {
+export default function Sidebar({ isOpen, onClose, user, onLogout, onOpenSettings, onOpenProfile, version, onOpenAdmin, onOpenUpdates, hasUpdates, isTestAccount, onResetTutorial, onResetUpdates }) {
   const email = user?.email || ''
   const isAdmin = email === 'hemmings.nacho@gmail.com'
   const { t } = useLanguage()
@@ -42,6 +42,25 @@ export default function Sidebar({ isOpen, onClose, user, onLogout, onOpenSetting
                   <span className="flex-1 text-left">{t('updates_title')}</span>
                   {hasUpdates && <span className="h-2 w-2 rounded-full bg-emerald-400" />}
                 </button>
+                {isTestAccount && (
+                  <div className="mt-2 rounded-2xl border border-white/5 bg-neutral-900/60 p-3">
+                    <div className="flex items-center gap-2 mb-2 text-neutral-500 text-[10px] uppercase tracking-widest font-bold">
+                      <Beaker size={12} /> {t('test_mode_title')}
+                    </div>
+                    <button
+                      onClick={() => { onResetTutorial?.(); onClose(); }}
+                      className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-neutral-300 hover:bg-neutral-800/80 transition-colors"
+                    >
+                      {t('test_reset_tutorial')}
+                    </button>
+                    <button
+                      onClick={() => { onResetUpdates?.(); onClose(); }}
+                      className="mt-2 w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-neutral-300 hover:bg-neutral-800/80 transition-colors"
+                    >
+                      {t('test_reset_updates')}
+                    </button>
+                  </div>
+                )}
                 {isAdmin && (
                   <button onClick={() => { onOpenAdmin(); onClose(); }} className="w-full flex items-center gap-3 px-4 py-4 bg-blue-500/5 text-blue-400 hover:bg-blue-500/10 rounded-2xl transition-all font-black text-sm border border-blue-500/5" >
                     <ShieldCheck size={20} /> <span className="uppercase tracking-widest text-[10px]">{t('control_tower')}</span>
