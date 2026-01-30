@@ -1,7 +1,19 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { Sparkles, X, CheckCircle2 } from 'lucide-react'
+import { Sparkles, X, CheckCircle2, ShieldCheck, Flame, Star, Bell, ListChecks, Clock, Heart, Wand2 } from 'lucide-react'
 import { useLanguage } from '../context/LanguageContext'
 const MotionDiv = motion.div
+
+const ICONS = {
+  sparkles: Sparkles,
+  shield: ShieldCheck,
+  flame: Flame,
+  star: Star,
+  bell: Bell,
+  list: ListChecks,
+  clock: Clock,
+  heart: Heart,
+  wand: Wand2
+}
 
 export default function UpdateShowcase({ isOpen, onClose, payload }) {
   const { t } = useLanguage()
@@ -41,20 +53,22 @@ export default function UpdateShowcase({ isOpen, onClose, payload }) {
           </div>
 
           <div className="space-y-3">
-            {items.map((item, index) => (
+            {items.map((item, index) => {
+              const Icon = item.icon ? (ICONS[item.icon] || CheckCircle2) : CheckCircle2
+              return (
               <div
                 key={`${item.title}-${index}`}
                 className="flex items-start gap-3 bg-neutral-900/60 border border-white/5 rounded-2xl p-4"
               >
                 <div className="mt-1 h-6 w-6 rounded-full bg-white/5 border border-white/5 flex items-center justify-center">
-                  <CheckCircle2 size={14} className="text-emerald-400" />
+                  <Icon size={14} className="text-emerald-400" />
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-white">{item.title}</p>
                   <p className="text-[11px] text-neutral-500 mt-1">{item.desc}</p>
                 </div>
               </div>
-            ))}
+            )})}
           </div>
 
           <button

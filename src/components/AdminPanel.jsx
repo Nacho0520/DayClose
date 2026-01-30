@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabaseClient'
-import { ShieldAlert, RefreshCw, Megaphone, CheckCircle, Activity, Save, ChevronLeft, Users, Trash2, Globe, Bell, UserX, UserCheck, ListChecks, LineChart, Wrench, Mail, Sparkles } from 'lucide-react'
+import { ShieldAlert, RefreshCw, Megaphone, CheckCircle, Activity, Save, ChevronLeft, Users, Trash2, Globe, Bell, UserX, UserCheck, ListChecks, LineChart, Wrench, Mail, Sparkles, ShieldCheck, Flame, Star, Clock, Heart, Wand2 } from 'lucide-react'
 
 export default function AdminPanel({ onClose, version }) {
   const [maintenance, setMaintenance] = useState(false)
@@ -10,10 +10,10 @@ export default function AdminPanel({ onClose, version }) {
   const [updateId, setUpdateId] = useState('')
   const [updateTitleES, setUpdateTitleES] = useState('')
   const [updateSubtitleES, setUpdateSubtitleES] = useState('')
-  const [updateStepsES, setUpdateStepsES] = useState('')
+  const [updateItemsES, setUpdateItemsES] = useState([])
   const [updateTitleEN, setUpdateTitleEN] = useState('')
   const [updateSubtitleEN, setUpdateSubtitleEN] = useState('')
-  const [updateStepsEN, setUpdateStepsEN] = useState('')
+  const [updateItemsEN, setUpdateItemsEN] = useState([])
   const [stats, setStats] = useState({ habits: 0, logs: 0, users: 0 })
   const [users, setUsers] = useState([])
   const [habitStats, setHabitStats] = useState([])
@@ -53,41 +53,41 @@ export default function AdminPanel({ onClose, version }) {
               setUpdateId(update.id || '')
               setUpdateTitleES(update.title || '')
               setUpdateSubtitleES(update.subtitle || '')
-              setUpdateStepsES((update.items || []).map(i => `${i.title} | ${i.desc}`.trim()).join('\n'))
+              setUpdateItemsES(update.items || [])
               const updateEn = enPayload?.update
               if (updateEn) {
                 setUpdateTitleEN(updateEn.title || '')
                 setUpdateSubtitleEN(updateEn.subtitle || '')
-                setUpdateStepsEN((updateEn.items || []).map(i => `${i.title} | ${i.desc}`.trim()).join('\n'))
+                setUpdateItemsEN(updateEn.items || [])
               }
             } else {
               setUpdateId('')
               setUpdateTitleES('')
               setUpdateSubtitleES('')
-              setUpdateStepsES('')
+              setUpdateItemsES([])
               setUpdateTitleEN('')
               setUpdateSubtitleEN('')
-              setUpdateStepsEN('')
+              setUpdateItemsEN([])
             }
           } else {
             setBannerTextES(announcement.message)
             setUpdateId('')
             setUpdateTitleES('')
             setUpdateSubtitleES('')
-            setUpdateStepsES('')
+            setUpdateItemsES([])
             setUpdateTitleEN('')
             setUpdateSubtitleEN('')
-            setUpdateStepsEN('')
+            setUpdateItemsEN([])
           }
         } catch {
           setBannerTextES(announcement.message)
           setUpdateId('')
           setUpdateTitleES('')
           setUpdateSubtitleES('')
-          setUpdateStepsES('')
+          setUpdateItemsES([])
           setUpdateTitleEN('')
           setUpdateSubtitleEN('')
-          setUpdateStepsEN('')
+          setUpdateItemsEN([])
         }
       }
 
@@ -119,24 +119,19 @@ export default function AdminPanel({ onClose, version }) {
     setLoading(true)
     setMessage(null)
     try {
-      const parseSteps = (raw) => raw
-        .split('\n')
-        .map(line => line.trim())
-        .filter(Boolean)
-        .map(line => {
-          const [title, ...rest] = line.split('|')
-          return { title: title.trim(), desc: rest.join('|').trim() || '' }
-        })
-        .filter(item => item.title)
-
-      const buildUpdate = (id, title, subtitle, stepsRaw) => {
-        const hasContent = id.trim() || title.trim() || subtitle.trim() || stepsRaw.trim()
+      const buildUpdate = (id, title, subtitle, items) => {
+        const filtered = (items || []).filter(i => i?.title?.trim())
+        const hasContent = id.trim() || title.trim() || subtitle.trim() || filtered.length > 0
         if (!hasContent) return null
         return {
           id: id.trim(),
           title: title.trim(),
           subtitle: subtitle.trim(),
-          items: parseSteps(stepsRaw)
+          items: filtered.map(i => ({
+            title: i.title.trim(),
+            desc: (i.desc || '').trim(),
+            icon: i.icon || ''
+          }))
         }
       }
 
@@ -145,8 +140,8 @@ export default function AdminPanel({ onClose, version }) {
         supabase.from('app_settings').update({ value: appVersion }).eq('key', 'app_version')
       ]
       await supabase.from('announcements').update({ is_active: false }).neq('id', 0)
-      const updateEs = buildUpdate(updateId, updateTitleES, updateSubtitleES, updateStepsES)
-      const updateEn = buildUpdate(updateId, updateTitleEN, updateSubtitleEN, updateStepsEN) || updateEs
+      const updateEs = buildUpdate(updateId, updateTitleES, updateSubtitleES, updateItemsES)
+      const updateEn = buildUpdate(updateId, updateTitleEN, updateSubtitleEN, updateItemsEN) || updateEs
       const hasAnnouncement = bannerTextES.trim().length > 0 || updateEs
       if (hasAnnouncement) {
         const finalMessage = JSON.stringify({
@@ -169,10 +164,34 @@ export default function AdminPanel({ onClose, version }) {
     setUpdateId('')
     setUpdateTitleES('')
     setUpdateSubtitleES('')
-    setUpdateStepsES('')
+    setUpdateItemsES([])
     setUpdateTitleEN('')
     setUpdateSubtitleEN('')
-    setUpdateStepsEN('')
+    setUpdateItemsEN([])
+  }
+
+  const UPDATE_ICON_OPTIONS = [
+    { id: 'sparkles', icon: Sparkles },
+    { id: 'shield', icon: ShieldCheck },
+    { id: 'flame', icon: Flame },
+    { id: 'star', icon: Star },
+    { id: 'bell', icon: Bell },
+    { id: 'list', icon: ListChecks },
+    { id: 'clock', icon: Clock },
+    { id: 'heart', icon: Heart },
+    { id: 'wand', icon: Wand2 }
+  ]
+
+  const addUpdateItem = (setItems) => {
+    setItems(prev => [...prev, { title: '', desc: '', icon: 'sparkles' }])
+  }
+
+  const updateItemField = (setItems, index, field, value) => {
+    setItems(prev => prev.map((item, i) => (i === index ? { ...item, [field]: value } : item)))
+  }
+
+  const removeUpdateItem = (setItems, index) => {
+    setItems(prev => prev.filter((_, i) => i !== index))
   }
 
   const toggleBlockUser = async (userId, blocked) => {
@@ -413,12 +432,56 @@ export default function AdminPanel({ onClose, version }) {
                         placeholder="Subtítulo (ES)"
                         className="w-full bg-neutral-900 border border-neutral-800/60 rounded-[1.5rem] px-4 py-3 text-sm font-medium outline-none focus:border-neutral-400/50 transition-colors mb-2"
                       />
-                      <textarea
-                        value={updateStepsES}
-                        onChange={(e) => setUpdateStepsES(e.target.value)}
-                        placeholder="Paso 1 | Descripción\nPaso 2 | Descripción"
-                        className="w-full bg-neutral-900 border border-neutral-800/60 rounded-[1.5rem] p-4 text-sm font-medium outline-none h-28 resize-none focus:border-neutral-400/50 transition-colors"
-                      />
+                      <div className="space-y-3">
+                        {updateItemsES.map((item, index) => (
+                          <div key={`es-${index}`} className="bg-neutral-900/60 border border-white/5 rounded-2xl p-3">
+                            <div className="flex items-center gap-2 mb-2">
+                              {UPDATE_ICON_OPTIONS.map((opt) => {
+                                const Icon = opt.icon
+                                const selected = item.icon === opt.id
+                                return (
+                                  <button
+                                    key={opt.id}
+                                    type="button"
+                                    onClick={() => updateItemField(setUpdateItemsES, index, 'icon', opt.id)}
+                                    className={`h-8 w-8 rounded-xl flex items-center justify-center border ${selected ? 'bg-white/10 border-white/20 text-white' : 'bg-neutral-900/60 border-white/5 text-neutral-500'} transition-colors`}
+                                  >
+                                    <Icon size={14} />
+                                  </button>
+                                )
+                              })}
+                            </div>
+                            <input
+                              value={item.title}
+                              onChange={(e) => updateItemField(setUpdateItemsES, index, 'title', e.target.value)}
+                              placeholder="Título"
+                              className="w-full bg-neutral-900 border border-neutral-800/60 rounded-xl px-3 py-2 text-sm text-white mb-2"
+                            />
+                            <textarea
+                              value={item.desc}
+                              onChange={(e) => updateItemField(setUpdateItemsES, index, 'desc', e.target.value)}
+                              placeholder="Descripción"
+                              className="w-full bg-neutral-900 border border-neutral-800/60 rounded-xl p-3 text-sm text-white h-20 resize-none"
+                            />
+                            <div className="flex justify-end mt-2">
+                              <button
+                                type="button"
+                                onClick={() => removeUpdateItem(setUpdateItemsES, index)}
+                                className="text-xs text-red-400 hover:text-red-300"
+                              >
+                                Eliminar
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={() => addUpdateItem(setUpdateItemsES)}
+                          className="w-full bg-white/10 border border-white/10 text-white text-xs font-bold py-2 rounded-xl"
+                        >
+                          Añadir novedad
+                        </button>
+                      </div>
                     </div>
                     <div>
                       <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-2">Contenido EN</p>
@@ -434,12 +497,56 @@ export default function AdminPanel({ onClose, version }) {
                         placeholder="Subtitle (EN)"
                         className="w-full bg-neutral-900 border border-neutral-800/60 rounded-[1.5rem] px-4 py-3 text-sm font-medium outline-none focus:border-neutral-400/50 transition-colors mb-2"
                       />
-                      <textarea
-                        value={updateStepsEN}
-                        onChange={(e) => setUpdateStepsEN(e.target.value)}
-                        placeholder="Step 1 | Description\nStep 2 | Description"
-                        className="w-full bg-neutral-900 border border-neutral-800/60 rounded-[1.5rem] p-4 text-sm font-medium outline-none h-28 resize-none focus:border-neutral-400/50 transition-colors"
-                      />
+                      <div className="space-y-3">
+                        {updateItemsEN.map((item, index) => (
+                          <div key={`en-${index}`} className="bg-neutral-900/60 border border-white/5 rounded-2xl p-3">
+                            <div className="flex items-center gap-2 mb-2">
+                              {UPDATE_ICON_OPTIONS.map((opt) => {
+                                const Icon = opt.icon
+                                const selected = item.icon === opt.id
+                                return (
+                                  <button
+                                    key={opt.id}
+                                    type="button"
+                                    onClick={() => updateItemField(setUpdateItemsEN, index, 'icon', opt.id)}
+                                    className={`h-8 w-8 rounded-xl flex items-center justify-center border ${selected ? 'bg-white/10 border-white/20 text-white' : 'bg-neutral-900/60 border-white/5 text-neutral-500'} transition-colors`}
+                                  >
+                                    <Icon size={14} />
+                                  </button>
+                                )
+                              })}
+                            </div>
+                            <input
+                              value={item.title}
+                              onChange={(e) => updateItemField(setUpdateItemsEN, index, 'title', e.target.value)}
+                              placeholder="Title"
+                              className="w-full bg-neutral-900 border border-neutral-800/60 rounded-xl px-3 py-2 text-sm text-white mb-2"
+                            />
+                            <textarea
+                              value={item.desc}
+                              onChange={(e) => updateItemField(setUpdateItemsEN, index, 'desc', e.target.value)}
+                              placeholder="Description"
+                              className="w-full bg-neutral-900 border border-neutral-800/60 rounded-xl p-3 text-sm text-white h-20 resize-none"
+                            />
+                            <div className="flex justify-end mt-2">
+                              <button
+                                type="button"
+                                onClick={() => removeUpdateItem(setUpdateItemsEN, index)}
+                                className="text-xs text-red-400 hover:text-red-300"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={() => addUpdateItem(setUpdateItemsEN)}
+                          className="w-full bg-white/10 border border-white/10 text-white text-xs font-bold py-2 rounded-xl"
+                        >
+                          Add update
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
