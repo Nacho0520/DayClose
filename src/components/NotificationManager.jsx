@@ -38,9 +38,13 @@ export default function NotificationManager({ userId }) {
     const updateLanguagePreference = async () => {
       // Solo actualizamos si ya tiene permiso concedido y hay un usuario
       if (userId && permission === 'granted') {
-        await supabase.from('push_subscriptions')
+        const { error } = await supabase.from('push_subscriptions')
           .update({ language: language }) // <-- Actualizamos la columna language
           .eq('user_id', userId)
+        if (error && String(error.message || '').includes("language")) {
+          // La columna no existe: evitamos romper la experiencia
+          return
+        }
       }
     }
     updateLanguagePreference()
@@ -80,7 +84,16 @@ export default function NotificationManager({ userId }) {
           language: language // <-- Guardamos 'es' o 'en'
         })
 
-        if (error) throw error
+        if (error && String(error.message || '').includes("language")) {
+          // Fallback si la columna no existe
+          const { error: fallbackError } = await supabase.from('push_subscriptions').insert({
+            user_id: userId,
+            subscription: subscription
+          })
+          if (fallbackError) throw fallbackError
+        } else if (error) {
+          throw error
+        }
         
         setSubscribed(true)
         alert('¡Notificaciones activadas!')
