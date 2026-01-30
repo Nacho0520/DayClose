@@ -12,9 +12,10 @@ import Tutorial from './components/Tutorial'
 import Dock from './components/Dock' 
 import { X, BarChart3, LayoutGrid } from 'lucide-react' 
 import Stats from './components/Stats'
+import ProgressComparison from './components/ProgressComparison'
 import { useLanguage } from './context/LanguageContext' 
 
-const CURRENT_SOFTWARE_VERSION = '1.0.21'; 
+const CURRENT_SOFTWARE_VERSION = '1.0.22'; 
 
 function getDefaultIconForTitle(title = '', index) {
   const mapping = ['📖', '💧', '🧘', '💤', '🍎', '💪', '📝', '🚶']
@@ -245,11 +246,14 @@ function App() {
             <Stats user={session.user} /> 
           ) : (
             <div className="flex flex-col items-center justify-center flex-1 text-white p-6 text-center">
-              <div className="bg-blue-500/10 p-6 rounded-[2.5rem] border border-blue-500/20 mb-6">
-                <LayoutGrid size={48} className="text-blue-500" />
+              <div className="w-full max-w-md space-y-6">
+                <div className="bg-blue-500/10 p-6 rounded-[2.5rem] border border-blue-500/20">
+                  <LayoutGrid size={48} className="text-blue-500 mx-auto mb-4" />
+                  <h2 className="text-3xl font-black mb-2 tracking-tighter uppercase leading-none">{t('more_title')}</h2>
+                  <p className="text-neutral-500 font-medium italic">{t('more_subtitle')}</p>
+                </div>
+                <ProgressComparison user={session.user} />
               </div>
-              <h2 className="text-3xl font-black mb-2 tracking-tighter uppercase leading-none">{t('more_title')}</h2>
-              <p className="text-neutral-500 font-medium italic max-w-xs">{t('more_subtitle')}</p>
             </div>
           )}
         </div>

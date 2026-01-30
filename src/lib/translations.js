@@ -82,6 +82,11 @@ export const translations = {
     total_wins: "Victorias Totales",
     this_week: "Esta Semana",
     weekly_perf: "Rendimiento Semanal",
+    compare_day: "Hoy vs Ayer",
+    compare_week: "Esta semana",
+    compare_month: "Mes actual",
+    compare_section_title: "Comparación personal",
+    compare_section_desc: "Yo vs yo",
     
     // Dock & More
     dock_home: "Inicio",
@@ -221,6 +226,11 @@ export const translations = {
     total_wins: "Total Wins",
     this_week: "This Week",
     weekly_perf: "Weekly Performance",
+    compare_day: "Today vs Yesterday",
+    compare_week: "This week",
+    compare_month: "Current month",
+    compare_section_title: "Personal comparison",
+    compare_section_desc: "Me vs me",
     
     // Dock & More
     dock_home: "Home",
