@@ -1,8 +1,8 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, LogOut, Settings, ShieldCheck, Heart, ChevronRight } from 'lucide-react'
+import { X, LogOut, Settings, ShieldCheck, Heart, ChevronRight, Sparkles } from 'lucide-react'
 import { useLanguage } from '../context/LanguageContext'
 
-export default function Sidebar({ isOpen, onClose, user, onLogout, onOpenSettings, onOpenProfile, version, onOpenAdmin }) {
+export default function Sidebar({ isOpen, onClose, user, onLogout, onOpenSettings, onOpenProfile, version, onOpenAdmin, onOpenUpdates, hasUpdates }) {
   const email = user?.email || ''
   const isAdmin = email === 'hemmings.nacho@gmail.com'
   const { t } = useLanguage()
@@ -33,6 +33,14 @@ export default function Sidebar({ isOpen, onClose, user, onLogout, onOpenSetting
               <nav className="space-y-3 flex-1">
                 <button onClick={() => { onOpenSettings(); onClose(); }} className="w-full flex items-center gap-3 px-4 py-4 text-neutral-400 hover:bg-neutral-800 hover:text-white rounded-2xl transition-all font-medium text-sm" >
                   <Settings size={20} /> <span>{t('profile_settings')}</span>
+                </button>
+                <button
+                  onClick={() => { onOpenUpdates?.(); onClose(); }}
+                  className="w-full flex items-center gap-3 px-4 py-4 text-neutral-400 hover:bg-neutral-800 hover:text-white rounded-2xl transition-all font-medium text-sm"
+                >
+                  <Sparkles size={20} />
+                  <span className="flex-1 text-left">{t('updates_title')}</span>
+                  {hasUpdates && <span className="h-2 w-2 rounded-full bg-emerald-400" />}
                 </button>
                 {isAdmin && (
                   <button onClick={() => { onOpenAdmin(); onClose(); }} className="w-full flex items-center gap-3 px-4 py-4 bg-blue-500/5 text-blue-400 hover:bg-blue-500/10 rounded-2xl transition-all font-black text-sm border border-blue-500/5" >

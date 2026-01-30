@@ -14,9 +14,10 @@ import { X, BarChart3, LayoutGrid } from 'lucide-react'
 import Stats from './components/Stats'
 import ProgressComparison from './components/ProgressComparison'
 import BlockedScreen from './components/BlockedScreen'
+import UpdateShowcase from './components/UpdateShowcase'
 import { useLanguage } from './context/LanguageContext' 
 
-const CURRENT_SOFTWARE_VERSION = '1.1.5'; 
+const CURRENT_SOFTWARE_VERSION = '1.1.6'; 
 
 function getDefaultIconForTitle(title = '', index) {
   const mapping = ['📖', '💧', '🧘', '💤', '🍎', '💪', '📝', '🚶']
@@ -127,6 +128,20 @@ function normalizeMiniHabits(value) {
   return []
 }
 
+function parseAnnouncementMessage(raw, language) {
+  if (!raw) return { update: null }
+  try {
+    const parsed = JSON.parse(raw)
+    const langPayload = parsed[language] || parsed['es'] || null
+    if (langPayload && typeof langPayload === 'object') {
+      return { update: langPayload.update || null }
+    }
+  } catch {
+    return { update: null }
+  }
+  return { update: null }
+}
+
 function App() {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [swipeStatus, setSwipeStatus] = useState(null)
@@ -150,7 +165,10 @@ function App() {
   const AUTO_UPDATE_DELAY_MS = 8000
   const ADMIN_EMAIL = 'hemmings.nacho@gmail.com' 
   
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
+  const [updatePayload, setUpdatePayload] = useState(null)
+  const [updateOpen, setUpdateOpen] = useState(false)
+  const [updateUnread, setUpdateUnread] = useState(false)
 
   const reviewHabits = useMemo(() => {
     try {
@@ -201,6 +219,62 @@ function App() {
     };
     if (!loadingSession) initSettings();
   }, [session, loadingSession]);
+
+  useEffect(() => {
+    if (!session) return
+    let active = true
+    const applyAnnouncement = (message) => {
+      const { update } = parseAnnouncementMessage(message, language)
+      if (!active) return
+      setUpdatePayload(update || null)
+      if (update?.id) {
+        const key = `mivida_update_seen_${update.id}`
+        const seen = localStorage.getItem(key) === 'true'
+        setUpdateUnread(!seen)
+      } else {
+        setUpdateUnread(false)
+      }
+    }
+    const fetchAnnouncement = async () => {
+      const { data } = await supabase
+        .from('announcements')
+        .select('message')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single()
+      applyAnnouncement(data?.message || null)
+    }
+    fetchAnnouncement()
+    const channel = supabase
+      .channel('public:announcements')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'announcements' }, () => {
+        fetchAnnouncement()
+      })
+      .subscribe()
+    return () => {
+      active = false
+      supabase.removeChannel(channel)
+    }
+  }, [session, language])
+
+  useEffect(() => {
+    if (mode === 'dashboard' && updateUnread && updatePayload && !updateOpen) {
+      queueMicrotask(() => setUpdateOpen(true))
+    }
+  }, [mode, updateUnread, updatePayload, updateOpen])
+
+  const handleCloseUpdate = () => {
+    if (updatePayload?.id) {
+      try {
+        localStorage.setItem(`mivida_update_seen_${updatePayload.id}`, 'true')
+      } catch {
+        // ignore
+      }
+    }
+    setUpdateUnread(false)
+    setUpdateOpen(false)
+  }
 
   useEffect(() => {
     if (!updateAvailable) return
@@ -333,7 +407,8 @@ function App() {
     return (
       <div className="relative min-h-screen bg-neutral-900 overflow-x-hidden flex flex-col">
         {/* TopBanner renderizado como bloque flexible, no flotante */}
-        <TopBanner />
+        <TopBanner onOpenUpdates={() => setUpdateOpen(true)} />
+        <UpdateShowcase isOpen={updateOpen} onClose={handleCloseUpdate} payload={updatePayload} />
         {updateAvailable && (
           <div className="px-4 pt-4">
             <div className="mx-auto w-full max-w-md rounded-2xl border border-white/5 bg-neutral-900/70 px-4 py-3 backdrop-blur">
@@ -359,6 +434,8 @@ function App() {
               user={session.user} habits={habits} todayLogs={todayLogs}
               onStartReview={handleStartReview} onResetToday={handleResetToday}
               version={CURRENT_SOFTWARE_VERSION} onOpenAdmin={() => setMode('admin')}
+              onOpenUpdates={() => setUpdateOpen(true)}
+              hasUpdates={updateUnread}
             />
           ) : activeTab === 'stats' ? (
             <Stats user={session.user} /> 

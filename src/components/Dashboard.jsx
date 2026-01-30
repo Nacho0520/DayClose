@@ -26,7 +26,7 @@ function CircularProgress({ percentage }) {
   );
 }
 
-function Dashboard({ user, habits, todayLogs, onStartReview, version, onOpenAdmin }) {
+function Dashboard({ user, habits, todayLogs, onStartReview, version, onOpenAdmin, onOpenUpdates, hasUpdates }) {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isSettingsOpen, setSettingsOpen] = useState(false);
   const [isCreatorOpen, setCreatorOpen] = useState(false);
@@ -107,7 +107,9 @@ function Dashboard({ user, habits, todayLogs, onStartReview, version, onOpenAdmi
         onLogout={() => supabase.auth.signOut().then(() => window.location.reload())} 
         onOpenSettings={() => setSettingsOpen(true)} version={version}
         onOpenProfile={() => setProfileOpen(true)}
-        onOpenAdmin={onOpenAdmin} 
+        onOpenAdmin={onOpenAdmin}
+        onOpenUpdates={onOpenUpdates}
+        hasUpdates={hasUpdates}
       />
       
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setSettingsOpen(false)} user={user} appVersion={version} />

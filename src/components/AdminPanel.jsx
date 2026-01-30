@@ -1,12 +1,19 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabaseClient'
-import { ShieldAlert, RefreshCw, Megaphone, CheckCircle, Activity, Save, ChevronLeft, Users, Trash2, Globe, Bell, UserX, UserCheck, ListChecks, LineChart, Wrench, Mail } from 'lucide-react'
+import { ShieldAlert, RefreshCw, Megaphone, CheckCircle, Activity, Save, ChevronLeft, Users, Trash2, Globe, Bell, UserX, UserCheck, ListChecks, LineChart, Wrench, Mail, Sparkles } from 'lucide-react'
 
 export default function AdminPanel({ onClose, version }) {
   const [maintenance, setMaintenance] = useState(false)
   const [appVersion, setAppVersion] = useState(version || '1.0.0')
   const [bannerTextES, setBannerTextES] = useState('')
   const [bannerTextEN, setBannerTextEN] = useState('')
+  const [updateId, setUpdateId] = useState('')
+  const [updateTitleES, setUpdateTitleES] = useState('')
+  const [updateSubtitleES, setUpdateSubtitleES] = useState('')
+  const [updateStepsES, setUpdateStepsES] = useState('')
+  const [updateTitleEN, setUpdateTitleEN] = useState('')
+  const [updateSubtitleEN, setUpdateSubtitleEN] = useState('')
+  const [updateStepsEN, setUpdateStepsEN] = useState('')
   const [stats, setStats] = useState({ habits: 0, logs: 0, users: 0 })
   const [users, setUsers] = useState([])
   const [habitStats, setHabitStats] = useState([])
@@ -37,13 +44,50 @@ export default function AdminPanel({ onClose, version }) {
         try {
           const parsed = JSON.parse(announcement.message)
           if (parsed.es && parsed.en) {
-            setBannerTextES(parsed.es)
-            setBannerTextEN(parsed.en)
+            const esPayload = typeof parsed.es === 'string' ? { banner: parsed.es } : parsed.es
+            const enPayload = typeof parsed.en === 'string' ? { banner: parsed.en } : parsed.en
+            setBannerTextES(esPayload?.banner || '')
+            setBannerTextEN(enPayload?.banner || '')
+            const update = esPayload?.update || enPayload?.update
+            if (update) {
+              setUpdateId(update.id || '')
+              setUpdateTitleES(update.title || '')
+              setUpdateSubtitleES(update.subtitle || '')
+              setUpdateStepsES((update.items || []).map(i => `${i.title} | ${i.desc}`.trim()).join('\n'))
+              const updateEn = enPayload?.update
+              if (updateEn) {
+                setUpdateTitleEN(updateEn.title || '')
+                setUpdateSubtitleEN(updateEn.subtitle || '')
+                setUpdateStepsEN((updateEn.items || []).map(i => `${i.title} | ${i.desc}`.trim()).join('\n'))
+              }
+            } else {
+              setUpdateId('')
+              setUpdateTitleES('')
+              setUpdateSubtitleES('')
+              setUpdateStepsES('')
+              setUpdateTitleEN('')
+              setUpdateSubtitleEN('')
+              setUpdateStepsEN('')
+            }
           } else {
             setBannerTextES(announcement.message)
+            setUpdateId('')
+            setUpdateTitleES('')
+            setUpdateSubtitleES('')
+            setUpdateStepsES('')
+            setUpdateTitleEN('')
+            setUpdateSubtitleEN('')
+            setUpdateStepsEN('')
           }
         } catch {
           setBannerTextES(announcement.message)
+          setUpdateId('')
+          setUpdateTitleES('')
+          setUpdateSubtitleES('')
+          setUpdateStepsES('')
+          setUpdateTitleEN('')
+          setUpdateSubtitleEN('')
+          setUpdateStepsEN('')
         }
       }
 
@@ -75,15 +119,39 @@ export default function AdminPanel({ onClose, version }) {
     setLoading(true)
     setMessage(null)
     try {
+      const parseSteps = (raw) => raw
+        .split('\n')
+        .map(line => line.trim())
+        .filter(Boolean)
+        .map(line => {
+          const [title, ...rest] = line.split('|')
+          return { title: title.trim(), desc: rest.join('|').trim() || '' }
+        })
+        .filter(item => item.title)
+
+      const buildUpdate = (id, title, subtitle, stepsRaw) => {
+        const hasContent = id.trim() || title.trim() || subtitle.trim() || stepsRaw.trim()
+        if (!hasContent) return null
+        return {
+          id: id.trim(),
+          title: title.trim(),
+          subtitle: subtitle.trim(),
+          items: parseSteps(stepsRaw)
+        }
+      }
+
       const updates = [
         supabase.from('app_settings').update({ value: maintenance.toString() }).eq('key', 'maintenance_mode'),
         supabase.from('app_settings').update({ value: appVersion }).eq('key', 'app_version')
       ]
       await supabase.from('announcements').update({ is_active: false }).neq('id', 0)
-      if (bannerTextES.trim().length > 0) {
+      const updateEs = buildUpdate(updateId, updateTitleES, updateSubtitleES, updateStepsES)
+      const updateEn = buildUpdate(updateId, updateTitleEN, updateSubtitleEN, updateStepsEN) || updateEs
+      const hasAnnouncement = bannerTextES.trim().length > 0 || updateEs
+      if (hasAnnouncement) {
         const finalMessage = JSON.stringify({
-          es: bannerTextES,
-          en: bannerTextEN || bannerTextES
+          es: { banner: bannerTextES.trim(), update: updateEs },
+          en: { banner: (bannerTextEN || bannerTextES).trim(), update: updateEn }
         })
         updates.push(supabase.from('announcements').insert([{ message: finalMessage, is_active: true }]))
       }
@@ -98,6 +166,13 @@ export default function AdminPanel({ onClose, version }) {
   const clearAnnouncement = () => {
     setBannerTextES('')
     setBannerTextEN('')
+    setUpdateId('')
+    setUpdateTitleES('')
+    setUpdateSubtitleES('')
+    setUpdateStepsES('')
+    setUpdateTitleEN('')
+    setUpdateSubtitleEN('')
+    setUpdateStepsEN('')
   }
 
   const toggleBlockUser = async (userId, blocked) => {
@@ -305,6 +380,68 @@ export default function AdminPanel({ onClose, version }) {
                     </div>
                   </div>
                   <textarea value={bannerTextEN} onChange={(e) => setBannerTextEN(e.target.value)} placeholder="Write the message in English..." className="w-full bg-neutral-900 border border-neutral-800/60 rounded-[1.5rem] p-4 text-sm font-medium outline-none h-24 resize-none focus:border-neutral-400/50 transition-colors" />
+                </div>
+                <div className="h-px bg-white/5" />
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-xl bg-neutral-900/70 border border-white/5 flex items-center justify-center">
+                      <Sparkles size={12} className="text-neutral-400" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Tutorial de Novedades</p>
+                      <p className="text-xs text-neutral-600">Se mostrará como tutorial/aviso al usuario</p>
+                    </div>
+                  </div>
+                  <input
+                    value={updateId}
+                    onChange={(e) => setUpdateId(e.target.value)}
+                    placeholder="ID único (ej. 2026-01-30)"
+                    className="w-full bg-neutral-900 border border-neutral-800/60 rounded-[1.5rem] px-4 py-3 text-sm font-medium outline-none focus:border-neutral-400/50 transition-colors"
+                  />
+                  <div className="grid gap-4">
+                    <div>
+                      <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-2">Contenido ES</p>
+                      <input
+                        value={updateTitleES}
+                        onChange={(e) => setUpdateTitleES(e.target.value)}
+                        placeholder="Título (ES)"
+                        className="w-full bg-neutral-900 border border-neutral-800/60 rounded-[1.5rem] px-4 py-3 text-sm font-medium outline-none focus:border-neutral-400/50 transition-colors mb-2"
+                      />
+                      <input
+                        value={updateSubtitleES}
+                        onChange={(e) => setUpdateSubtitleES(e.target.value)}
+                        placeholder="Subtítulo (ES)"
+                        className="w-full bg-neutral-900 border border-neutral-800/60 rounded-[1.5rem] px-4 py-3 text-sm font-medium outline-none focus:border-neutral-400/50 transition-colors mb-2"
+                      />
+                      <textarea
+                        value={updateStepsES}
+                        onChange={(e) => setUpdateStepsES(e.target.value)}
+                        placeholder="Paso 1 | Descripción\nPaso 2 | Descripción"
+                        className="w-full bg-neutral-900 border border-neutral-800/60 rounded-[1.5rem] p-4 text-sm font-medium outline-none h-28 resize-none focus:border-neutral-400/50 transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-2">Contenido EN</p>
+                      <input
+                        value={updateTitleEN}
+                        onChange={(e) => setUpdateTitleEN(e.target.value)}
+                        placeholder="Title (EN)"
+                        className="w-full bg-neutral-900 border border-neutral-800/60 rounded-[1.5rem] px-4 py-3 text-sm font-medium outline-none focus:border-neutral-400/50 transition-colors mb-2"
+                      />
+                      <input
+                        value={updateSubtitleEN}
+                        onChange={(e) => setUpdateSubtitleEN(e.target.value)}
+                        placeholder="Subtitle (EN)"
+                        className="w-full bg-neutral-900 border border-neutral-800/60 rounded-[1.5rem] px-4 py-3 text-sm font-medium outline-none focus:border-neutral-400/50 transition-colors mb-2"
+                      />
+                      <textarea
+                        value={updateStepsEN}
+                        onChange={(e) => setUpdateStepsEN(e.target.value)}
+                        placeholder="Step 1 | Description\nStep 2 | Description"
+                        className="w-full bg-neutral-900 border border-neutral-800/60 rounded-[1.5rem] p-4 text-sm font-medium outline-none h-28 resize-none focus:border-neutral-400/50 transition-colors"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             </>

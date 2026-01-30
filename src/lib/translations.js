@@ -127,6 +127,9 @@ export const translations = {
     update_title: "Nueva versión disponible",
     update_desc: "Toca para actualizar y disfrutar mejoras.",
     update_cta: "Actualizar",
+    updates_title: "Novedades",
+    updates_cta: "Ver novedades",
+    updates_ack: "Entendido",
 
     // Hard Day Mode
     hard_day_title: "Día Difícil",
@@ -306,6 +309,9 @@ export const translations = {
     update_title: "New version available",
     update_desc: "Tap to update and get improvements.",
     update_cta: "Update",
+    updates_title: "What's new",
+    updates_cta: "View updates",
+    updates_ack: "Got it",
     // Hard Day Mode
     hard_day_title: "Hard Day",
     hard_day_desc: "Focus only on the essentials",

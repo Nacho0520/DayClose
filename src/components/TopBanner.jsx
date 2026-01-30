@@ -4,22 +4,23 @@ import { supabase } from '../lib/supabaseClient'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useLanguage } from '../context/LanguageContext' // <-- Importar contexto
 
-export default function TopBanner() {
+export default function TopBanner({ onOpenUpdates }) {
   const [rawMessage, setRawMessage] = useState(null)
   const [isVisible, setIsVisible] = useState(false)
-  const { language } = useLanguage() // <-- Obtener idioma actual ('es' o 'en')
+  const { language, t } = useLanguage() // <-- Obtener idioma actual ('es' o 'en')
 
-  // Función auxiliar para extraer el texto correcto
-  const getTranslatedMessage = (raw) => {
-    if (!raw) return ''
+  const parseAnnouncement = (raw) => {
+    if (!raw) return { banner: '', update: null }
     try {
-      // Intentamos leerlo como JSON bilingüe
       const parsed = JSON.parse(raw)
-      // Devolvemos el idioma actual, o español por defecto
-      return parsed[language] || parsed['es'] || raw
+      const langPayload = parsed[language] || parsed['es'] || raw
+      if (typeof langPayload === 'string') return { banner: langPayload, update: null }
+      if (langPayload && typeof langPayload === 'object') {
+        return { banner: langPayload.banner || '', update: langPayload.update || null }
+      }
+      return { banner: raw, update: null }
     } catch (e) {
-      // Si no es JSON (mensaje antiguo), lo devolvemos tal cual
-      return raw
+      return { banner: raw, update: null }
     }
   }
 
@@ -55,7 +56,7 @@ export default function TopBanner() {
     }
   }, [])
 
-  const displayMessage = getTranslatedMessage(rawMessage)
+  const { banner: displayMessage, update } = parseAnnouncement(rawMessage)
 
   return (
     <AnimatePresence>
@@ -67,7 +68,7 @@ export default function TopBanner() {
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
           className="w-full flex justify-center pt-6 mb-2 px-4 relative z-30"
         >
-          <div className="flex items-center gap-4 bg-neutral-800/60 backdrop-blur-xl pl-5 pr-8 py-3 radius-pill shadow-apple-soft border border-white/10 max-w-4xl mx-auto">
+          <div className="flex items-center gap-4 bg-neutral-800/60 backdrop-blur-xl pl-5 pr-4 py-3 radius-pill shadow-apple-soft border border-white/10 max-w-4xl mx-auto">
             <div className="p-1.5 bg-white/5 rounded-full shrink-0">
               <Megaphone size={14} className="text-neutral-400" />
             </div>
@@ -75,6 +76,14 @@ export default function TopBanner() {
             <p className="text-xs font-medium text-neutral-200 tracking-wide leading-snug text-left min-w-[200px] md:min-w-[300px]">
               {displayMessage}
             </p>
+            {update && onOpenUpdates && (
+              <button
+                onClick={onOpenUpdates}
+                className="ml-auto rounded-full bg-white/10 border border-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-neutral-200 hover:bg-white/20"
+              >
+                {t('updates_cta')}
+              </button>
+            )}
           </div>
         </motion.div>
       )}
