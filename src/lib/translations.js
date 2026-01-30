@@ -88,6 +88,11 @@ export const translations = {
     more_title: "Más Funciones",
     more_subtitle: "Estamos preparando nuevas herramientas para ti.",
 
+    // Update
+    update_title: "Nueva versión disponible",
+    update_desc: "Toca para actualizar y disfrutar mejoras.",
+    update_cta: "Actualizar",
+
     // Hard Day Mode
     hard_day_title: "Día Difícil",
     hard_day_desc: "Enfócate solo en lo esencial",
@@ -219,6 +224,10 @@ export const translations = {
     more_title: "More Features",
     more_subtitle: "We are preparing new tools for you.",
 
+    // Update
+    update_title: "New version available",
+    update_desc: "Tap to update and get improvements.",
+    update_cta: "Update",
     // Hard Day Mode
     hard_day_title: "Hard Day",
     hard_day_desc: "Focus only on the essentials",

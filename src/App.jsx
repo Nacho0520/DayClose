@@ -52,6 +52,7 @@ function App() {
   const [saveSuccess, setSaveSuccess] = useState(null)
   const [hasSaved, setHasSaved] = useState(false)
   const [isMaintenance, setIsMaintenance] = useState(false)
+  const [updateAvailable, setUpdateAvailable] = useState(false)
   const ADMIN_EMAIL = 'hemmings.nacho@gmail.com' 
   
   const { t } = useLanguage()
@@ -76,11 +77,11 @@ function App() {
     const handleVersionCheck = (dbVersion) => {
       if (dbVersion && dbVersion !== CURRENT_SOFTWARE_VERSION) {
         if (session?.user?.email === ADMIN_EMAIL) return;
-        const lastReloadAttempt = localStorage.getItem('last_version_reload');
-        if (lastReloadAttempt === dbVersion) return;
-        localStorage.setItem('last_version_reload', dbVersion);
-        window.location.reload(true);
-      } else if (dbVersion === CURRENT_SOFTWARE_VERSION) {
+        setUpdateAvailable(true);
+        return;
+      }
+      setUpdateAvailable(false);
+      if (dbVersion === CURRENT_SOFTWARE_VERSION) {
         localStorage.removeItem('last_version_reload');
       }
     };
@@ -183,6 +184,24 @@ function App() {
       <div className="relative min-h-screen bg-neutral-900 overflow-x-hidden flex flex-col">
         {/* TopBanner renderizado como bloque flexible, no flotante */}
         <TopBanner />
+        {updateAvailable && (
+          <div className="px-4 pt-4">
+            <div className="mx-auto w-full max-w-md rounded-2xl border border-neutral-800/60 bg-neutral-900/70 px-4 py-3 backdrop-blur">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-neutral-200">{t('update_title')}</p>
+                  <p className="text-[11px] text-neutral-500">{t('update_desc')}</p>
+                </div>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="shrink-0 rounded-full bg-white px-3 py-1.5 text-xs font-bold text-black hover:bg-neutral-200 active:scale-95 transition"
+                >
+                  {t('update_cta')}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         
         <div className="flex-1 flex flex-col">
           {activeTab === 'home' ? (
