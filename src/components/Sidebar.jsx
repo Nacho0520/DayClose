@@ -1,8 +1,8 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, LogOut, Settings, ShieldCheck, Heart, ChevronRight, Sparkles, Beaker } from 'lucide-react'
+import { X, LogOut, Settings, ShieldCheck, Heart, ChevronRight, Sparkles, Beaker, Archive } from 'lucide-react'
 import { useLanguage } from '../context/LanguageContext'
 
-export default function Sidebar({ isOpen, onClose, user, onLogout, onOpenSettings, onOpenProfile, version, onOpenAdmin, onOpenUpdates, hasUpdates, isTestAccount, onResetTutorial, onResetUpdates }) {
+export default function Sidebar({ isOpen, onClose, user, onLogout, onOpenSettings, onOpenProfile, version, onOpenAdmin, onOpenUpdates, hasUpdates, isTestAccount, onResetTutorial, onResetUpdates, onOpenHistory }) {
   const email = user?.email || ''
   const isAdmin = email === 'hemmings.nacho@gmail.com'
   const { t } = useLanguage()
@@ -36,6 +36,15 @@ export default function Sidebar({ isOpen, onClose, user, onLogout, onOpenSetting
                     <Settings size={18} className="text-neutral-300" />
                   </div>
                   <span>{t('profile_settings')}</span>
+                </button>
+                <button
+                  onClick={() => { onOpenHistory?.(); onClose(); }}
+                  className="w-full flex items-center gap-3 px-4 py-4 text-neutral-300 bg-neutral-800/40 hover:bg-neutral-800/70 hover:text-white rounded-2xl transition-all font-medium text-sm border border-white/5"
+                >
+                  <div className="h-9 w-9 rounded-xl bg-neutral-900/70 border border-white/5 flex items-center justify-center">
+                    <Archive size={18} className="text-neutral-300" />
+                  </div>
+                  <span className="flex-1 text-left">{t('history_title')}</span>
                 </button>
                 <button
                   onClick={() => { onOpenUpdates?.(); onClose(); }}

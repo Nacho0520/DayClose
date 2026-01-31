@@ -26,7 +26,7 @@ function CircularProgress({ percentage }) {
   );
 }
 
-function Dashboard({ user, habits, todayLogs, onStartReview, version, onOpenAdmin, onOpenUpdates, hasUpdates, isTestAccount, onResetTutorial, onResetUpdates }) {
+function Dashboard({ user, habits, todayLogs, onStartReview, version, onOpenAdmin, onOpenUpdates, hasUpdates, isTestAccount, onResetTutorial, onResetUpdates, onOpenHistory }) {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isSettingsOpen, setSettingsOpen] = useState(false);
   const [isCreatorOpen, setCreatorOpen] = useState(false);
@@ -109,6 +109,7 @@ function Dashboard({ user, habits, todayLogs, onStartReview, version, onOpenAdmi
         onOpenProfile={() => setProfileOpen(true)}
         onOpenAdmin={onOpenAdmin}
         onOpenUpdates={onOpenUpdates}
+        onOpenHistory={onOpenHistory}
         hasUpdates={hasUpdates}
         isTestAccount={isTestAccount}
         onResetTutorial={onResetTutorial}

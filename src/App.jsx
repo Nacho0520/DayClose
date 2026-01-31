@@ -16,9 +16,10 @@ import ProgressComparison from './components/ProgressComparison'
 import BlockedScreen from './components/BlockedScreen'
 import UpdateShowcase from './components/UpdateShowcase'
 import MoreFeatures from './components/MoreFeatures'
+import History from './components/History'
 import { useLanguage } from './context/LanguageContext' 
 
-const CURRENT_SOFTWARE_VERSION = '1.1.14'; 
+const CURRENT_SOFTWARE_VERSION = '1.1.15'; 
 
 function getDefaultIconForTitle(title = '', index) {
   const mapping = ['📖', '💧', '🧘', '💤', '🍎', '💪', '📝', '🚶']
@@ -427,6 +428,10 @@ function App() {
   if (mode === 'tutorial') return <Tutorial user={session.user} onComplete={handleFinishTutorial} />
   if (mode === 'admin') return <AdminPanel onClose={() => setMode('dashboard')} version={CURRENT_SOFTWARE_VERSION} />
 
+  if (mode === 'history') {
+    return <History user={session.user} onClose={() => setMode('dashboard')} />
+  }
+
   if (mode === 'dashboard') {
     return (
       <div className="relative min-h-screen bg-neutral-900 overflow-x-hidden flex flex-col">
@@ -463,6 +468,7 @@ function App() {
               isTestAccount={isTestAccount}
               onResetTutorial={handleResetTutorial}
               onResetUpdates={handleResetUpdates}
+              onOpenHistory={() => setMode('history')}
             />
           ) : activeTab === 'stats' ? (
             <Stats user={session.user} /> 
