@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, useMotionValue, animate } from 'framer-motion'
 import SwipeCard from './components/SwipeCard'
 import NoteModal from './components/NoteModal'
 import Dashboard from './components/Dashboard'
@@ -20,7 +20,7 @@ import MoreFeatures from './components/MoreFeatures'
 import History from './components/History'
 import { useLanguage } from './context/LanguageContext' 
 
-const CURRENT_SOFTWARE_VERSION = '1.1.17'; 
+const CURRENT_SOFTWARE_VERSION = '1.1.18'; 
 
 function getDefaultIconForTitle(title = '', index) {
   const mapping = ['📖', '💧', '🧘', '💤', '🍎', '💪', '📝', '🚶']
@@ -171,46 +171,12 @@ function App() {
   
   const { t, language } = useLanguage()
   const MotionDiv = motion.div
-  const [tabDirection, setTabDirection] = useState(0)
-  const touchStartRef = useRef({ x: 0, y: 0, time: 0 })
-
-  const handleSwipeStart = (event) => {
-    const touch = event.touches?.[0]
-    if (!touch) return
-    touchStartRef.current = { x: touch.clientX, y: touch.clientY, time: Date.now() }
-  }
-
-  const handleSwipeEnd = (event) => {
-    const touch = event.changedTouches?.[0]
-    if (!touch) return
-    const { x, y, time } = touchStartRef.current
-    const dx = touch.clientX - x
-    const dy = touch.clientY - y
-    const dt = Date.now() - time
-    if (dt > 600) return
-    if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return
-
-    const tabs = ['home', 'stats', 'apps']
-    const currentIndex = tabs.indexOf(activeTab)
-    if (dx < 0 && currentIndex < tabs.length - 1) {
-      setTabDirection(1)
-      setActiveTab(tabs[currentIndex + 1])
-    }
-    if (dx > 0 && currentIndex > 0) {
-      setTabDirection(-1)
-      setActiveTab(tabs[currentIndex - 1])
-    }
-  }
-
+  const tabs = ['home', 'stats', 'apps']
+  const tabIndex = tabs.indexOf(activeTab)
+  const tabContainerRef = useRef(null)
+  const [tabWidth, setTabWidth] = useState(0)
+  const x = useMotionValue(0)
   const handleTabChange = (nextTab) => {
-    const tabs = ['home', 'stats', 'apps']
-    const currentIndex = tabs.indexOf(activeTab)
-    const nextIndex = tabs.indexOf(nextTab)
-    if (nextIndex === -1 || currentIndex === -1) {
-      setActiveTab(nextTab)
-      return
-    }
-    setTabDirection(nextIndex > currentIndex ? 1 : -1)
     setActiveTab(nextTab)
   }
   const [updatePayload, setUpdatePayload] = useState(null)
@@ -266,6 +232,27 @@ function App() {
     };
     if (!loadingSession) initSettings();
   }, [session, loadingSession]);
+
+  useEffect(() => {
+    const updateWidth = () => {
+      const width = tabContainerRef.current?.offsetWidth || window.innerWidth
+      setTabWidth(width)
+    }
+    updateWidth()
+    window.addEventListener('resize', updateWidth)
+    return () => window.removeEventListener('resize', updateWidth)
+  }, [])
+
+  useEffect(() => {
+    if (!tabWidth || tabIndex < 0) return
+    const controls = animate(x, -tabIndex * tabWidth, {
+      type: 'spring',
+      damping: 30,
+      stiffness: 300,
+      mass: 0.8
+    })
+    return controls.stop
+  }, [tabWidth, tabIndex, x])
 
   useEffect(() => {
     if (!session) return
@@ -478,11 +465,7 @@ function App() {
 
   if (mode === 'dashboard') {
     return (
-      <div
-        className="relative min-h-screen bg-neutral-900 overflow-x-hidden flex flex-col"
-        onTouchStart={handleSwipeStart}
-        onTouchEnd={handleSwipeEnd}
-      >
+      <div className="relative min-h-screen bg-neutral-900 overflow-x-hidden flex flex-col">
         {/* TopBanner renderizado como bloque flexible, no flotante */}
         <TopBanner onOpenUpdates={() => setUpdateOpen(true)} />
         <UpdateShowcase isOpen={updateOpen} onClose={handleCloseUpdate} payload={updatePayload} />
@@ -505,41 +488,51 @@ function App() {
           </div>
         )}
         
-        <div className="flex-1 flex flex-col">
-          <AnimatePresence mode="wait" custom={tabDirection}>
-            <MotionDiv
-              key={activeTab}
-              custom={tabDirection}
-              initial={(dir) => ({ opacity: 0, x: dir >= 0 ? 36 : -36, scale: 0.985 })}
-              animate={{ opacity: 1, x: 0, scale: 1 }}
-              exit={(dir) => ({ opacity: 0, x: dir >= 0 ? -36 : 36, scale: 0.985 })}
-              transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
-              className="flex-1 flex flex-col"
-            >
-              {activeTab === 'home' ? (
-                <Dashboard
-                  user={session.user} habits={habits} todayLogs={todayLogs}
-                  onStartReview={handleStartReview} onResetToday={handleResetToday}
-                  version={CURRENT_SOFTWARE_VERSION} onOpenAdmin={() => setMode('admin')}
-                  onOpenUpdates={() => setUpdateOpen(true)}
-                  hasUpdates={updateUnread}
-                  isTestAccount={isTestAccount}
-                  onResetTutorial={handleResetTutorial}
-                  onResetUpdates={handleResetUpdates}
-                  onOpenHistory={() => setMode('history')}
-                />
-              ) : activeTab === 'stats' ? (
-                <Stats user={session.user} /> 
-              ) : (
-                <div className="flex flex-col items-center justify-center flex-1 text-white p-6 text-center">
-                  <div className="w-full max-w-md space-y-6">
-                    <ProgressComparison user={session.user} />
-                    <MoreFeatures />
-                  </div>
+        <div className="flex-1 flex flex-col overflow-hidden" ref={tabContainerRef}>
+          <MotionDiv
+            className="flex h-full"
+            style={{ x }}
+            drag="x"
+            dragDirectionLock
+            dragConstraints={{ left: -tabWidth * (tabs.length - 1), right: 0 }}
+            dragElastic={0.06}
+            onDragEnd={(_, info) => {
+              if (!tabWidth) return
+              const threshold = tabWidth * 0.2
+              if (info.offset.x < -threshold && tabIndex < tabs.length - 1) {
+                setActiveTab(tabs[tabIndex + 1])
+              } else if (info.offset.x > threshold && tabIndex > 0) {
+                setActiveTab(tabs[tabIndex - 1])
+              } else {
+                animate(x, -tabIndex * tabWidth, { type: 'spring', damping: 30, stiffness: 300, mass: 0.8 })
+              }
+            }}
+          >
+            <div style={{ width: tabWidth }} className="shrink-0">
+              <Dashboard
+                user={session.user} habits={habits} todayLogs={todayLogs}
+                onStartReview={handleStartReview} onResetToday={handleResetToday}
+                version={CURRENT_SOFTWARE_VERSION} onOpenAdmin={() => setMode('admin')}
+                onOpenUpdates={() => setUpdateOpen(true)}
+                hasUpdates={updateUnread}
+                isTestAccount={isTestAccount}
+                onResetTutorial={handleResetTutorial}
+                onResetUpdates={handleResetUpdates}
+                onOpenHistory={() => setMode('history')}
+              />
+            </div>
+            <div style={{ width: tabWidth }} className="shrink-0">
+              <Stats user={session.user} /> 
+            </div>
+            <div style={{ width: tabWidth }} className="shrink-0">
+              <div className="flex flex-col items-center justify-center flex-1 text-white p-6 text-center">
+                <div className="w-full max-w-md space-y-6">
+                  <ProgressComparison user={session.user} />
+                  <MoreFeatures />
                 </div>
-              )}
-            </MotionDiv>
-          </AnimatePresence>
+              </div>
+            </div>
+          </MotionDiv>
         </div>
 
         <Dock activeTab={activeTab} onTabChange={handleTabChange} />
