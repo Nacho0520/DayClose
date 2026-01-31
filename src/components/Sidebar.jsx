@@ -22,7 +22,13 @@ export default function Sidebar({ isOpen, onClose, user, onLogout, onOpenSetting
                 onClick={() => { onOpenProfile(); onClose(); }}
                 className="w-full flex items-center gap-3 mb-10 p-4 bg-neutral-800/50 rounded-2xl border border-white/5 text-white hover:bg-neutral-800 transition-colors"
               >
-                <div className="h-10 w-10 rounded-full bg-neutral-800 flex items-center justify-center font-black flex-shrink-0"> {email[0]?.toUpperCase() || 'U'} </div>
+                <div className="h-10 w-10 rounded-full bg-neutral-800 flex items-center justify-center font-black flex-shrink-0 overflow-hidden">
+                  {user?.user_metadata?.avatar_url ? (
+                    <img src={user.user_metadata.avatar_url} alt="avatar" className="h-full w-full object-cover" />
+                  ) : (
+                    <span>{email[0]?.toUpperCase() || 'U'}</span>
+                  )}
+                </div>
                 <div className="overflow-hidden flex-1 text-left">
                   <p className="text-sm font-bold truncate tracking-tight">{user?.user_metadata?.full_name || 'Usuario'}</p>
                   <p className="text-[10px] text-neutral-500 truncate font-mono">{email}</p>
