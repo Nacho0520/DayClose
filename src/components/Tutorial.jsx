@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Star, ArrowRight, CheckCircle, MessageSquare, PartyPopper } from 'lucide-react'
+import { Star, ArrowRight, CheckCircle, MessageSquare, PartyPopper, Bell } from 'lucide-react'
 import SwipeCard from './SwipeCard'
 import { useLanguage } from '../context/LanguageContext'
 
@@ -9,6 +9,15 @@ export default function Tutorial({ user, onComplete }) {
   const [step, setStep] = useState(0)
   const [tutorialNote, setTutorialNote] = useState('')
   const { t } = useLanguage()
+  const ua = typeof navigator !== 'undefined' ? navigator.userAgent : ''
+  const isIOS = /iPhone|iPad|iPod/i.test(ua)
+  const isAndroid = /Android/i.test(ua)
+
+  const pushSteps = isIOS
+    ? [t('push_ios_step1'), t('push_ios_step2'), t('push_ios_step3')]
+    : isAndroid
+      ? [t('push_android_step1'), t('push_android_step2'), t('push_android_step3')]
+      : [t('push_generic_step1'), t('push_generic_step2')]
 
   const PRACTICE_STEPS = [
     { id: 'p1', title: t('tut_step1_title'), desc: t('tut_step1_desc'), icon: "💧", color: "bg-blue-500", instruction: t('tut_step1_instr') },
@@ -42,7 +51,29 @@ export default function Tutorial({ user, onComplete }) {
             <div className="flex items-center gap-3 mb-6"><div className="p-3 bg-purple-500/10 rounded-2xl text-purple-400"><MessageSquare size={24} /></div><h2 className="text-xl font-black text-white tracking-tight">{t('tut_note_title')}</h2></div>
             <p className="text-neutral-400 text-xs mb-4 font-bold uppercase tracking-widest">{t('tut_sim')}</p>
             <textarea autoFocus value={tutorialNote} onChange={(e) => setTutorialNote(e.target.value)} placeholder={t('tut_note_placeholder')} className="w-full bg-neutral-900 border border-neutral-800/60 rounded-2xl p-4 text-white text-sm outline-none focus:border-neutral-400/50 transition-colors h-32 resize-none mb-6" />
-            <button onClick={() => setPhase('congrats')} className="w-full bg-white text-black font-black py-4 rounded-2xl shadow-xl active:scale-95 transition-all">{t('tut_save_note')}</button>
+            <button onClick={() => setPhase('push')} className="w-full bg-white text-black font-black py-4 rounded-2xl shadow-xl active:scale-95 transition-all">{t('tut_save_note')}</button>
+          </motion.div>
+        )}
+        {phase === 'push' && (
+          <motion.div key="push" initial={{ opacity: 0, y: 50 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-sm bg-neutral-800 border border-white/5 rounded-[3rem] p-8 shadow-2xl">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-3 bg-emerald-500/10 rounded-2xl text-emerald-400"><Bell size={22} /></div>
+              <h2 className="text-xl font-black text-white tracking-tight">{t('push_tutorial_title')}</h2>
+            </div>
+            <p className="text-neutral-400 text-xs mb-4 font-bold uppercase tracking-widest">{t('push_tutorial_subtitle')}</p>
+            <div className="space-y-2 mb-6">
+              {pushSteps.map((stepText, index) => (
+                <div key={`${stepText}-${index}`} className="flex items-start gap-3 bg-neutral-900/60 border border-white/5 rounded-2xl p-3 text-sm text-neutral-300">
+                  <div className="h-6 w-6 rounded-full bg-white/5 border border-white/5 text-[10px] font-bold flex items-center justify-center text-neutral-400">
+                    {index + 1}
+                  </div>
+                  <p className="text-[12px] leading-relaxed">{stepText}</p>
+                </div>
+              ))}
+            </div>
+            <button onClick={() => setPhase('congrats')} className="w-full bg-white text-black font-black py-4 rounded-2xl shadow-xl active:scale-95 transition-all">
+              {t('push_tutorial_cta')}
+            </button>
           </motion.div>
         )}
         {phase === 'congrats' && (

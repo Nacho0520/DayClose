@@ -4,6 +4,14 @@ import { useLanguage } from '../context/LanguageContext'
 
 export default function SettingsModal({ isOpen, onClose, user, appVersion }) {
   const { t, language, switchLanguage } = useLanguage()
+  const ua = typeof navigator !== 'undefined' ? navigator.userAgent : ''
+  const isIOS = /iPhone|iPad|iPod/i.test(ua)
+  const isAndroid = /Android/i.test(ua)
+  const quickSteps = isIOS
+    ? [t('push_ios_step1'), t('push_ios_step2'), t('push_ios_step3')]
+    : isAndroid
+      ? [t('push_android_step1'), t('push_android_step2'), t('push_android_step3')]
+      : [t('push_generic_step1'), t('push_generic_step2')]
 
   if (!isOpen) return null
 
@@ -23,6 +31,19 @@ export default function SettingsModal({ isOpen, onClose, user, appVersion }) {
           <div className="pt-2 border-t border-white/5 mt-4">
             <p className="text-xs text-neutral-400 mb-2">{t('system_permissions')}</p>
             {user?.id ? (<NotificationManager userId={user.id} appVersion={appVersion} />) : (<p className="text-xs text-neutral-500 italic">{t('loading_permissions')}</p>)}
+          </div>
+          <div className="bg-neutral-900/50 p-4 rounded-xl border border-neutral-800/60">
+            <p className="text-xs text-neutral-400 mb-2 font-semibold">{t('push_steps_title')}</p>
+            <div className="space-y-2">
+              {quickSteps.map((step, index) => (
+                <div key={`${step}-${index}`} className="flex items-start gap-2 text-[11px] text-neutral-400">
+                  <span className="h-5 w-5 rounded-full bg-white/5 border border-white/5 flex items-center justify-center text-[9px] font-bold text-neutral-500">
+                    {index + 1}
+                  </span>
+                  <span className="leading-relaxed">{step}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
