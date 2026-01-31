@@ -1,4 +1,5 @@
-import { useEffect, useState, useCallback, useMemo } from 'react'
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import SwipeCard from './components/SwipeCard'
 import NoteModal from './components/NoteModal'
 import Dashboard from './components/Dashboard'
@@ -19,7 +20,7 @@ import MoreFeatures from './components/MoreFeatures'
 import History from './components/History'
 import { useLanguage } from './context/LanguageContext' 
 
-const CURRENT_SOFTWARE_VERSION = '1.1.15'; 
+const CURRENT_SOFTWARE_VERSION = '1.1.16'; 
 
 function getDefaultIconForTitle(title = '', index) {
   const mapping = ['📖', '💧', '🧘', '💤', '🍎', '💪', '📝', '🚶']
@@ -169,6 +170,34 @@ function App() {
   const TEST_EMAIL = 'test@test.com'
   
   const { t, language } = useLanguage()
+  const MotionDiv = motion.div
+  const touchStartRef = useRef({ x: 0, y: 0, time: 0 })
+
+  const handleSwipeStart = (event) => {
+    const touch = event.touches?.[0]
+    if (!touch) return
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY, time: Date.now() }
+  }
+
+  const handleSwipeEnd = (event) => {
+    const touch = event.changedTouches?.[0]
+    if (!touch) return
+    const { x, y, time } = touchStartRef.current
+    const dx = touch.clientX - x
+    const dy = touch.clientY - y
+    const dt = Date.now() - time
+    if (dt > 600) return
+    if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return
+
+    const tabs = ['home', 'stats', 'apps']
+    const currentIndex = tabs.indexOf(activeTab)
+    if (dx < 0 && currentIndex < tabs.length - 1) {
+      setActiveTab(tabs[currentIndex + 1])
+    }
+    if (dx > 0 && currentIndex > 0) {
+      setActiveTab(tabs[currentIndex - 1])
+    }
+  }
   const [updatePayload, setUpdatePayload] = useState(null)
   const [updateOpen, setUpdateOpen] = useState(false)
   const [updateUnread, setUpdateUnread] = useState(false)
@@ -434,7 +463,11 @@ function App() {
 
   if (mode === 'dashboard') {
     return (
-      <div className="relative min-h-screen bg-neutral-900 overflow-x-hidden flex flex-col">
+      <div
+        className="relative min-h-screen bg-neutral-900 overflow-x-hidden flex flex-col"
+        onTouchStart={handleSwipeStart}
+        onTouchEnd={handleSwipeEnd}
+      >
         {/* TopBanner renderizado como bloque flexible, no flotante */}
         <TopBanner onOpenUpdates={() => setUpdateOpen(true)} />
         <UpdateShowcase isOpen={updateOpen} onClose={handleCloseUpdate} payload={updatePayload} />
@@ -458,28 +491,39 @@ function App() {
         )}
         
         <div className="flex-1 flex flex-col">
-          {activeTab === 'home' ? (
-            <Dashboard
-              user={session.user} habits={habits} todayLogs={todayLogs}
-              onStartReview={handleStartReview} onResetToday={handleResetToday}
-              version={CURRENT_SOFTWARE_VERSION} onOpenAdmin={() => setMode('admin')}
-              onOpenUpdates={() => setUpdateOpen(true)}
-              hasUpdates={updateUnread}
-              isTestAccount={isTestAccount}
-              onResetTutorial={handleResetTutorial}
-              onResetUpdates={handleResetUpdates}
-              onOpenHistory={() => setMode('history')}
-            />
-          ) : activeTab === 'stats' ? (
-            <Stats user={session.user} /> 
-          ) : (
-            <div className="flex flex-col items-center justify-center flex-1 text-white p-6 text-center">
-              <div className="w-full max-w-md space-y-6">
-                <ProgressComparison user={session.user} />
-                <MoreFeatures />
-              </div>
-            </div>
-          )}
+          <AnimatePresence mode="wait">
+            <MotionDiv
+              key={activeTab}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+              className="flex-1 flex flex-col"
+            >
+              {activeTab === 'home' ? (
+                <Dashboard
+                  user={session.user} habits={habits} todayLogs={todayLogs}
+                  onStartReview={handleStartReview} onResetToday={handleResetToday}
+                  version={CURRENT_SOFTWARE_VERSION} onOpenAdmin={() => setMode('admin')}
+                  onOpenUpdates={() => setUpdateOpen(true)}
+                  hasUpdates={updateUnread}
+                  isTestAccount={isTestAccount}
+                  onResetTutorial={handleResetTutorial}
+                  onResetUpdates={handleResetUpdates}
+                  onOpenHistory={() => setMode('history')}
+                />
+              ) : activeTab === 'stats' ? (
+                <Stats user={session.user} /> 
+              ) : (
+                <div className="flex flex-col items-center justify-center flex-1 text-white p-6 text-center">
+                  <div className="w-full max-w-md space-y-6">
+                    <ProgressComparison user={session.user} />
+                    <MoreFeatures />
+                  </div>
+                </div>
+              )}
+            </MotionDiv>
+          </AnimatePresence>
         </div>
 
         <Dock activeTab={activeTab} onTabChange={setActiveTab} />
