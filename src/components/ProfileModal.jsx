@@ -4,12 +4,12 @@ import { X, User, Upload, Image as ImageIcon, Trash2 } from 'lucide-react'
 import { useLanguage } from '../context/LanguageContext'
 
 const PRESET_AVATARS = [
-  '/avatars/avatar-1.svg',
-  '/avatars/avatar-2.svg',
-  '/avatars/avatar-3.svg',
-  '/avatars/avatar-4.svg',
-  '/avatars/avatar-5.svg',
-  '/avatars/avatar-6.svg'
+  '/avatars/avatar-1.png',
+  '/avatars/avatar-2.png',
+  '/avatars/avatar-3.png',
+  '/avatars/avatar-4.png',
+  '/avatars/avatar-5.png',
+  '/avatars/avatar-6.png'
 ]
 
 export default function ProfileModal({ isOpen, onClose, user }) {
@@ -43,7 +43,17 @@ export default function ProfileModal({ isOpen, onClose, user }) {
     setLoading(false)
   }
 
+  const ensureSession = async () => {
+    const { data } = await supabase.auth.getSession()
+    if (!data?.session) {
+      setMessage({ type: 'error', text: t('auth_session_missing') })
+      return false
+    }
+    return true
+  }
+
   const handleSelectPreset = async (url) => {
+    if (!(await ensureSession())) return
     setAvatarUrl(url)
     setUploading(true)
     const { error } = await supabase.auth.updateUser({ data: { avatar_url: url } })
@@ -56,6 +66,7 @@ export default function ProfileModal({ isOpen, onClose, user }) {
   }
 
   const handleRemoveAvatar = async () => {
+    if (!(await ensureSession())) return
     setUploading(true)
     const { error } = await supabase.auth.updateUser({ data: { avatar_url: '' } })
     if (error) {
@@ -70,6 +81,7 @@ export default function ProfileModal({ isOpen, onClose, user }) {
   const handleUpload = async (event) => {
     const file = event.target.files?.[0]
     if (!file || !user?.id) return
+    if (!(await ensureSession())) return
     if (file.size > 2 * 1024 * 1024) {
       setMessage({ type: 'error', text: t('avatar_too_large') })
       return
