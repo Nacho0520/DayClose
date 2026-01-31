@@ -51,6 +51,17 @@ export default function ProfileModal({ isOpen, onClose, user }) {
     if (error) {
       setMessage({ type: 'error', text: error.message })
     } else {
+      if (fullName.trim() && user?.id) {
+        const { error: profileError } = await supabase
+          .from('user_profiles')
+          .update({ full_name: fullName.trim() })
+          .eq('user_id', user.id)
+        if (profileError) {
+          setMessage({ type: 'error', text: profileError.message })
+          setLoading(false)
+          return
+        }
+      }
       setMessage({ type: 'success', text: password ? t('password_changed') : t('profile_updated') })
       setTimeout(() => { onClose(); window.location.reload() }, 1500)
     }

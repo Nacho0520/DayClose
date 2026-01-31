@@ -2,6 +2,15 @@
 
 create extension if not exists pgcrypto;
 
+alter table public.user_profiles
+  add column if not exists full_name text;
+
+update public.user_profiles up
+set full_name = coalesce(up.full_name, au.raw_user_meta_data ->> 'full_name')
+from auth.users au
+where au.id = up.user_id
+  and up.full_name is null;
+
 -- Friendships (solicitudes entre usuarios)
 create table if not exists public.friendships (
   id uuid primary key default gen_random_uuid(),
@@ -82,12 +91,13 @@ create policy "Invitee or inviter can delete invite"
 create or replace function public.search_user_by_email(p_email text)
 returns table (
   user_id uuid,
-  email text
+  email text,
+  full_name text
 )
 language sql
 security definer
 as $$
-  select user_id, email
+  select user_id, email, full_name
   from public.user_profiles
   where lower(email) = lower(p_email)
     and user_id <> auth.uid()
@@ -218,7 +228,7 @@ $$;
 create or replace function public.get_friend_summary()
 returns table (
   friend_id uuid,
-  email text,
+  display_name text,
   streak integer,
   weekly_consistency numeric
 )
@@ -235,7 +245,7 @@ begin
       and (requester_id = auth.uid() or addressee_id = auth.uid())
   ),
   friend_emails as (
-    select f.friend_id, p.email
+    select f.friend_id, coalesce(p.full_name, p.email) as display_name
     from friends f
     join public.user_profiles p on p.user_id = f.friend_id
   ),
@@ -290,7 +300,7 @@ begin
   )
   select
     e.friend_id,
-    e.email,
+    e.display_name,
     coalesce(s.streak, 0)::integer as streak,
     case
       when coalesce(h.total_habits, 0) = 0 then 0

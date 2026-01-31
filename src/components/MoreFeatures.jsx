@@ -106,7 +106,7 @@ export default function MoreFeatures({ user }) {
 
       const { data: requests } = await supabase
         .from('friendships')
-        .select('id, requester_id, addressee_id, created_at, requester:requester_id(email), addressee:addressee_id(email)')
+        .select('id, requester_id, addressee_id, created_at, requester:requester_id(email, full_name), addressee:addressee_id(email, full_name)')
         .eq('status', 'pending')
 
       const incoming = (requests || []).filter((req) => req.addressee_id === user.id)
@@ -116,7 +116,7 @@ export default function MoreFeatures({ user }) {
 
       const { data: invites } = await supabase
         .from('friend_invites')
-        .select('id, inviter_id, invitee_email, created_at, inviter:inviter_id(email)')
+        .select('id, inviter_id, invitee_email, created_at, inviter:inviter_id(email, full_name)')
         .eq('status', 'pending')
 
       const inviteEmailLower = user.email?.toLowerCase()
@@ -281,12 +281,23 @@ export default function MoreFeatures({ user }) {
             <span className="text-[10px] uppercase tracking-widest font-bold text-emerald-300/80 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
               {t('more_friends_tag')}
             </span>
-            <button
-              onClick={() => setIsFriendsOpen(true)}
-              className="text-[11px] text-white bg-white/5 border border-white/10 px-3 py-1.5 rounded-full"
-            >
-              {t('more_friends_action')}
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  setFriendTab('email')
+                  setIsFriendsOpen(true)
+                }}
+                className="text-[11px] text-neutral-300 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full"
+              >
+                {t('more_friends_invite')}
+              </button>
+              <button
+                onClick={() => setIsFriendsOpen(true)}
+                className="text-[11px] text-white bg-white/5 border border-white/10 px-3 py-1.5 rounded-full"
+              >
+                {t('more_friends_action')}
+              </button>
+            </div>
           </div>
         </MotionDiv>
 
@@ -507,7 +518,7 @@ export default function MoreFeatures({ user }) {
                         className="flex items-center justify-between rounded-xl bg-white/5 border border-white/5 px-3 py-2"
                       >
                         <div>
-                          <p className="text-sm font-semibold text-white">{friend.email}</p>
+                          <p className="text-sm font-semibold text-white">{friend.display_name || t('friends_request_unknown')}</p>
                           <p className="text-[10px] text-neutral-500">
                             {t('friends_consistency')} {friend.weekly_consistency || 0}%
                           </p>
@@ -527,7 +538,9 @@ export default function MoreFeatures({ user }) {
                   <p className="text-xs uppercase tracking-widest text-neutral-500">{t('friends_requests_title')}</p>
                   {pendingIncoming.map((req) => (
                     <div key={req.id} className="flex items-center justify-between rounded-xl bg-white/5 border border-white/5 px-3 py-2">
-                      <p className="text-xs text-neutral-300">{req.requester?.email || t('friends_request_unknown')}</p>
+                      <p className="text-xs text-neutral-300">
+                        {req.requester?.full_name || req.requester?.email || t('friends_request_unknown')}
+                      </p>
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => handleRespondRequest(req.id, true)}
@@ -548,7 +561,7 @@ export default function MoreFeatures({ user }) {
                   {pendingInvites.map((invite) => (
                     <div key={invite.id} className="flex items-center justify-between rounded-xl bg-white/5 border border-white/5 px-3 py-2">
                       <p className="text-xs text-neutral-300">
-                        {t('friends_invite_from')} {invite.inviter?.email || t('friends_request_unknown')}
+                        {t('friends_invite_from')} {invite.inviter?.full_name || invite.inviter?.email || t('friends_request_unknown')}
                       </p>
                       <button
                         onClick={() => handleAcceptInvite(invite.id)}
@@ -566,7 +579,9 @@ export default function MoreFeatures({ user }) {
                   <p className="text-xs uppercase tracking-widest text-neutral-500">{t('friends_pending_title')}</p>
                   {pendingOutgoing.map((req) => (
                     <div key={req.id} className="flex items-center justify-between rounded-xl bg-white/5 border border-white/5 px-3 py-2">
-                      <p className="text-xs text-neutral-300">{req.addressee?.email || t('friends_request_unknown')}</p>
+                      <p className="text-xs text-neutral-300">
+                        {req.addressee?.full_name || req.addressee?.email || t('friends_request_unknown')}
+                      </p>
                       <button
                         onClick={() => handleCancelRequest(req.id)}
                         className="text-[10px] text-neutral-300 border border-white/10 px-3 py-1.5 rounded-full"
@@ -669,7 +684,7 @@ export default function MoreFeatures({ user }) {
                     <div className="flex items-center justify-between rounded-xl bg-white/5 border border-white/5 px-3 py-2">
                       <div className="flex items-center gap-2 text-sm text-white">
                         <UserPlus size={14} className="text-neutral-300" />
-                        {searchResult.email}
+                        {searchResult.full_name || searchResult.email}
                       </div>
                       <button
                         onClick={handleSendRequest}
