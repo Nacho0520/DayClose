@@ -268,16 +268,16 @@ begin
             end as day
         ),
         seq as (
-          select generate_series(0, 365) as offset
+          select generate_series(0, 365) as seq_idx
         ),
         checks as (
-          select offset, (start_day.day - offset) as day,
-            exists(select 1 from active_days a where a.user_id = f.friend_id and a.day = (start_day.day - offset)) as active
+          select seq_idx, (start_day.day - seq_idx) as day,
+            exists(select 1 from active_days a where a.user_id = f.friend_id and a.day = (start_day.day - seq_idx)) as active
           from seq, start_day
           where start_day.day is not null
         ),
         first_gap as (
-          select min(offset) as gap from checks where active = false
+          select min(seq_idx) as gap from checks where active = false
         )
         select
           case
