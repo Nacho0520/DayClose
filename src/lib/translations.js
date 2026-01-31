@@ -125,6 +125,15 @@ export const translations = {
     dock_more: "Más",
     more_title: "Más Funciones",
     more_subtitle: "Estamos preparando nuevas herramientas para ti.",
+    more_premium_title: "Más funciones",
+    more_premium_subtitle: "Explora lo que viene para ti",
+    more_goals_title: "Metas semanales",
+    more_goals_desc: "Planifica, mide y celebra tus avances.",
+    more_insights_title: "Insights inteligentes",
+    more_insights_desc: "Aprende de tus patrones con claridad.",
+    more_energy_title: "Energía diaria",
+    more_energy_desc: "Registra tu energía y ajusta tu ritmo.",
+    more_soon: "Próximamente",
 
     // Update
     update_title: "Nueva versión disponible",
@@ -319,6 +328,15 @@ export const translations = {
     dock_more: "More",
     more_title: "More Features",
     more_subtitle: "We are preparing new tools for you.",
+    more_premium_title: "More features",
+    more_premium_subtitle: "See what’s coming next",
+    more_goals_title: "Weekly goals",
+    more_goals_desc: "Plan, measure, and celebrate progress.",
+    more_insights_title: "Smart insights",
+    more_insights_desc: "Understand your patterns clearly.",
+    more_energy_title: "Daily energy",
+    more_energy_desc: "Track energy and tune your pace.",
+    more_soon: "Coming soon",
 
     // Update
     update_title: "New version available",

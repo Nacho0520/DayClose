@@ -15,9 +15,10 @@ import Stats from './components/Stats'
 import ProgressComparison from './components/ProgressComparison'
 import BlockedScreen from './components/BlockedScreen'
 import UpdateShowcase from './components/UpdateShowcase'
+import MoreFeatures from './components/MoreFeatures'
 import { useLanguage } from './context/LanguageContext' 
 
-const CURRENT_SOFTWARE_VERSION = '1.1.11'; 
+const CURRENT_SOFTWARE_VERSION = '1.1.13'; 
 
 function getDefaultIconForTitle(title = '', index) {
   const mapping = ['📖', '💧', '🧘', '💤', '🍎', '💪', '📝', '🚶']
@@ -469,11 +470,7 @@ function App() {
             <div className="flex flex-col items-center justify-center flex-1 text-white p-6 text-center">
               <div className="w-full max-w-md space-y-6">
                 <ProgressComparison user={session.user} />
-                <div className="bg-neutral-800/30 p-6 radius-card border border-white/5 shadow-apple-soft">
-                  <LayoutGrid size={40} className="text-neutral-500 mx-auto mb-3" />
-                  <h2 className="text-2xl font-black mb-1 tracking-tighter uppercase leading-none">{t('more_title')}</h2>
-                  <p className="text-neutral-500 font-medium italic">{t('more_subtitle')}</p>
-                </div>
+                <MoreFeatures />
               </div>
             </div>
           )}
