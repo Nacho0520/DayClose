@@ -20,10 +20,11 @@ import MoreFeatures from './components/MoreFeatures'
 import FriendsSection from './components/FriendsSection'
 import FutureLettersSection from './components/FutureLettersSection'
 import FeedbackSection from './components/FeedbackSection'
+import CommunityHub from './components/CommunityHub'
 import History from './components/History'
 import { useLanguage } from './context/LanguageContext' 
 
-const CURRENT_SOFTWARE_VERSION = '1.1.36'; 
+const CURRENT_SOFTWARE_VERSION = '1.1.37'; 
 
 function getDefaultIconForTitle(title = '', index) {
   const mapping = ['📖', '💧', '🧘', '💤', '🍎', '💪', '📝', '🚶']
@@ -174,7 +175,7 @@ function App() {
   
   const { t, language } = useLanguage()
   const MotionDiv = motion.div
-  const tabs = ['home', 'stats', 'apps']
+  const tabs = ['home', 'stats', 'community', 'apps']
   const tabIndex = tabs.indexOf(activeTab)
   const tabContainerRef = useRef(null)
   const [tabWidth, setTabWidth] = useState(0)
@@ -534,6 +535,9 @@ function App() {
             </div>
             <div style={{ width: effectiveWidth }} className="shrink-0">
               <Stats user={session.user} /> 
+            </div>
+            <div style={{ width: effectiveWidth }} className="shrink-0">
+              <CommunityHub user={session.user} />
             </div>
             <div style={{ width: effectiveWidth }} className="shrink-0">
               <div className="flex flex-col items-center justify-center flex-1 text-white p-6 text-center">

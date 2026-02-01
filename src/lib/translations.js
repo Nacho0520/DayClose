@@ -133,6 +133,7 @@ export const translations = {
     // Dock & More
     dock_home: "Inicio",
     dock_stats: "Stats",
+    dock_community: "Comunidad",
     dock_more: "Más",
     more_title: "Más Funciones",
     more_subtitle: "Estamos preparando nuevas herramientas para ti.",
@@ -221,6 +222,17 @@ export const translations = {
     more_energy_title: "Energía diaria",
     more_energy_desc: "Registra tu energía y ajusta tu ritmo.",
     more_soon: "Próximamente",
+    community_title: "Comunidad",
+    community_subtitle: "Motivación real, con cero presión.",
+    community_checkin_title: "Check-in silencioso",
+    community_checkin_desc: "Comparte tu constancia sin detalles de hábitos.",
+    community_challenge_title: "Reto 7 días",
+    community_challenge_desc: "Un reto breve para avanzar juntos.",
+    community_support_title: "Apoyo en un toque",
+    community_support_desc: "Envía ánimo rápido cuando alguien lo necesita.",
+    community_moment_title: "Momento compartido",
+    community_moment_desc: "Pequeñas victorias que inspiran sin comparar.",
+    community_soon: "Próximamente",
 
     // Update
     update_title: "Nueva versión disponible",
@@ -441,6 +453,7 @@ export const translations = {
     // Dock & More
     dock_home: "Home",
     dock_stats: "Stats",
+    dock_community: "Community",
     dock_more: "More",
     more_title: "More Features",
     more_subtitle: "We are preparing new tools for you.",
@@ -529,6 +542,17 @@ export const translations = {
     more_energy_title: "Daily energy",
     more_energy_desc: "Track energy and tune your pace.",
     more_soon: "Coming soon",
+    community_title: "Community",
+    community_subtitle: "Real motivation with zero pressure.",
+    community_checkin_title: "Silent check-in",
+    community_checkin_desc: "Share consistency without habit details.",
+    community_challenge_title: "7-day challenge",
+    community_challenge_desc: "A short challenge to move forward together.",
+    community_support_title: "One-tap support",
+    community_support_desc: "Send quick encouragement when needed.",
+    community_moment_title: "Shared moment",
+    community_moment_desc: "Small wins that inspire without comparison.",
+    community_soon: "Coming soon",
 
     // Update
     update_title: "New version available",

@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, BarChart3, LayoutGrid } from 'lucide-react';
+import { Home, BarChart3, LayoutGrid, Users } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
 export default function Dock({ activeTab, onTabChange }) {
@@ -7,6 +7,7 @@ export default function Dock({ activeTab, onTabChange }) {
   const tabs = [
     { id: 'home', icon: Home, label: t('dock_home') },
     { id: 'stats', icon: BarChart3, label: t('dock_stats') },
+    { id: 'community', icon: Users, label: t('dock_community') },
     { id: 'apps', icon: LayoutGrid, label: t('dock_more') },
   ];
 
