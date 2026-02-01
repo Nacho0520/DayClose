@@ -22,7 +22,7 @@ import FutureLettersSection from './components/FutureLettersSection'
 import History from './components/History'
 import { useLanguage } from './context/LanguageContext' 
 
-const CURRENT_SOFTWARE_VERSION = '1.1.32'; 
+const CURRENT_SOFTWARE_VERSION = '1.1.33'; 
 
 function getDefaultIconForTitle(title = '', index) {
   const mapping = ['📖', '💧', '🧘', '💤', '🍎', '💪', '📝', '🚶']

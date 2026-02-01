@@ -232,27 +232,28 @@ export default function FriendsSection({ user }) {
   }
 
   return (
-    <div className="bg-neutral-800/30 p-5 sm:p-6 radius-card border border-white/5 shadow-apple-soft">
-      <div className="flex items-center justify-between mb-3">
+    <div className="bg-neutral-900/40 p-5 sm:p-6 radius-card border border-white/5 shadow-apple-soft relative overflow-hidden">
+      <div className="absolute -top-20 right-0 h-40 w-40 rounded-full bg-emerald-500/10 blur-3xl" />
+      <div className="flex items-center justify-between mb-3 relative z-10">
         <div>
           <h2 className="text-lg sm:text-xl font-black tracking-tight text-white">{t('more_friends_title')}</h2>
           <p className="text-[11px] text-neutral-500">{t('more_friends_desc')}</p>
         </div>
         {showFriendsNew && (
-          <span className="text-[10px] uppercase tracking-widest font-bold text-indigo-300/80 bg-indigo-500/10 border border-indigo-500/20 px-2.5 py-1 rounded-full">
+          <span className="text-[10px] uppercase tracking-widest font-bold text-indigo-300/90 bg-indigo-500/15 border border-indigo-500/30 px-2.5 py-1 rounded-full">
             {t('friends_new')}
           </span>
         )}
       </div>
 
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 relative z-10">
         <p className="text-[11px] text-neutral-500">{t('more_friends_privacy')}</p>
         <button
           onClick={() => {
             setFriendTab('email')
             setIsFriendsOpen(true)
           }}
-          className="text-[11px] text-neutral-300 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full"
+          className="text-[11px] text-neutral-200 bg-white/10 border border-white/10 px-3 py-1.5 rounded-full hover:bg-white/15 transition"
         >
           {t('more_friends_invite')}
         </button>
@@ -262,7 +263,7 @@ export default function FriendsSection({ user }) {
         <MotionDiv
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-3 shadow-[0_0_30px_rgba(16,185,129,0.2)] mb-3"
+          className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-3 shadow-[0_0_30px_rgba(16,185,129,0.2)] mb-3 relative z-10"
         >
           <div className="flex items-center justify-between mb-2">
             <p className="text-xs uppercase tracking-widest text-emerald-300/80">{t('friends_requests_title')}</p>
@@ -316,7 +317,7 @@ export default function FriendsSection({ user }) {
         </MotionDiv>
       )}
 
-      <div className="rounded-2xl border border-white/5 bg-neutral-950/60 p-3">
+      <div className="rounded-2xl border border-white/5 bg-neutral-950/60 p-3 relative z-10">
         <div className="flex items-center justify-between mb-2">
           <p className="text-xs uppercase tracking-widest text-neutral-500">{t('friends_list_title')}</p>
           <span className="text-[10px] text-neutral-500">{friends.length}</span>

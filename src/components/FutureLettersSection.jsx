@@ -66,8 +66,9 @@ export default function FutureLettersSection() {
   }
 
   return (
-    <div className="bg-neutral-800/30 p-5 sm:p-6 radius-card border border-white/5 shadow-apple-soft">
-      <div className="flex items-center justify-between mb-3">
+    <div className="bg-neutral-900/40 p-5 sm:p-6 radius-card border border-white/5 shadow-apple-soft relative overflow-hidden">
+      <div className="absolute -top-24 left-6 h-40 w-40 rounded-full bg-indigo-500/10 blur-3xl" />
+      <div className="flex items-center justify-between mb-3 relative z-10">
         <div>
           <h2 className="text-lg sm:text-xl font-black tracking-tight text-white">{t('more_letters_title')}</h2>
           <p className="text-[11px] text-neutral-500">{t('more_letters_desc')}</p>
@@ -77,7 +78,7 @@ export default function FutureLettersSection() {
         </div>
       </div>
 
-      <div className="flex items-center justify-between mt-2">
+      <div className="flex items-center justify-between mt-2 relative z-10">
         <div className="flex items-center gap-2 text-[10px] text-neutral-500">
           <Clock size={12} />
           {nextLetter ? (
@@ -107,7 +108,7 @@ export default function FutureLettersSection() {
           )}
           <button
             onClick={() => setIsLetterOpen(true)}
-            className="text-[11px] text-white bg-white/5 border border-white/10 px-3 py-1.5 rounded-full"
+            className="text-[11px] text-white bg-white/10 border border-white/10 px-3 py-1.5 rounded-full hover:bg-white/15 transition"
           >
             {t('more_letters_action')}
           </button>
