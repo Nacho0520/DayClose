@@ -24,7 +24,7 @@ import CommunityHub from './components/CommunityHub'
 import History from './components/History'
 import { useLanguage } from './context/LanguageContext' 
 
-const CURRENT_SOFTWARE_VERSION = '1.1.37'; 
+const CURRENT_SOFTWARE_VERSION = '1.1.38'; 
 
 function getDefaultIconForTitle(title = '', index) {
   const mapping = ['📖', '💧', '🧘', '💤', '🍎', '💪', '📝', '🚶']
@@ -543,7 +543,6 @@ function App() {
               <div className="flex flex-col items-center justify-center flex-1 text-white p-6 text-center">
                 <div className="w-full max-w-md space-y-6">
                   <ProgressComparison user={session.user} />
-                  <FriendsSection user={session.user} />
                   <FutureLettersSection />
                   <FeedbackSection user={session.user} />
                   <MoreFeatures />
