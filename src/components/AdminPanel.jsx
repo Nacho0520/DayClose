@@ -234,6 +234,12 @@ export default function AdminPanel({ onClose, version }) {
     fetchAdminData()
   }
 
+  const deleteFeedbackReport = async (id) => {
+    if (!confirm('¿Eliminar este reporte?')) return
+    await supabase.from('feedback_reports').delete().eq('id', id)
+    fetchAdminData()
+  }
+
   const addWhitelistEmail = async () => {
     if (!whitelistInput.trim()) return
     await supabase.from('maintenance_whitelist').insert({ email: whitelistInput.trim() })
@@ -833,6 +839,12 @@ export default function AdminPanel({ onClose, version }) {
                             className="text-[10px] text-neutral-300 border border-white/10 px-3 py-1.5 rounded-full"
                           >
                             Cerrar
+                          </button>
+                          <button
+                            onClick={() => deleteFeedbackReport(item.id)}
+                            className="text-[10px] text-red-300 border border-red-500/30 px-3 py-1.5 rounded-full"
+                          >
+                            Eliminar
                           </button>
                         </div>
                       </div>
