@@ -52,7 +52,7 @@ export default function UpdateShowcase({ isOpen, onClose, payload }) {
             </div>
           </div>
 
-          <div className="space-y-3">
+          <div className="premium-divider">
             {items.map((item, index) => {
               const Icon = item.icon ? (ICONS[item.icon] || CheckCircle2) : CheckCircle2
               return (

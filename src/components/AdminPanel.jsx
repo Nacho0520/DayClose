@@ -292,7 +292,7 @@ export default function AdminPanel({ onClose, version }) {
         <div className="bg-neutral-800/40 p-4 rounded-3xl border border-white/5 text-center"><Activity className="text-emerald-400 mx-auto mb-2" size={20} /><p className="text-xl font-black">{stats.logs}</p><p className="text-[8px] text-neutral-500 uppercase font-black">Registros</p></div>
       </div>
 
-      <div className="space-y-6">
+      <div className="premium-divider">
         <section className="bg-neutral-800/20 rounded-[3rem] p-6 border border-white/5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -334,7 +334,7 @@ export default function AdminPanel({ onClose, version }) {
                   <div className={`absolute top-1.5 h-6 w-6 rounded-full shadow-md transition-all ${maintenance ? 'left-8 bg-neutral-900' : 'left-2 bg-white'}`} />
                 </button>
               </div>
-              <div className="mt-6 space-y-6">
+              <div className="mt-6 premium-divider">
                 <div>
                   <div className="flex items-center gap-3 mb-3">
                     <div className="h-9 w-9 rounded-xl bg-neutral-900/70 border border-white/5 flex items-center justify-center">
@@ -398,7 +398,7 @@ export default function AdminPanel({ onClose, version }) {
                   </button>
                 )}
               </div>
-              <div className="space-y-6">
+              <div className="premium-divider">
                 <div>
                   <div className="flex items-center gap-3 mb-3">
                     <div className="h-9 w-9 rounded-xl bg-neutral-900/70 border border-white/5 flex items-center justify-center">
@@ -424,7 +424,7 @@ export default function AdminPanel({ onClose, version }) {
                   <textarea value={bannerTextEN} onChange={(e) => setBannerTextEN(e.target.value)} placeholder="Write the message in English..." className="w-full bg-neutral-900 border border-neutral-800/60 rounded-[1.5rem] p-4 text-sm font-medium outline-none h-24 resize-none focus:border-neutral-400/50 transition-colors" />
                 </div>
                 <div className="h-px bg-white/5" />
-                <div className="space-y-4">
+                <div className="premium-divider">
                   <div className="flex items-center gap-3">
                     <div className="h-9 w-9 rounded-xl bg-neutral-900/70 border border-white/5 flex items-center justify-center">
                       <Sparkles size={12} className="text-neutral-400" />
@@ -455,7 +455,7 @@ export default function AdminPanel({ onClose, version }) {
                         placeholder="Subtítulo (ES)"
                         className="w-full bg-neutral-900 border border-neutral-800/60 rounded-[1.5rem] px-4 py-3 text-sm font-medium outline-none focus:border-neutral-400/50 transition-colors mb-2"
                       />
-                      <div className="space-y-3">
+                      <div className="premium-divider">
                         {updateItemsES.map((item, index) => (
                           <div key={`es-${index}`} className="bg-neutral-900/60 border border-white/5 rounded-2xl p-3">
                             <div className="flex items-center gap-2 mb-2">
@@ -520,7 +520,7 @@ export default function AdminPanel({ onClose, version }) {
                         placeholder="Subtitle (EN)"
                         className="w-full bg-neutral-900 border border-neutral-800/60 rounded-[1.5rem] px-4 py-3 text-sm font-medium outline-none focus:border-neutral-400/50 transition-colors mb-2"
                       />
-                      <div className="space-y-3">
+                      <div className="premium-divider">
                         {updateItemsEN.map((item, index) => (
                           <div key={`en-${index}`} className="bg-neutral-900/60 border border-white/5 rounded-2xl p-3">
                             <div className="flex items-center gap-2 mb-2">
@@ -592,7 +592,7 @@ export default function AdminPanel({ onClose, version }) {
           {openSection === 'users' && (
             <>
               <div className="h-px bg-white/5 my-6" />
-              <div className="space-y-4">
+              <div className="premium-divider">
                 {users.map(u => (
                   <div key={u.user_id} className="bg-neutral-900/50 p-4 rounded-2xl border border-white/5">
                     <div className="flex items-center gap-3">
@@ -636,7 +636,7 @@ export default function AdminPanel({ onClose, version }) {
           {openSection === 'habits' && (
             <>
               <div className="h-px bg-white/5 my-6" />
-              <div className="space-y-3">
+              <div className="premium-divider">
                 {habitStats.slice(0, 6).map(h => (
                   <div key={h.habit_id} className="bg-neutral-900/50 p-4 rounded-2xl border border-white/5">
                     <div className="flex items-center justify-between">
@@ -714,7 +714,7 @@ export default function AdminPanel({ onClose, version }) {
           {openSection === 'notifications' && (
             <>
               <div className="h-px bg-white/5 my-6" />
-              <div className="space-y-4">
+              <div className="premium-divider">
                 <div className="grid gap-3">
                   <div className="flex items-center gap-3">
                     <div className="h-9 w-9 rounded-xl bg-neutral-900/70 border border-white/5 flex items-center justify-center">
@@ -783,7 +783,7 @@ export default function AdminPanel({ onClose, version }) {
               {feedbackReports.length === 0 ? (
                 <p className="text-xs text-neutral-500">Sin reportes aún.</p>
               ) : (
-                <div className="space-y-3">
+                <div className="premium-divider">
                   {feedbackReports.map((item) => (
                     <div key={item.id} className="rounded-2xl border border-white/5 bg-neutral-900/60 p-4">
                       <div className="flex items-start justify-between gap-3">

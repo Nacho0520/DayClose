@@ -239,11 +239,7 @@ export default function FriendsSection({ user }) {
           <h2 className="text-lg sm:text-xl font-black tracking-tight text-white">{t('more_friends_title')}</h2>
           <p className="text-[11px] text-neutral-500">{t('more_friends_desc')}</p>
         </div>
-        {showFriendsNew && (
-          <span className="text-[10px] uppercase tracking-widest font-bold text-indigo-300/90 bg-indigo-500/15 border border-indigo-500/30 px-2.5 py-1 rounded-full">
-            {t('friends_new')}
-          </span>
-        )}
+        {showFriendsNew && <span className="badge-subtle">{t('friends_new')}</span>}
       </div>
 
       <div className="flex items-center justify-between mb-4 relative z-10">
@@ -271,7 +267,7 @@ export default function FriendsSection({ user }) {
               {pendingIncoming.length + pendingInvites.length}
             </span>
           </div>
-          <div className="space-y-2">
+          <div className="premium-divider">
             {pendingIncoming.map((req) => (
               <div
                 key={req.id}
@@ -327,7 +323,7 @@ export default function FriendsSection({ user }) {
         ) : friends.length === 0 ? (
           <p className="text-[11px] text-neutral-500">{t('friends_empty')}</p>
         ) : (
-          <div className="space-y-2">
+          <div className="premium-divider">
             {friends.map((friend) => (
               <div
                 key={friend.friend_id}
@@ -399,7 +395,7 @@ export default function FriendsSection({ user }) {
                 </div>
 
                 {friendTab === 'email' && (
-                  <div className="space-y-2">
+                  <div className="premium-divider">
                     <p className="text-[11px] text-neutral-500">{t('friends_email_hint')}</p>
                     <div className="flex gap-2">
                       <input
@@ -419,7 +415,7 @@ export default function FriendsSection({ user }) {
                 )}
 
                 {friendTab === 'code' && (
-                  <div className="space-y-3">
+                  <div className="premium-divider">
                     <div className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 flex items-center justify-between">
                       <div>
                         <p className="text-[11px] text-neutral-500">{t('friends_code_label')}</p>
@@ -450,7 +446,7 @@ export default function FriendsSection({ user }) {
                 )}
 
                 {friendTab === 'search' && (
-                  <div className="space-y-2">
+                  <div className="premium-divider">
                     <p className="text-[11px] text-neutral-500">{t('friends_search_hint')}</p>
                     <div className="flex gap-2">
                       <input
@@ -485,7 +481,7 @@ export default function FriendsSection({ user }) {
                 )}
 
                 {pendingOutgoing.length > 0 && (
-                  <div className="mt-4 rounded-2xl border border-white/5 bg-neutral-950/60 p-3 space-y-2">
+                  <div className="mt-4 rounded-2xl border border-white/5 bg-neutral-950/60 p-3 premium-divider">
                     <p className="text-xs uppercase tracking-widest text-neutral-500">{t('friends_pending_title')}</p>
                     {pendingOutgoing.map((req) => (
                       <div key={req.id} className="flex items-center justify-between rounded-xl bg-white/5 border border-white/5 px-3 py-2">

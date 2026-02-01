@@ -20,7 +20,7 @@ export default function SettingsModal({ isOpen, onClose, user, appVersion }) {
       <div className="w-full max-w-sm bg-neutral-800/80 radius-card p-6 shadow-apple border border-white/5 relative backdrop-blur-xl">
         <button onClick={onClose} className="absolute top-4 right-4 text-neutral-400 hover:text-white"><X size={24} /></button>
         <h2 className="text-xl font-bold text-white mb-6">{t('settings_title')}</h2>
-        <div className="space-y-4">
+        <div className="premium-divider">
           <div className="bg-neutral-900/50 p-4 rounded-xl border border-neutral-800/60">
             <label className="flex items-center gap-2 text-sm text-neutral-400 mb-3"><Globe size={14} /> {t('language_label')}</label>
             <div className="grid grid-cols-2 gap-2">
@@ -34,7 +34,7 @@ export default function SettingsModal({ isOpen, onClose, user, appVersion }) {
           </div>
           <div className="bg-neutral-900/50 p-4 rounded-xl border border-neutral-800/60">
             <p className="text-xs text-neutral-400 mb-2 font-semibold">{t('push_steps_title')}</p>
-            <div className="space-y-2">
+            <div className="premium-divider">
               {quickSteps.map((step, index) => (
                 <div key={`${step}-${index}`} className="flex items-start gap-2 text-[11px] text-neutral-400">
                   <span className="h-5 w-5 rounded-full bg-white/5 border border-white/5 flex items-center justify-center text-[9px] font-bold text-neutral-500">

@@ -16,7 +16,7 @@ export default function CommunityHub({ user }) {
 
   return (
     <div className="flex flex-col items-center justify-center flex-1 text-white p-6 text-center">
-      <div className="w-full max-w-md space-y-6">
+      <div className="w-full max-w-md premium-divider">
         <div className="text-left px-1">
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
@@ -49,9 +49,7 @@ export default function CommunityHub({ user }) {
                   <p className="text-sm font-semibold text-white">{t(`community_${card.id}_title`)}</p>
                   <p className="text-[11px] text-neutral-500">{t(`community_${card.id}_desc`)}</p>
                 </div>
-                <span className="text-[9px] uppercase tracking-widest font-bold text-indigo-300/80 bg-indigo-500/10 border border-indigo-500/20 px-2.5 py-1 rounded-full">
-                  {t('community_soon')}
-                </span>
+                <span className="badge-subtle">{t('community_soon')}</span>
               </MotionDiv>
             )
           })}

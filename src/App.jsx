@@ -24,7 +24,7 @@ import CommunityHub from './components/CommunityHub'
 import History from './components/History'
 import { useLanguage } from './context/LanguageContext' 
 
-const CURRENT_SOFTWARE_VERSION = '1.1.39'; 
+const CURRENT_SOFTWARE_VERSION = '1.1.40'; 
 
 function getDefaultIconForTitle(title = '', index) {
   const mapping = ['📖', '💧', '🧘', '💤', '🍎', '💪', '📝', '🚶']

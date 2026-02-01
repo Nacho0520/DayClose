@@ -153,7 +153,7 @@ export default function History({ user, onClose }) {
           <p className="text-body font-medium">{t('history_empty')}</p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="premium-divider">
           {grouped.map(day => {
             const pct = day.total ? Math.round((day.completed / day.total) * 100) : 0
             return (
@@ -167,7 +167,7 @@ export default function History({ user, onClose }) {
                     {pct}%
                   </span>
                 </div>
-                <div className="space-y-2">
+                <div className="premium-divider">
                   {day.items.map((item) => {
                     const habit = habitMap.get(item.habit_id)
                     const isDone = item.status === 'completed'

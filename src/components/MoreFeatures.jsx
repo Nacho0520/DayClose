@@ -41,9 +41,7 @@ export default function MoreFeatures() {
                 <p className="text-sm font-semibold text-white">{t(`more_${feature.id}_title`)}</p>
                 <p className="text-[11px] text-neutral-500">{t(`more_${feature.id}_desc`)}</p>
               </div>
-              <span className="text-[9px] uppercase tracking-widest font-bold text-neutral-400 bg-white/5 border border-white/5 px-2.5 py-1 rounded-full">
-                {t('more_soon')}
-              </span>
+              <span className="badge-subtle">{t('more_soon')}</span>
             </MotionDiv>
           )
         })}

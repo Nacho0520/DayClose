@@ -143,7 +143,7 @@ function Dashboard({ user, habits, todayLogs, onStartReview, version, onOpenAdmi
             <p className="text-body font-medium">{t('no_habits_today')}</p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="premium-divider">
             {visibleHabits.map((habit) => {
               const log = logsMap.get(habit.id);
               const isCritical = hardDayIds.includes(habit.id);
@@ -188,7 +188,7 @@ function Dashboard({ user, habits, todayLogs, onStartReview, version, onOpenAdmi
                       <p className="text-[10px] uppercase tracking-widest text-neutral-500 font-bold mb-2">
                         {t('mini_habits_title')}
                       </p>
-                      <div className="space-y-2">
+                      <div className="premium-divider">
                         {miniHabits.map((mini, index) => (
                           <div
                             key={`${mini.title || mini}-${index}`}
@@ -243,7 +243,7 @@ function Dashboard({ user, habits, todayLogs, onStartReview, version, onOpenAdmi
               </div>
             </div>
 
-            <div className="space-y-2 max-h-56 overflow-y-auto">
+            <div className="premium-divider max-h-56 overflow-y-auto">
               {(habits || []).map((habit) => {
                 const selected = hardDayIds.includes(habit.id)
                 return (

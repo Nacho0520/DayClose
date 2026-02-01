@@ -88,11 +88,7 @@ export default function FutureLettersSection() {
           <h2 className="text-lg sm:text-xl font-black tracking-tight text-white">{t('more_letters_title')}</h2>
           <p className="text-[11px] text-neutral-500">{t('more_letters_desc')}</p>
         </div>
-        {showLettersNew && (
-          <span className="text-[10px] uppercase tracking-widest font-bold text-indigo-300/90 bg-indigo-500/15 border border-indigo-500/30 px-2.5 py-1 rounded-full">
-            {t('friends_new')}
-          </span>
-        )}
+        {showLettersNew && <span className="badge-subtle">{t('friends_new')}</span>}
       </div>
 
       <div className="flex items-center justify-between mt-2 relative z-10">

@@ -195,7 +195,7 @@ export default function Auth() {
         </AnimatePresence>
 
         {isRecovery ? (
-          <form className="space-y-4" onSubmit={handleUpdatePassword}>
+          <form className="premium-divider" onSubmit={handleUpdatePassword}>
             <div>
               <label className="mb-2 ml-1 block text-[10px] font-black uppercase tracking-widest text-neutral-500">
                 {t('new_password')}
@@ -231,7 +231,7 @@ export default function Auth() {
             </button>
           </form>
         ) : (
-          <form className="space-y-4" onSubmit={handleAuth}>
+          <form className="premium-divider" onSubmit={handleAuth}>
             {isSignUp && (
             <div>
               <label className="mb-2 ml-1 block text-[10px] font-black uppercase tracking-widest text-neutral-500">

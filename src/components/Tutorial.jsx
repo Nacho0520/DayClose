@@ -61,7 +61,7 @@ export default function Tutorial({ user, onComplete }) {
               <h2 className="text-xl font-black text-white tracking-tight">{t('push_tutorial_title')}</h2>
             </div>
             <p className="text-neutral-400 text-xs mb-4 font-bold uppercase tracking-widest">{t('push_tutorial_subtitle')}</p>
-            <div className="space-y-2 mb-6">
+            <div className="premium-divider mb-6">
               {pushSteps.map((stepText, index) => (
                 <div key={`${stepText}-${index}`} className="flex items-start gap-3 bg-neutral-900/60 border border-white/5 rounded-2xl p-3 text-sm text-neutral-300">
                   <div className="h-6 w-6 rounded-full bg-white/5 border border-white/5 text-[10px] font-bold flex items-center justify-center text-neutral-400">

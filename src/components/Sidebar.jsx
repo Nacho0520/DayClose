@@ -36,7 +36,7 @@ export default function Sidebar({ isOpen, onClose, user, onLogout, onOpenSetting
                 </div>
                 <ChevronRight size={18} className="text-neutral-600" />
               </button>
-              <nav className="space-y-3 flex-1">
+              <nav className="premium-divider flex-1">
                 <button onClick={() => { onOpenSettings(); onClose(); }} className="w-full flex items-center gap-3 px-4 py-4 text-neutral-300 bg-neutral-800/60 hover:bg-neutral-800/80 hover:text-white rounded-2xl transition-all font-medium text-sm border border-white/5" >
                   <div className="h-9 w-9 rounded-xl bg-neutral-900/70 border border-white/5 flex items-center justify-center">
                     <Settings size={18} className="text-neutral-300" />

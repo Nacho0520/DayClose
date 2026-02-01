@@ -54,4 +54,29 @@ body {
   .text-body { font-size: var(--text-body); line-height: 1.55; }
   .text-caption { font-size: var(--text-caption); letter-spacing: 0.08em; text-transform: uppercase; }
   .text-title { font-size: var(--text-title); line-height: 1.1; }
+  .badge-subtle {
+    font-size: 0.6rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: rgba(165, 180, 252, 0.9);
+    background: rgba(99, 102, 241, 0.12);
+    border: 1px solid rgba(99, 102, 241, 0.25);
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+  }
+  .premium-divider > * + * {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    position: relative;
+  }
+  .premium-divider > * + *::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0.75rem;
+    right: 0.75rem;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), transparent);
+  }
 }

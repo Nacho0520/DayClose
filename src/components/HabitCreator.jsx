@@ -267,9 +267,9 @@ export default function HabitCreator({ isOpen, onClose, userId, onHabitCreated, 
             </div>
           </div>
           
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="premium-divider">
             {/* Título e Icono Actual */}
-            <div className="space-y-2">
+            <div className="premium-divider">
               <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider">{t('habit_name_label')}</label>
               <div className="flex gap-3">
                 <div className="h-14 w-14 flex items-center justify-center rounded-2xl text-3xl bg-neutral-700 border border-white/5 shadow-inner">
@@ -279,7 +279,7 @@ export default function HabitCreator({ isOpen, onClose, userId, onHabitCreated, 
               </div>
             </div>
 
-            <div className="space-y-3">
+            <div className="premium-divider">
               <button
                 type="button"
                 onClick={() => setShowMiniHabits((prev) => !prev)}
@@ -345,7 +345,7 @@ export default function HabitCreator({ isOpen, onClose, userId, onHabitCreated, 
                     ))}
                   </div>
                   {miniHabits.length > 0 && (
-                    <div className="space-y-2">
+                    <div className="premium-divider">
                       {miniHabits.map((item, index) => (
                         <div
                           key={`${item.title}-${index}`}
@@ -381,7 +381,7 @@ export default function HabitCreator({ isOpen, onClose, userId, onHabitCreated, 
             </div>
 
             {/* SELECCIÓN DE ICONO (MODIFICACIÓN) */}
-            <div className="space-y-3">
+            <div className="premium-divider">
               <label className="flex items-center gap-2 text-xs font-bold text-neutral-400 uppercase tracking-wider">
                 <Smile size={14} /> {t('icon_label')}
               </label>
@@ -399,7 +399,7 @@ export default function HabitCreator({ isOpen, onClose, userId, onHabitCreated, 
               </div>
             </div>
 
-            <div className="space-y-3">
+            <div className="premium-divider">
               <label className="flex items-center gap-2 text-xs font-bold text-neutral-400 uppercase tracking-wider"><Calendar size={14} /> {t('frequency')}</label>
               <div className="flex justify-between bg-neutral-900 p-2 rounded-2xl border border-white/5">
                 {DAYS.map((day) => {
@@ -408,13 +408,13 @@ export default function HabitCreator({ isOpen, onClose, userId, onHabitCreated, 
                 })}
               </div>
             </div>
-            <div className="space-y-3">
+            <div className="premium-divider">
               <label className="flex items-center gap-2 text-xs font-bold text-neutral-400 uppercase tracking-wider"><Clock size={14} /> {t('time_of_day')}</label>
               <div className="grid grid-cols-3 gap-2">
                 {[ { id: 'morning', label: t('morning') }, { id: 'afternoon', label: t('afternoon') }, { id: 'night', label: t('night') } ].map(time => (<button key={time.id} type="button" onClick={() => setTimeOfDay(time.id)} className={`py-2 rounded-xl text-sm font-medium border transition-colors ${timeOfDay === time.id ? 'bg-white text-black border-white' : 'bg-neutral-700 text-neutral-300 border-transparent hover:bg-neutral-600'}`}>{time.label}</button>))}
               </div>
             </div>
-            <div className="space-y-3">
+            <div className="premium-divider">
               <label className="flex items-center gap-2 text-xs font-bold text-neutral-400 uppercase tracking-wider"><Palette size={14} /> {t('color')}</label>
               <div className="flex gap-3 justify-center bg-neutral-900 p-3 rounded-2xl border border-white/5">{COLORS.map(color => (<button key={color} type="button" onClick={() => setSelectedColor(color)} className={`w-8 h-8 rounded-full ${color} transition-transform ${selectedColor === color ? 'ring-2 ring-white scale-110' : 'opacity-50 hover:opacity-100'}`} />))}</div>
             </div>

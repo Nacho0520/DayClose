@@ -155,12 +155,12 @@ export default function ProfileModal({ isOpen, onClose, user }) {
             {message.text}
           </div>
         )}
-        <form onSubmit={handleUpdate} className="space-y-4">
-          <div className="space-y-3">
+        <form onSubmit={handleUpdate} className="premium-divider">
+          <div className="premium-divider">
             <label className="block text-sm text-neutral-400 mb-1">{t('avatar_title')}</label>
-            <div className="space-y-3">
+            <div className="premium-divider">
               {PRESET_AVATAR_GROUPS.map((group) => (
-                <div key={group.key} className="space-y-2">
+                <div key={group.key} className="premium-divider">
                   <p className="text-[11px] uppercase tracking-wide text-neutral-500">{t(group.labelKey)}</p>
                   <div className="grid grid-cols-6 gap-2">
                     {group.items.map((src) => (
