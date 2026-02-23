@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
-import { motion, useMotionValue, animate } from 'framer-motion'
+import { motion, useMotionValue, animate, AnimatePresence } from 'framer-motion'
 import SwipeCard from './components/SwipeCard'
 import NoteModal from './components/NoteModal'
 import Dashboard from './components/Dashboard'
@@ -22,6 +22,7 @@ import FutureLettersSection from './components/FutureLettersSection'
 import FeedbackSection from './components/FeedbackSection'
 import CommunityHub from './components/CommunityHub'
 import History from './components/History'
+import ProWelcomeModal from './components/ProWelcomeModal'
 import { useLanguage } from './context/LanguageContext' 
 
 const CURRENT_SOFTWARE_VERSION = '1.1.40'; 
@@ -187,6 +188,7 @@ function App() {
   const [updatePayload, setUpdatePayload] = useState(null)
   const [updateOpen, setUpdateOpen] = useState(false)
   const [updateUnread, setUpdateUnread] = useState(false)
+  const [showCheckoutSuccessToast, setShowCheckoutSuccessToast] = useState(false)
 
   const reviewHabits = useMemo(() => {
     try {
@@ -374,6 +376,14 @@ function App() {
   }
 
   useEffect(() => {
+    const checkout = new URLSearchParams(window.location.search).get('checkout')
+    if (checkout === 'success') {
+      setShowCheckoutSuccessToast(true)
+      window.history.replaceState({}, '', '/')
+    }
+  }, [])
+
+  useEffect(() => {
     const initSession = async () => {
       const { data } = await supabase.auth.getSession()
       const currentSession = data?.session ?? null
@@ -468,16 +478,36 @@ function App() {
     return <BlockedScreen title={t('blocked_title')} message={t('blocked_desc')} />
   }
 
-  if (mode === 'tutorial') return <Tutorial user={session.user} onComplete={handleFinishTutorial} />
-  if (mode === 'admin') return <AdminPanel onClose={() => setMode('dashboard')} version={CURRENT_SOFTWARE_VERSION} />
+  if (mode === 'tutorial') {
+    return (
+      <>
+        <ProWelcomeModal isOpen={showCheckoutSuccessToast} onClose={() => setShowCheckoutSuccessToast(false)} />
+        <Tutorial user={session.user} onComplete={handleFinishTutorial} />
+      </>
+    )
+  }
+  if (mode === 'admin') {
+    return (
+      <>
+        <ProWelcomeModal isOpen={showCheckoutSuccessToast} onClose={() => setShowCheckoutSuccessToast(false)} />
+        <AdminPanel onClose={() => setMode('dashboard')} version={CURRENT_SOFTWARE_VERSION} />
+      </>
+    )
+  }
 
   if (mode === 'history') {
-    return <History user={session.user} onClose={() => setMode('dashboard')} />
+    return (
+      <>
+        <ProWelcomeModal isOpen={showCheckoutSuccessToast} onClose={() => setShowCheckoutSuccessToast(false)} />
+        <History user={session.user} onClose={() => setMode('dashboard')} />
+      </>
+    )
   }
 
   if (mode === 'dashboard') {
     return (
       <div className="relative min-h-screen bg-neutral-900 overflow-x-hidden flex flex-col">
+        <ProWelcomeModal isOpen={showCheckoutSuccessToast} onClose={() => setShowCheckoutSuccessToast(false)} />
         {/* TopBanner renderizado como bloque flexible, no flotante */}
         <TopBanner onOpenUpdates={() => setUpdateOpen(true)} />
         <UpdateShowcase isOpen={updateOpen} onClose={handleCloseUpdate} payload={updatePayload} />
@@ -560,6 +590,7 @@ function App() {
 
   return (
     <div className={`app-screen flex items-center justify-center ${swipeStatus === 'done' ? 'bg-emerald-900' : swipeStatus === 'not-done' ? 'bg-red-900' : 'bg-neutral-900'} transition-colors duration-300 relative`}>
+      <ProWelcomeModal isOpen={showCheckoutSuccessToast} onClose={() => setShowCheckoutSuccessToast(false)} />
       <button onClick={() => window.location.reload()} className="fixed top-6 right-6 z-[100] flex items-center gap-1 px-4 py-2 bg-neutral-800/80 backdrop-blur-md border border-white/5 rounded-full text-neutral-400 hover:text-white transition-all shadow-lg">
         <X size={18} /> <span className="text-xs font-medium uppercase tracking-widest">{t('exit')}</span>
       </button>
