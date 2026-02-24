@@ -332,6 +332,26 @@ export const translations = {
     payment_error: "No se ha podido iniciar el pago. Inténtalo de nuevo.",
     portal_error: "No se ha podido abrir el portal. Inténtalo de nuevo.",
 
+    // Pro gates
+    pro_habit_limit_banner: "Has llegado al límite de 5 hábitos.",
+    pro_habit_limit_cta: "Hazte Pro",
+    pro_habit_limit_suffix: "para añadir más.",
+    pro_heatmap_title: "Historial visual",
+    pro_heatmap_desc: "Visualiza tu actividad de los últimos 28 días con el Plan Pro",
+    pro_heatmap_cta: "Hazte Pro",
+    pro_history_title: "Historial extendido",
+    pro_history_desc: "Con Pro accedes a los últimos 90 días de historial completo.",
+    pro_history_cta: "Ver con Plan Pro",
+    pro_history_back: "Volver al mes actual",
+    pro_letters_title: "Cartas del futuro",
+    pro_letters_desc: "Disponible con el Plan Pro",
+    pro_comparison_title: "Comparación de progreso",
+    pro_comparison_desc: "Disponible con el Plan Pro",
+    pro_reminder_title: "Recordatorios inteligentes",
+    pro_reminder_desc: "Disponible con el Plan Pro",
+    history_days_free: "Últimos 30 días",
+    history_days_pro: "Últimos 90 días",
+
   },
   en: {
     // Auth & General
@@ -664,6 +684,26 @@ export const translations = {
     manage_subscription: "Manage subscription",
     payment_error: "Could not start payment. Please try again.",
     portal_error: "Could not open portal. Please try again.",
+
+    // Pro gates
+    pro_habit_limit_banner: "You've reached the 5-habit limit.",
+    pro_habit_limit_cta: "Go Pro",
+    pro_habit_limit_suffix: "to add more.",
+    pro_heatmap_title: "Visual history",
+    pro_heatmap_desc: "Visualize your activity over the last 28 days with the Pro Plan",
+    pro_heatmap_cta: "Go Pro",
+    pro_history_title: "Extended history",
+    pro_history_desc: "With Pro you access the last 90 days of full history.",
+    pro_history_cta: "View with Pro Plan",
+    pro_history_back: "Back to current month",
+    pro_letters_title: "Future letters",
+    pro_letters_desc: "Available with the Pro Plan",
+    pro_comparison_title: "Progress comparison",
+    pro_comparison_desc: "Available with the Pro Plan",
+    pro_reminder_title: "Smart reminders",
+    pro_reminder_desc: "Available with the Pro Plan",
+    history_days_free: "Last 30 days",
+    history_days_pro: "Last 90 days",
 
   }
 }

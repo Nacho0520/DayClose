@@ -240,7 +240,7 @@ export default function Stats({ user, isPro }) {
       <div className="relative bg-neutral-800/30 p-6 rounded-[2.5rem] border border-white/5">
         <div className="flex items-center gap-3 mb-5">
           <Calendar size={18} className="text-neutral-400" />
-          <h3 className="text-sm font-black text-white uppercase tracking-wider">Últimos 28 días</h3>
+          <h3 className="text-sm font-black text-white uppercase tracking-wider">{t('heatmap_title')}</h3>
           {!isPro && (
             <span className="ml-auto flex items-center gap-1 text-[10px] uppercase tracking-widest font-bold px-2 py-1 rounded-full bg-violet-500/20 border border-violet-500/30 text-violet-400">
               <Zap size={10} /> Pro
@@ -271,14 +271,14 @@ export default function Stats({ user, isPro }) {
               <div className="h-12 w-12 rounded-2xl bg-violet-500/20 border border-violet-500/30 flex items-center justify-center">
                 <Lock size={22} className="text-violet-400" />
               </div>
-              <p className="text-sm font-black text-white">Historial visual</p>
-              <p className="text-[11px] text-neutral-400 leading-relaxed">
-                Visualiza tu actividad de los últimos 28 días con el Plan Pro
+              <p className="text-sm font-black text-white">{t('pro_heatmap_title')}</p>
+              <p className="text-[11px] text-neutral-400 leading-relaxed text-center px-4">
+                {t('pro_heatmap_desc')}
               </p>
               <button
                 className="mt-1 flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-violet-500 text-white text-xs font-black shadow-lg shadow-violet-500/30 active:scale-95 transition-all"
               >
-                <Zap size={13} /> Hazte Pro
+                <Zap size={13} /> {t('pro_heatmap_cta')}
               </button>
             </div>
           </div>

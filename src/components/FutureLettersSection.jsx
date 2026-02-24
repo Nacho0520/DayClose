@@ -102,17 +102,19 @@ export default function FutureLettersSection({ isPro }) {
         {showLettersNew && <span className="badge-subtle">{t('friends_new')}</span>}
       </div>
 
-      {!isPro && letters.length >= MAX_FREE_LETTERS && (
-        <button onClick={() => setProModalOpen(true)} className="w-full mb-3 relative z-10 flex items-center justify-between gap-3 bg-violet-600/10 border border-violet-500/20 rounded-2xl px-4 py-2.5 active:scale-95 transition-all">
-          <p className="text-[11px] text-neutral-400">Plan Free: máx {MAX_FREE_LETTERS} carta activa</p>
-          <div className="flex items-center gap-1 bg-violet-600 px-2.5 py-1 rounded-lg flex-shrink-0">
-            <Zap size={10} className="text-white fill-white" />
-            <span className="text-[10px] font-black text-white">Pro</span>
-          </div>
-        </button>
-      )}
+      {isPro ? (
+        <>
+          {!isPro && letters.length >= MAX_FREE_LETTERS && (
+            <button onClick={() => setProModalOpen(true)} className="w-full mb-3 relative z-10 flex items-center justify-between gap-3 bg-violet-600/10 border border-violet-500/20 rounded-2xl px-4 py-2.5 active:scale-95 transition-all">
+              <p className="text-[11px] text-neutral-400">Plan Free: máx {MAX_FREE_LETTERS} carta activa</p>
+              <div className="flex items-center gap-1 bg-violet-600 px-2.5 py-1 rounded-lg flex-shrink-0">
+                <Zap size={10} className="text-white fill-white" />
+                <span className="text-[10px] font-black text-white">Pro</span>
+              </div>
+            </button>
+          )}
 
-      <div className="flex items-center justify-between mt-2 relative z-10">
+          <div className="flex items-center justify-between mt-2 relative z-10">
         <div className="flex items-center gap-2 text-[10px] text-neutral-500">
           <Clock size={12} />
           {nextLetter ? (
@@ -238,6 +240,32 @@ export default function FutureLettersSection({ isPro }) {
             </MotionDiv>
           </div>
         )}
+        </>
+      ) : (
+        <div className="relative">
+          <div className="blur-sm pointer-events-none select-none opacity-60">
+            <div className="flex items-center justify-between mt-2 relative z-10">
+              <div className="flex items-center gap-2 text-[10px] text-neutral-500">
+                <Clock size={12} />
+                <span>{t('more_letters_empty')}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button className="text-[11px] px-3 py-1.5 rounded-full text-white bg-white/10 border border-white/10">
+                  {t('more_letters_open')}
+                </button>
+                <button className="text-[11px] px-3 py-1.5 rounded-full text-white bg-white/10 border border-white/10">
+                  {t('more_letters_action')}
+                </button>
+              </div>
+            </div>
+          </div>
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-neutral-900/60 rounded-[2rem] backdrop-blur-sm">
+            <Zap size={22} className="text-violet-400" />
+            <p className="text-sm font-black text-white">Cartas del futuro</p>
+            <p className="text-[11px] text-neutral-400 text-center px-4">Disponible con el Plan Pro</p>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

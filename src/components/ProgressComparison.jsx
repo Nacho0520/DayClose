@@ -100,6 +100,7 @@ export default function ProgressComparison({ user, isPro }) {
         </div>
       </div>
 
+      {isPro ? (
       <div className="grid grid-cols-3 gap-3">
         {['day', 'week', 'month'].map((key) => {
           const data = comparison[key]
@@ -140,6 +141,25 @@ export default function ProgressComparison({ user, isPro }) {
           )
         })}
       </div>
+      ) : (
+        <div className="relative">
+          <div className="blur-sm pointer-events-none select-none opacity-60">
+            <div className="grid grid-cols-3 gap-3">
+              {['day', 'week', 'month'].map((key) => (
+                <div key={key} className="bg-neutral-900/60 p-4 radius-card border border-white/5 text-center shadow-apple-soft">
+                  <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest">{t(`compare_${key}`)}</p>
+                  <p className="mt-1 text-2xl font-black text-white tracking-tight">—</p>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-neutral-900/60 rounded-[2rem] backdrop-blur-sm">
+            <Zap size={22} className="text-violet-400" />
+            <p className="text-sm font-black text-white">Comparación de progreso</p>
+            <p className="text-[11px] text-neutral-400 text-center px-4">Plan Pro</p>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

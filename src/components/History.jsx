@@ -122,7 +122,7 @@ export default function History({ user, onClose, isPro }) {
         <div className="flex-1">
           <h2 className="text-xl font-black text-white">{t('history_title')}</h2>
           <p className="text-[11px] text-neutral-500">
-            {isPro ? 'Últimos 90 días' : 'Últimos 30 días'}
+            {isPro ? t('history_days_pro') : t('history_days_free')}
           </p>
         </div>
         {/* Badge Pro o CTA */}
@@ -201,17 +201,17 @@ export default function History({ user, onClose, isPro }) {
             <Zap size={28} className="text-violet-400 fill-violet-400" />
           </div>
           <div className="text-center">
-            <p className="text-white font-black text-lg mb-1">Historial extendido</p>
-            <p className="text-neutral-500 text-sm">Con Pro accedes a los últimos<br />90 días de historial completo.</p>
+            <p className="text-white font-black text-lg mb-1">{t('pro_history_title')}</p>
+            <p className="text-neutral-500 text-sm">{t('pro_history_desc')}</p>
           </div>
           <button
             onClick={() => setProModalOpen(true)}
             className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-bold px-8 py-3.5 rounded-2xl active:scale-95 transition-all shadow-lg shadow-indigo-500/20"
           >
-            Ver con Pro
+            {t('pro_history_cta')}
           </button>
           <button onClick={() => setSelectedMonth(currentMonthStr)} className="text-neutral-600 text-xs hover:text-neutral-400 transition-colors">
-            Volver al mes actual
+            {t('pro_history_back')}
           </button>
         </div>
       ) : grouped.length === 0 ? (

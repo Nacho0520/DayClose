@@ -173,11 +173,11 @@ function Dashboard({
           <div className="mb-6 flex items-center gap-3 px-4 py-3 rounded-2xl bg-violet-500/10 border border-violet-500/20">
             <Zap size={16} className="text-violet-400 flex-shrink-0" />
             <p className="text-[12px] text-violet-300 flex-1">
-              Has llegado al límite de {MAX_FREE_HABITS} hábitos.{' '}
+              {t('pro_habit_limit_banner')}{' '}
               <button onClick={() => setProModalOpen(true)} className="underline font-bold">
-                Hazte Pro
+                {t('pro_habit_limit_cta')}
               </button>{' '}
-              para añadir más.
+              {t('pro_habit_limit_suffix')}
             </p>
           </div>
         )}

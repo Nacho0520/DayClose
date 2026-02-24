@@ -56,10 +56,11 @@ export default function ReminderPopup({ session, isPro }) {
   }
 
   useEffect(() => {
+    if (!isPro) return
     const initialTimer = setTimeout(checkPendingHabits, 5000)
     const interval = setInterval(checkPendingHabits, 300000)
     return () => { clearTimeout(initialTimer); clearInterval(interval) }
-  }, [session, snoozedHabits])
+  }, [session, snoozedHabits, isPro])
 
   const handleAction = async (action) => {
     if (!currentHabit) return
