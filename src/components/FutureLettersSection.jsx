@@ -102,7 +102,45 @@ export default function FutureLettersSection({ isPro }) {
         {showLettersNew && <span className="badge-subtle">{t('friends_new')}</span>}
       </div>
 
-      {isPro ? (
+      {!isPro ? (
+        <div className="relative mt-3">
+          {/* Preview borroso — mismo patrón que heatmap de Stats */}
+          <div className="blur-sm pointer-events-none select-none flex flex-col gap-3">
+            <div className="bg-neutral-800/60 rounded-2xl p-4 border border-white/5 flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-neutral-700 flex-shrink-0" />
+              <div className="flex-1">
+                <div className="h-3 w-28 bg-neutral-700 rounded-full mb-2" />
+                <div className="h-2 w-16 bg-neutral-800 rounded-full" />
+              </div>
+              <div className="w-16 h-6 bg-neutral-700 rounded-full" />
+            </div>
+            <div className="bg-neutral-800/60 rounded-2xl p-4 border border-white/5 flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-neutral-700 flex-shrink-0" />
+              <div className="flex-1">
+                <div className="h-3 w-20 bg-neutral-700 rounded-full mb-2" />
+                <div className="h-2 w-24 bg-neutral-800 rounded-full" />
+              </div>
+              <div className="w-16 h-6 bg-neutral-700 rounded-full" />
+            </div>
+          </div>
+          {/* Overlay — mismo patrón que heatmap de Stats */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center rounded-[2rem] bg-neutral-900/70 backdrop-blur-sm">
+            <div className="flex flex-col items-center gap-3 px-6 text-center">
+              <div className="h-12 w-12 rounded-2xl bg-violet-500/20 border border-violet-500/30 flex items-center justify-center">
+                <Zap size={22} className="text-violet-400 fill-violet-400/30" />
+              </div>
+              <p className="text-sm font-black text-white">{t('pro_letters_title')}</p>
+              <p className="text-[11px] text-neutral-400 leading-relaxed text-center px-4">{t('pro_letters_desc')}</p>
+              <button
+                onClick={() => setProModalOpen(true)}
+                className="mt-1 flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-violet-500 text-white text-xs font-black shadow-lg shadow-violet-500/30 active:scale-95 transition-all"
+              >
+                <Zap size={13} /> {t('upgrade_to_pro')}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (
         <>
           {!isPro && letters.length >= MAX_FREE_LETTERS && (
             <button onClick={() => setProModalOpen(true)} className="w-full mb-3 relative z-10 flex items-center justify-between gap-3 bg-violet-600/10 border border-violet-500/20 rounded-2xl px-4 py-2.5 active:scale-95 transition-all">
@@ -241,41 +279,6 @@ export default function FutureLettersSection({ isPro }) {
           </div>
         )}
         </>
-      ) : (
-        <div className="relative">
-          <div className="blur-sm pointer-events-none select-none opacity-60">
-            <div className="flex items-center justify-between mt-2 relative z-10">
-              <div className="flex items-center gap-2 text-[10px] text-neutral-500">
-                <Clock size={12} />
-                <span>{t('more_letters_empty')}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <button className="text-[11px] px-3 py-1.5 rounded-full text-white bg-white/10 border border-white/10">
-                  {t('more_letters_open')}
-                </button>
-                <button className="text-[11px] px-3 py-1.5 rounded-full text-white bg-white/10 border border-white/10">
-                  {t('more_letters_action')}
-                </button>
-              </div>
-            </div>
-          </div>
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gradient-to-b from-neutral-900/70 to-neutral-900/95 rounded-[2rem] backdrop-blur-[2px]">
-            <div className="w-12 h-12 rounded-[1.2rem] bg-violet-600/20 border border-violet-500/30 flex items-center justify-center shadow-lg shadow-violet-500/10">
-              <Zap size={22} className="text-violet-400 fill-violet-400/30" />
-            </div>
-            <div className="text-center">
-              <p className="text-base font-black text-white tracking-tight">{t('pro_letters_title')}</p>
-              <p className="text-[11px] text-neutral-400 mt-1">{t('pro_letters_desc')}</p>
-            </div>
-            <button
-              onClick={() => setProModalOpen(true)}
-              className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-xs font-black uppercase tracking-wider shadow-lg shadow-violet-500/25 active:scale-95 transition-all"
-            >
-              <Zap size={13} className="fill-white" />
-              {t('upgrade_to_pro')}
-            </button>
-          </div>
-        </div>
       )}
     </div>
   )

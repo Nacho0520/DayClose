@@ -142,35 +142,32 @@ export default function ProgressComparison({ user, isPro }) {
         })}
       </div>
       ) : (
-        <div className="relative rounded-[2rem] overflow-hidden">
-          {/* Preview borroso */}
-          <div className="blur-sm pointer-events-none select-none opacity-40">
-            <div className="grid grid-cols-3 gap-3">
-              {['day', 'week', 'month'].map((key) => (
-                <div key={key} className="bg-neutral-900/60 p-4 radius-card border border-white/5 text-center">
-                  <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest">{t(`compare_${key}`)}</p>
-                  <p className="mt-1 text-2xl font-black text-white tracking-tight">12</p>
-                  <span className="mt-2 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20">▲ 24%</span>
-                </div>
-              ))}
-            </div>
+        <div className="relative">
+          {/* Grid borroso — mismo patrón que heatmap de Stats */}
+          <div className="grid grid-cols-3 gap-3 blur-sm pointer-events-none select-none">
+            {['day', 'week', 'month'].map((key) => (
+              <div key={key} className="bg-neutral-800/60 p-4 rounded-2xl border border-white/5 text-center">
+                <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest mb-1">{t(`compare_${key}`)}</p>
+                <p className="text-2xl font-black text-white">12</p>
+                <span className="mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold text-emerald-400 bg-emerald-500/10">▲ 24%</span>
+              </div>
+            ))}
           </div>
-          {/* Overlay */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gradient-to-b from-neutral-900/70 to-neutral-900/95 rounded-[2rem] backdrop-blur-[2px]">
-            <div className="w-12 h-12 rounded-[1.2rem] bg-violet-600/20 border border-violet-500/30 flex items-center justify-center shadow-lg shadow-violet-500/10">
-              <Zap size={22} className="text-violet-400 fill-violet-400/30" />
+          {/* Overlay — mismo patrón que heatmap de Stats */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center rounded-[2rem] bg-neutral-900/70 backdrop-blur-sm">
+            <div className="flex flex-col items-center gap-3 px-6 text-center">
+              <div className="h-12 w-12 rounded-2xl bg-violet-500/20 border border-violet-500/30 flex items-center justify-center">
+                <Zap size={22} className="text-violet-400 fill-violet-400/30" />
+              </div>
+              <p className="text-sm font-black text-white">{t('pro_comparison_title')}</p>
+              <p className="text-[11px] text-neutral-400 leading-relaxed text-center px-4">{t('pro_comparison_desc')}</p>
+              <button
+                onClick={() => setProModalOpen(true)}
+                className="mt-1 flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-violet-500 text-white text-xs font-black shadow-lg shadow-violet-500/30 active:scale-95 transition-all"
+              >
+                <Zap size={13} /> {t('upgrade_to_pro')}
+              </button>
             </div>
-            <div className="text-center">
-              <p className="text-base font-black text-white tracking-tight">{t('pro_comparison_title')}</p>
-              <p className="text-[11px] text-neutral-400 mt-1">{t('pro_comparison_desc')}</p>
-            </div>
-            <button
-              onClick={() => setProModalOpen(true)}
-              className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-xs font-black uppercase tracking-wider shadow-lg shadow-violet-500/25 active:scale-95 transition-all"
-            >
-              <Zap size={13} className="fill-white" />
-              {t('upgrade_to_pro')}
-            </button>
           </div>
         </div>
       )}
