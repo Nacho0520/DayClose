@@ -369,7 +369,8 @@ export const translations = {
     weekly_summary_title: "Resumen semanal",
     weekly_summary_rate: "Constancia esta semana",
     weekly_summary_empty: "Sin actividad esta semana",
-    weekly_summary_cta: "Ver desglose con Pro",
+    weekly_summary_cta: "Hazte Pro",
+    this_week_title: "Esta semana",
 
 
   },
@@ -722,7 +723,7 @@ export const translations = {
     pro_soft_cta: "Go Pro before you need it →",
     pro_heatmap_title: "Visual history",
     pro_heatmap_desc: "Visualize your activity over the last 28 days with the Pro Plan",
-    pro_heatmap_cta: "Go Pro",
+    pro_heatmap_cta: "Upgrade to Pro",
     pro_history_title: "Extended history",
     pro_history_desc: "With Pro you access the last 90 days of full history.",
     pro_history_cta: "View with Pro Plan",
@@ -742,7 +743,9 @@ export const translations = {
     weekly_summary_title: "Weekly summary",
     weekly_summary_rate: "Consistency this week",
     weekly_summary_empty: "No activity this week",
-    weekly_summary_cta: "See breakdown with Pro",
+    weekly_summary_cta: "Upgrade to Pro",
+
+    this_week_title: "This week",
 
 
   }

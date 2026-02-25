@@ -1,15 +1,8 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import {
-  Flame,
-  Trophy,
-  TrendingUp,
-  Calendar,
-  Loader2,
-  Lock,
-  Zap,
-  Award,
-  BarChart2,
+  Flame, Trophy, TrendingUp, Calendar,
+  Loader2, Lock, Zap, Award, BarChart2,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useLanguage } from "../context/LanguageContext";
@@ -28,9 +21,7 @@ export default function Stats({ user, isPro, onUpgrade }) {
       const raw = localStorage.getItem("mivida_streak_protector_uses");
       const parsed = raw ? JSON.parse(raw) : [];
       return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return [];
-    }
+    } catch { return []; }
   });
   const [isProtectorActive, setProtectorActive] = useState(false);
   const [isPerfectWeek, setIsPerfectWeek] = useState(false);
@@ -48,7 +39,7 @@ export default function Stats({ user, isPro, onUpgrade }) {
   const getUsesThisMonth = (date) => {
     const monthKey = getMonthKey(date);
     return protectorUses.filter(
-      (d) => typeof d === "string" && d.startsWith(monthKey),
+      (d) => typeof d === "string" && d.startsWith(monthKey)
     ).length;
   };
 
@@ -56,17 +47,15 @@ export default function Stats({ user, isPro, onUpgrade }) {
     async function calculateStats() {
       if (!user) return;
 
-      // Traemos logs + nombre del hábito para el desglose Pro
+      // CORRECCIÓN: Se añade 'data: logs' para extraer correctamente la información
       const { data: logs, error } = await supabase
         .from("daily_logs")
         .select("created_at, status, habit_id, habits(title)")
         .eq("user_id", user.id)
         .eq("status", "completed")
         .order("created_at", { ascending: false });
-      if (error || !logs) {
-        setLoading(false);
-        return;
-      }
+        
+      if (error || !logs) { setLoading(false); return; }
 
       const activeDays = new Set(logs.map((log) => formatDate(log.created_at)));
       const protectedDays = new Set();
@@ -90,10 +79,7 @@ export default function Stats({ user, isPro, onUpgrade }) {
         const nextUses = Array.from(new Set([...protectorUses, yesterdayStr]));
         protectedDays.add(yesterdayStr);
         try {
-          localStorage.setItem(
-            "mivida_streak_protector_uses",
-            JSON.stringify(nextUses),
-          );
+          localStorage.setItem("mivida_streak_protector_uses", JSON.stringify(nextUses));
         } catch {}
         setProtectorUses(nextUses);
       }
@@ -107,10 +93,7 @@ export default function Stats({ user, isPro, onUpgrade }) {
       if (!isActive(todayStr)) {
         checkDate.setDate(checkDate.getDate() - 1);
         if (!isActive(formatDate(checkDate))) currentStreak = 0;
-        else {
-          currentStreak = 1;
-          checkDate.setDate(checkDate.getDate() - 1);
-        }
+        else { currentStreak = 1; checkDate.setDate(checkDate.getDate() - 1); }
       } else {
         currentStreak = 1;
         checkDate.setDate(checkDate.getDate() - 1);
@@ -123,38 +106,28 @@ export default function Stats({ user, isPro, onUpgrade }) {
       }
 
       // ── Racha más larga histórica ─────────────────────────────
-      const allDays = Array.from(
-        new Set([...activeDays, ...protectedDays]),
-      ).sort();
-      let best = 0;
-      let run = 0;
+      const allDays = Array.from(new Set([...activeDays, ...protectedDays])).sort();
+      let best = 0, run = 0;
       for (let i = 0; i < allDays.length; i++) {
-        if (i === 0) {
-          run = 1;
-        } else {
-          const prev = new Date(allDays[i - 1]);
-          const curr = new Date(allDays[i]);
-          const diff = (curr - prev) / (1000 * 60 * 60 * 24);
+        if (i === 0) { run = 1; }
+        else {
+          const diff = (new Date(allDays[i]) - new Date(allDays[i - 1])) / (1000 * 60 * 60 * 24);
           run = diff === 1 ? run + 1 : 1;
         }
         if (run > best) best = run;
       }
       setBestStreak(best);
-
       setStreak(currentStreak);
       setTotalCompleted(logs.length);
       setProtectorActive(protectedDays.has(yesterdayStr));
 
-      // ── Semana actual (Lun–hoy) ───────────────────────────────
+      // ── Semana actual ─────────────────────────────────────────
       const days = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
-      const currentWeekData = [];
       const curr = new Date();
-      const currentDay = curr.getDay();
-      const distanceToMonday = currentDay === 0 ? 6 : currentDay - 1;
+      const distanceToMonday = curr.getDay() === 0 ? 6 : curr.getDay() - 1;
       const monday = new Date(curr);
       monday.setDate(curr.getDate() - distanceToMonday);
 
-      // Fechas de la semana actual
       const weekDates = [];
       for (let i = 0; i < 7; i++) {
         const d = new Date(monday);
@@ -162,31 +135,23 @@ export default function Stats({ user, isPro, onUpgrade }) {
         weekDates.push(formatDate(d));
       }
 
-      for (let i = 0; i < 7; i++) {
-        const d = new Date(monday);
-        d.setDate(monday.getDate() + i);
-        const dateStr = formatDate(d);
-        const count = logs.filter(
-          (l) => formatDate(l.created_at) === dateStr,
-        ).length;
-        currentWeekData.push({
+      const currentWeekData = weekDates.map((dateStr) => {
+        const d = new Date(dateStr);
+        const dayLogs = logs.filter((l) => formatDate(l.created_at) === dateStr);
+        return {
           day: days[d.getDay()],
           date: dateStr,
-          count,
+          count: dayLogs.length,
           isToday: dateStr === todayStr,
-        });
-      }
+          isFuture: new Date(dateStr) > today,
+        };
+      });
       setWeeklyData(currentWeekData);
 
-      // % global de la semana (días con al menos 1 completado / días transcurridos)
-      const passedDays = currentWeekData.filter(
-        (d) => new Date(d.date) <= today,
-      );
+      const passedDays = currentWeekData.filter((d) => !d.isFuture);
       const daysWithActivity = passedDays.filter((d) => d.count > 0).length;
-      const rate =
-        passedDays.length > 0
-          ? Math.round((daysWithActivity / passedDays.length) * 100)
-          : 0;
+      const rate = passedDays.length > 0
+        ? Math.round((daysWithActivity / passedDays.length) * 100) : 0;
       setWeeklyRate(rate);
 
       // ── Desglose por hábito esta semana (Pro) ────────────────
@@ -203,42 +168,33 @@ export default function Stats({ user, isPro, onUpgrade }) {
         .map((h) => ({
           title: h.title,
           days: h.days.size,
-          rate: Math.round(
-            (h.days.size / Math.max(passedDays.length, 1)) * 100,
-          ),
+          rate: Math.round((h.days.size / Math.max(passedDays.length, 1)) * 100),
         }))
         .sort((a, b) => b.rate - a.rate);
       setWeeklyHabitBreakdown(breakdown);
-      // ─────────────────────────────────────────────────────────
 
-      const isPerfectWeek = currentWeekData.every((d) => {
-        const dDate = new Date(d.date);
-        return dDate > new Date() || d.count > 0;
-      });
+      // ── Perfect week ─────────────────────────────────────────
       setIsPerfectWeek(
-        isPerfectWeek &&
-          currentWeekData
-            .filter((d) => new Date(d.date) <= new Date())
-            .every((d) => d.count > 0),
+        passedDays.length > 0 && passedDays.every((d) => d.count > 0)
       );
 
-      // Heatmap — últimos 28 días
+      // ── Heatmap 28 días ───────────────────────────────────────
       const heatmap = [];
       for (let i = 27; i >= 0; i--) {
         const d = new Date(today);
         d.setDate(today.getDate() - i);
         const dateStr = formatDate(d);
-        const count = logs.filter(
-          (l) => formatDate(l.created_at) === dateStr,
-        ).length;
-        heatmap.push({ date: dateStr, count, isToday: dateStr === todayStr });
+        heatmap.push({
+          date: dateStr,
+          count: logs.filter((l) => formatDate(l.created_at) === dateStr).length,
+          isToday: dateStr === todayStr,
+        });
       }
       setHeatmapData(heatmap);
-
       setLoading(false);
     }
     calculateStats();
-  }, [user, protectorUses]);
+  }, [user, protectorUses, t]); // Añadido t a dependencias
 
   if (loading)
     return (
@@ -253,24 +209,23 @@ export default function Stats({ user, isPro, onUpgrade }) {
     if (count < 6) return "bg-emerald-700";
     return "bg-emerald-500";
   };
-
   const getRateColor = (rate) => {
     if (rate >= 80) return "bg-emerald-500";
     if (rate >= 50) return "bg-amber-500";
     return "bg-red-500";
   };
 
+  const maxCount = Math.max(...weeklyData.map((d) => d.count)) || 1;
+
   return (
     <div className="w-full max-w-md mx-auto px-6 pb-32 pt-6 animate-in fade-in duration-500">
-      {/* Streak card */}
+
+      {/* ── Streak card ─────────────────────────────────────────── */}
       <div className="relative overflow-hidden bg-gradient-to-br from-neutral-800 to-neutral-900 rounded-[2.5rem] p-8 text-center border border-white/5 shadow-2xl mb-6">
-        <div className="absolute top-0 right-0 p-8 opacity-10">
-          <Flame size={120} />
-        </div>
+        <div className="absolute top-0 right-0 p-8 opacity-10"><Flame size={120} /></div>
         <div className="relative z-10">
           <motion.div
-            initial={{ scale: 0.5 }}
-            animate={{ scale: 1 }}
+            initial={{ scale: 0.5 }} animate={{ scale: 1 }}
             className={`inline-flex items-center justify-center p-4 rounded-full mb-4 border ${
               isProtectorActive
                 ? "bg-emerald-500/15 border-emerald-500/20 shadow-[0_0_30px_rgba(16,185,129,0.2)]"
@@ -279,93 +234,46 @@ export default function Stats({ user, isPro, onUpgrade }) {
                   : "bg-neutral-800/60 border-white/5"
             }`}
           >
-            {isProtectorActive ? (
-              <Lock size={32} className="text-emerald-400" />
-            ) : (
-              <Flame
-                size={32}
-                className={
-                  streak > 0
-                    ? "text-orange-500 fill-orange-500"
-                    : "text-neutral-600"
-                }
-              />
-            )}
+            {isProtectorActive
+              ? <Lock size={32} className="text-emerald-400" />
+              : <Flame size={32} className={streak > 0 ? "text-orange-500 fill-orange-500" : "text-neutral-600"} />
+            }
           </motion.div>
-          <h2 className="text-5xl font-black text-white tracking-tighter mb-1">
-            {streak}
-          </h2>
-          <p className="text-xs font-bold text-neutral-400 uppercase tracking-[0.3em]">
-            {t("streak_label")}
-          </p>
+          <h2 className="text-5xl font-black text-white tracking-tighter mb-1">{streak}</h2>
+          <p className="text-xs font-bold text-neutral-400 uppercase tracking-[0.3em]">{t("streak_label")}</p>
         </div>
       </div>
 
-      {/* Streak protector */}
-      <div className="bg-neutral-800/40 p-5 rounded-[2rem] border border-white/5 mb-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-bold text-white">
-              {t("streak_protector_title")}
-            </p>
-            <p className="text-[11px] text-neutral-500">
-              {t("streak_protector_desc")}
-            </p>
-          </div>
-          <span className="text-[10px] uppercase tracking-widest font-bold px-3 py-1 rounded-full border text-neutral-400 bg-white/5 border-white/5">
-            {t("streak_protector_monthly")} {getUsesThisMonth(new Date())}/
-            {MAX_PROTECTORS_PER_MONTH}
-          </span>
-        </div>
-        <p className="mt-3 text-[11px] text-neutral-500">
-          {t("streak_protector_cooldown")}
-        </p>
-      </div>
-
-      {/* Stats grid */}
+      {/* ── Stats grid ──────────────────────────────────────────── */}
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div className="bg-neutral-800/50 p-6 rounded-[2rem] border border-white/5">
           <Trophy className="text-yellow-500 mb-3" size={24} />
           <p className="text-2xl font-black text-white">{totalCompleted}</p>
-          <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider">
-            {t("total_wins")}
-          </p>
+          <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider">{t("total_wins")}</p>
         </div>
-        <div className="bg-neutral-800/50 p-6 rounded-[2rem] border border-white/5">
-          <TrendingUp className="text-emerald-500 mb-3" size={24} />
-          <p className="text-2xl font-black text-white">
-            {weeklyData.reduce((acc, curr) => acc + curr.count, 0)}
-          </p>
-          <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider">
-            {t("this_week")}
-          </p>
-        </div>
-        {/* Racha más larga */}
-        <div className="col-span-2 bg-neutral-800/50 p-6 rounded-[2rem] border border-white/5 flex items-center justify-between">
+        <div className="bg-neutral-800/50 p-6 rounded-[2rem] border border-white/5 flex items-center justify-between col-span-1">
           <div>
-            <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider mb-1">
-              {t("best_streak") || "Mejor racha"}
-            </p>
-            <p className="text-2xl font-black text-white">
-              {bestStreak}{" "}
-              <span className="text-sm font-bold text-neutral-500">
-                {t("days") || "días"}
-              </span>
-            </p>
-          </div>
-          <div className="h-12 w-12 rounded-2xl bg-orange-500/15 border border-orange-500/20 flex items-center justify-center">
-            <Award size={22} className="text-orange-400" />
+            <Award className="text-orange-400 mb-3" size={24} />
+            <p className="text-2xl font-black text-white">{bestStreak}</p>
+            <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider">{t("best_streak")}</p>
           </div>
         </div>
       </div>
 
-      {/* ── Resumen semanal ─────────────────────────────────────── */}
+      {/* ── SECCIÓN FUSIONADA: Esta Semana ──────────────────────── */}
       <div className="bg-neutral-800/30 p-6 rounded-[2.5rem] border border-white/5 mb-6">
+
+        {/* Header */}
         <div className="flex items-center gap-3 mb-5">
-          <BarChart2 size={18} className="text-neutral-400" />
+          <Calendar size={18} className="text-neutral-400" />
           <h3 className="text-sm font-black text-white uppercase tracking-wider">
-            {t("weekly_summary_title") || "Resumen semanal"}
+            {t("this_week_title") || "Esta Semana"}
           </h3>
+          {isPerfectWeek && (
+            <span className="ml-auto flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/25 text-amber-400 text-[10px] font-black uppercase tracking-wider animate-pulse">
+              🏆
+            </span>
+          )}
           {!isPro && (
             <span className="ml-auto flex items-center gap-1 text-[10px] uppercase tracking-widest font-bold px-2 py-1 rounded-full bg-violet-500/20 border border-violet-500/30 text-violet-400">
               <Zap size={10} /> Pro
@@ -373,207 +281,159 @@ export default function Stats({ user, isPro, onUpgrade }) {
           )}
         </div>
 
-        {/* % global — visible para todos */}
-        <div className="flex items-center justify-between mb-3">
-          <p className="text-[11px] text-neutral-400 font-bold uppercase tracking-wider">
-            {t("weekly_summary_rate") || "Constancia esta semana"}
-          </p>
-          <span
-            className={`text-xs font-black px-2.5 py-1 rounded-full ${
-              weeklyRate >= 80
-                ? "bg-emerald-500/20 text-emerald-400"
-                : weeklyRate >= 50
-                  ? "bg-amber-500/20 text-amber-400"
-                  : "bg-red-500/20 text-red-400"
-            }`}
-          >
-            {weeklyRate}%
-          </span>
-        </div>
-        <div className="w-full h-2 bg-neutral-700/50 rounded-full overflow-hidden mb-5">
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: `${weeklyRate}%` }}
-            transition={{ duration: 0.8, type: "spring" }}
-            className={`h-full rounded-full ${getRateColor(weeklyRate)}`}
-          />
-        </div>
+        {/* Contenido Gated para Pro (Constancia y Barras) */}
+        {!isPro ? (
+          <div className="relative">
+            {/* Visual Falso y Borroso */}
+            <div className="blur-sm pointer-events-none select-none">
+                {/* % falso */}
+                <div className="flex items-center justify-between mb-2">
+                    <div className="h-2 w-32 bg-neutral-700 rounded-full" />
+                    <div className="h-4 w-10 bg-neutral-700 rounded-full" />
+                </div>
+                <div className="w-full h-2 bg-neutral-700/50 rounded-full mb-6" />
 
-        {/* Desglose por hábito — solo Pro */}
+                {/* Barras falsas */}
+                <div className="flex items-end justify-between h-28 gap-2 mb-4">
+                    {[40, 70, 45, 90, 65, 30, 50].map((h, i) => (
+                        <div key={i} className="flex-1 bg-neutral-800 rounded-xl" style={{ height: `${h}%` }} />
+                    ))}
+                </div>
+            </div>
+
+            {/* CTA Overlay */}
+            <div className="absolute inset-0 flex items-center justify-center z-20">
+              <button
+                onClick={onUpgrade}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-violet-500 text-white text-xs font-black shadow-lg shadow-violet-500/30 active:scale-95 transition-all"
+              >
+                <Zap size={12} /> {t("weekly_summary_cta") || "Ver estadísticas Pro"}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* % global real */}
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[11px] text-neutral-400 font-bold uppercase tracking-wider">
+                {t("weekly_summary_rate") || "Constancia"}
+              </p>
+              <span className={`text-xs font-black px-2.5 py-1 rounded-full ${
+                weeklyRate >= 80 ? "bg-emerald-500/20 text-emerald-400"
+                : weeklyRate >= 50 ? "bg-amber-500/20 text-amber-400"
+                : "bg-red-500/20 text-red-400"
+              }`}>
+                {weeklyRate}%
+              </span>
+            </div>
+            <div className="w-full h-2 bg-neutral-700/50 rounded-full overflow-hidden mb-6">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${weeklyRate}%` }}
+                className={`h-full rounded-full ${getRateColor(weeklyRate)}`}
+              />
+            </div>
+
+            {/* Barras reales */}
+            <div className="flex items-end justify-between h-28 gap-2 mb-4">
+              {weeklyData.map((d, i) => {
+                const height = d.count === 0 ? 5 : (d.count / maxCount) * 100;
+                return (
+                  <div key={i} className="flex flex-col items-center flex-1 group">
+                    <div className="w-full relative flex items-end justify-center h-full">
+                      {d.count > 0 && (
+                        <div className="absolute -top-6 text-[10px] font-bold text-white opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                          {d.count}
+                        </div>
+                      )}
+                      <motion.div
+                        initial={{ height: 0 }}
+                        animate={{ height: `${height}%` }}
+                        className={`w-full rounded-xl min-h-[6px] ${
+                          d.isFuture ? "bg-neutral-800/50" 
+                          : d.isToday ? "bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.3)]" 
+                          : d.count > 0 ? "bg-neutral-600" : "bg-neutral-800"
+                        }`}
+                      />
+                    </div>
+                    <p className={`mt-2 text-[10px] font-black uppercase ${
+                      d.isToday ? "text-emerald-500" : "text-neutral-500"
+                    }`}>
+                      {d.day[0]}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
+
+        {/* Separador y Desglose Pro (Ya estaba gateado) */}
+        <div className="h-px bg-white/5 my-5" />
+        
         {isPro ? (
           <div className="space-y-3">
-            {weeklyHabitBreakdown.length === 0 ? (
-              <p className="text-[11px] text-neutral-600 text-center py-2">
-                {t("weekly_summary_empty") || "Sin actividad esta semana"}
-              </p>
-            ) : (
-              weeklyHabitBreakdown.map((h, i) => (
+            {weeklyHabitBreakdown.map((h, i) => (
                 <div key={i}>
                   <div className="flex items-center justify-between mb-1">
-                    <p className="text-[11px] text-neutral-300 font-bold truncate max-w-[70%]">
-                      {h.title}
-                    </p>
-                    <span className="text-[10px] text-neutral-500 font-bold">
-                      {h.days}d · {h.rate}%
-                    </span>
+                    <p className="text-[11px] text-neutral-300 font-bold truncate max-w-[70%]">{h.title}</p>
+                    <span className="text-[10px] text-neutral-500 font-bold">{h.days}d</span>
                   </div>
                   <div className="w-full h-1.5 bg-neutral-700/50 rounded-full overflow-hidden">
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${h.rate}%` }}
-                      transition={{
-                        duration: 0.6,
-                        delay: i * 0.08,
-                        type: "spring",
-                      }}
                       className={`h-full rounded-full ${getRateColor(h.rate)}`}
                     />
                   </div>
                 </div>
               ))
-            )}
+            }
           </div>
         ) : (
-          /* Overlay lock para Free */
-          <div className="relative">
-            <div className="space-y-3 blur-sm pointer-events-none select-none">
-              {[70, 50, 90].map((w, i) => (
-                <div key={i}>
-                  <div className="flex items-center justify-between mb-1">
-                    <div
-                      className="h-2.5 bg-neutral-700 rounded-full"
-                      style={{ width: `${w - 20}%` }}
-                    />
-                    <div className="h-2.5 w-8 bg-neutral-700 rounded-full" />
-                  </div>
-                  <div className="w-full h-1.5 bg-neutral-700/50 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-emerald-700 rounded-full"
-                      style={{ width: `${w}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
+            <div className="space-y-3 blur-sm pointer-events-none select-none opacity-50">
+                {[1, 2].map(i => (
+                    <div key={i} className="h-4 w-full bg-neutral-800 rounded-lg" />
+                ))}
             </div>
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-              <button
-                onClick={onUpgrade}
-                className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-violet-500 text-white text-xs font-black shadow-lg shadow-violet-500/30 active:scale-95 transition-all"
-              >
-                <Zap size={12} />{" "}
-                {t("weekly_summary_cta") || "Ver desglose con Pro"}
-              </button>
-            </div>
-          </div>
         )}
       </div>
-      {/* ──────────────────────────────────────────────────────── */}
 
-      {/* Weekly performance */}
-      <div className="bg-neutral-800/30 p-8 rounded-[2.5rem] border border-white/5 mb-6">
-        <div className="flex items-center gap-3 mb-6">
-          <Calendar size={18} className="text-neutral-400" />
-          <h3 className="text-sm font-black text-white uppercase tracking-wider">
-            {t("weekly_perf")}
-          </h3>
-          {isPerfectWeek && (
-            <span className="ml-auto flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/25 text-amber-400 text-[10px] font-black uppercase tracking-wider animate-pulse">
-              🏆 {t("perfect_week") || "Semana perfecta"}
-            </span>
-          )}
-        </div>
-        <div className="flex items-end justify-between h-32 gap-2">
-          {weeklyData.map((d, i) => {
-            const max = Math.max(...weeklyData.map((w) => w.count)) || 1;
-            const height = d.count === 0 ? 5 : (d.count / max) * 100;
-            return (
-              <div key={i} className="flex flex-col items-center flex-1 group">
-                <div className="w-full relative flex items-end justify-center h-full">
-                  <motion.div
-                    initial={{ height: 0 }}
-                    animate={{ height: `${height}%` }}
-                    transition={{ delay: i * 0.1, type: "spring" }}
-                    className={`w-full rounded-xl min-h-[6px] transition-colors ${
-                      d.isToday
-                        ? "bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.3)]"
-                        : d.count > 0
-                          ? "bg-neutral-700 group-hover:bg-neutral-600"
-                          : "bg-neutral-800"
-                    }`}
-                  />
-                  {d.count > 0 && (
-                    <div className="absolute -top-6 text-[10px] font-bold text-white opacity-0 group-hover:opacity-100 transition-opacity">
-                      {d.count}
-                    </div>
-                  )}
-                </div>
-                <p
-                  className={`mt-3 text-[10px] font-bold uppercase ${d.isToday ? "text-emerald-500" : "text-neutral-600"}`}
-                >
-                  {d.day[0]}
-                </p>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Heatmap anual (28 días) — gate Pro */}
+      {/* ── Heatmap 28 días — gate Pro ──────────────────────────── */}
       <div className="bg-neutral-800/30 p-6 rounded-[2.5rem] border border-white/5">
         <div className="flex items-center gap-3 mb-5">
           <Calendar size={18} className="text-neutral-400" />
-          <h3 className="text-sm font-black text-white uppercase tracking-wider">
-            {t("heatmap_title")}
-          </h3>
+          <h3 className="text-sm font-black text-white uppercase tracking-wider">{t("heatmap_title")}</h3>
           {!isPro && (
             <span className="ml-auto flex items-center gap-1 text-[10px] uppercase tracking-widest font-bold px-2 py-1 rounded-full bg-violet-500/20 border border-violet-500/30 text-violet-400">
               <Zap size={10} /> Pro
             </span>
           )}
         </div>
-
         {isPro ? (
-          /* Grid real */
           <div className="grid grid-cols-7 gap-1.5">
             {heatmapData.map((d, i) => (
-              <motion.div
+              <div
                 key={i}
-                initial={{ opacity: 0, scale: 0.5 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: i * 0.01 }}
-                title={`${d.date}: ${d.count} completados`}
-                className={`h-8 w-full rounded-lg ${getHeatColor(d.count)} ${
-                  d.isToday ? "ring-2 ring-white/40" : ""
-                }`}
+                className={`h-8 w-full rounded-lg ${getHeatColor(d.count)} ${d.isToday ? "ring-2 ring-white/40" : ""}`}
+                title={`${d.date}: ${d.count}`}
               />
             ))}
           </div>
         ) : (
-          /* Grid falso + botón encima */
           <div className="relative">
             <div className="grid grid-cols-7 gap-1.5 blur-sm pointer-events-none select-none">
-              {[
-                0, 2, 0, 1, 3, 0, 2, 1, 0, 3, 2, 0, 1, 0, 0, 1, 2, 0, 3, 1, 0,
-                2, 0, 1, 0, 2, 3, 1,
-              ].map((level, i) => (
-                <div
-                  key={i}
-                  className={`h-8 w-full rounded-lg ${
-                    level === 0
-                      ? "bg-neutral-800"
-                      : level === 1
-                        ? "bg-emerald-900"
-                        : level === 2
-                          ? "bg-emerald-700"
-                          : "bg-emerald-500"
-                  }`}
-                />
+              {[0,2,0,1,3,0,2,1,0,3,2,0,1,0,0,1,2,0,3,1,0,2,0,1,0,2,3,1].map((level, i) => (
+                <div key={i} className={`h-8 w-full rounded-lg ${
+                  level === 0 ? "bg-neutral-800" : level === 1 ? "bg-emerald-900"
+                  : level === 2 ? "bg-emerald-700" : "bg-emerald-500"
+                }`} />
               ))}
             </div>
             <div className="absolute inset-0 flex items-center justify-center">
               <button
                 onClick={onUpgrade}
-                className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-violet-500 text-white text-xs font-black shadow-lg shadow-violet-500/30 active:scale-95 transition-all"
+                className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-violet-500 text-white text-xs font-black"
               >
                 <Zap size={12} /> {t("pro_heatmap_cta")}
               </button>
