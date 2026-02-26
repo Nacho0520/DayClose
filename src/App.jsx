@@ -4,6 +4,7 @@ import SwipeCard from './components/SwipeCard'
 import NoteModal from './components/NoteModal'
 import Dashboard from './components/Dashboard'
 import Auth from './components/Auth'
+import LandingPage from './components/LandingPage' // <-- 1. Importación añadida
 import { supabase } from './lib/supabaseClient'
 import ReminderPopup from './components/ReminderPopup'
 import TopBanner from './components/TopBanner'
@@ -174,6 +175,7 @@ function App() {
   const [isBlocked, setIsBlocked] = useState(false)
   const [isWhitelisted, setIsWhitelisted] = useState(false)
   const [proModalOpen, setProModalOpen] = useState(false)
+  const [showAuth, setShowAuth] = useState(false) // <-- 2. Nuevo estado añadido
   const AUTO_UPDATE_DELAY_MS = 8000
   const ADMIN_EMAIL = 'hemmings.nacho@gmail.com' 
   const TEST_EMAIL = 'test@test.com'
@@ -278,11 +280,9 @@ function App() {
     return controls.stop
   }, [effectiveWidth, tabIndex, x])
 
-  // ── NUEVO: scroll al top al cambiar de tab ──────────────────────────────────
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
   }, [activeTab])
-  // ───────────────────────────────────────────────────────────────────────────
 
   useEffect(() => {
     if (!session?.user?.id) return
@@ -506,25 +506,25 @@ function App() {
     saveResults()
   }, [session, reviewHabits, currentIndex, results, hasSaved, saving, mode, fetchTodayLogs, t, showDaySummary])
 
-  if (loadingSession) return <div className="min-h-screen flex items-center justify-center bg-neutral-900 text-white font-black italic tracking-tighter">DAYCLOSE</div>
-  const isTestAccount = session?.user?.email === TEST_EMAIL
-  const effectiveIsPro = isTestAccount ? testProOverride : isPro
+  // --- MODIFICACIÓN DEL RENDERIZADO FINAL ---
 
-  const handleToggleTestPro = () => {
-    setTestProOverride(prev => {
-      const next = !prev
-      try {
-        localStorage.setItem('dayclose_simulate_free', next ? 'false' : 'true')
-      } catch {}
-      return next
-    })
+  if (loadingSession) return (
+    <div className="min-h-screen flex items-center justify-center bg-neutral-900 text-white font-black italic tracking-tighter uppercase text-3xl">
+        DAYCLOSE
+    </div>
+  );
+
+  // SI NO HAY SESIÓN:
+  if (!session) {
+    if (showAuth) {
+      // Si el usuario clicó en "Empezar" en la Landing, mostramos Auth
+      return <Auth onBack={() => setShowAuth(false)} />;
+    }
+    // Por defecto, mostramos la Landing Page
+    return <LandingPage onGetStarted={() => setShowAuth(true)} />;
   }
 
-  if (isMaintenance && session?.user?.email !== ADMIN_EMAIL && !isWhitelisted && !isTestAccount) {
-    return <MaintenanceScreen message={maintenanceMessage} />
-  }
-  
-  if (!session) return <><Auth /></>
+  // SI HAY SESIÓN:
   if (isBlocked && session?.user?.email !== ADMIN_EMAIL && !isTestAccount) {
     return <BlockedScreen title={t('blocked_title')} message={t('blocked_desc')} />
   }
@@ -613,7 +613,13 @@ function App() {
                 onResetUpdates={handleResetUpdates}
                 onOpenHistory={() => setMode('history')}
                 isPro={effectiveIsPro}
-                onToggleTestPro={handleToggleTestPro}
+                onToggleTestPro={() => {
+                   setTestProOverride(prev => {
+                     const next = !prev
+                     try { localStorage.setItem('dayclose_simulate_free', next ? 'false' : 'true') } catch {}
+                     return next
+                   })
+                }}
                 onUpgrade={() => setProModalOpen(true)}
               />
             </div>

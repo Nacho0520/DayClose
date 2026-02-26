@@ -31,6 +31,7 @@ export const translations = {
     confirm_password: "Confirmar contraseña",
     reset_password_updated_hint: "Ya puedes iniciar sesión con tu nueva contraseña.",
     back_to_login: "Volver a iniciar sesión",
+    back: "Volver", // <-- Añadido
     avatar_title: "Foto de perfil",
     avatar_upload: "Subir imagen",
     avatar_uploading: "Subiendo...",
@@ -46,6 +47,18 @@ export const translations = {
     push_requires_pwa: "Actívalas desde la app instalada en la pantalla de inicio.",
     push_unavailable_alert: "Tu dispositivo no soporta notificaciones push. Reinstala la app desde Safari.",
     
+    // Landing Page (NUEVO)
+    landing_badge: "Tu mejor versión empieza al cerrar el día",
+    landing_desc: "DayClose es el rastreador de hábitos minimalista diseñado para personas que buscan claridad, no distracciones.",
+    landing_cta: "Empezar ahora",
+    landing_pwa_hint: "Instalable en iOS & Android",
+    feature_1_title: "Interfaz Zero-Friction",
+    feature_1_desc: "Diseñada para que completes tus hábitos en menos de 10 segundos.",
+    feature_2_title: "Estadísticas Visuales",
+    feature_2_desc: "Mapas de calor y rachas que te motivan a no romper la cadena.",
+    feature_3_title: "Privacidad Total",
+    feature_3_desc: "Tus datos son tuyos. Sincronizados de forma segura en todos tus dispositivos.",
+
     // Dashboard
     hello: "Hola,",
     today_caps: "HOY",
@@ -61,6 +74,7 @@ export const translations = {
     saved_success: "¡Guardado con éxito!",
     back_dashboard: "Volver",
     exit: "Salir",
+    notes_reflection: "Reflexiones de hoy", // <-- Añadido
     
     // Sidebar
     menu: "Menú",
@@ -112,7 +126,7 @@ export const translations = {
     afternoon: "Tarde",
     night: "Noche",
     color: "Color",
-    icon_label: "Icono", // <--- Nueva modificación
+    icon_label: "Icono",
     create_habit_btn: "Crear Hábito",
     save_changes_btn: "Guardar Cambios",
     confirm_delete: "¿Seguro que quieres borrar este hábito y todo su historial?",
@@ -371,8 +385,6 @@ export const translations = {
     weekly_summary_empty: "Sin actividad esta semana",
     weekly_summary_cta: "Hazte Pro",
     this_week_title: "Esta semana",
-
-
   },
   en: {
     // Auth & General
@@ -406,6 +418,7 @@ export const translations = {
     confirm_password: "Confirm password",
     reset_password_updated_hint: "You can now log in with your new password.",
     back_to_login: "Back to login",
+    back: "Back", // <-- Added
     avatar_title: "Profile photo",
     avatar_upload: "Upload image",
     avatar_uploading: "Uploading...",
@@ -421,6 +434,18 @@ export const translations = {
     push_requires_pwa: "Enable them from the installed Home Screen app.",
     push_unavailable_alert: "Your device doesn't support push notifications. Reinstall from Safari.",
     
+    // Landing Page (NEW)
+    landing_badge: "Your best version starts at day close",
+    landing_desc: "DayClose is the minimalist habit tracker designed for people seeking clarity, not distractions.",
+    landing_cta: "Start now",
+    landing_pwa_hint: "Installable on iOS & Android",
+    feature_1_title: "Zero-Friction Interface",
+    feature_1_desc: "Designed for you to complete your habits in less than 10 seconds.",
+    feature_2_title: "Visual Statistics",
+    feature_2_desc: "Heatmaps and streaks that motivate you to keep the chain.",
+    feature_3_title: "Total Privacy",
+    feature_3_desc: "Your data is yours. Securely synced across all your devices.",
+
     // Dashboard
     hello: "Hello,",
     today_caps: "TODAY",
@@ -436,6 +461,7 @@ export const translations = {
     saved_success: "Saved successfully!",
     back_dashboard: "Go Back",
     exit: "Exit",
+    notes_reflection: "Today's reflections", // <-- Added
     
     // Sidebar
     menu: "Menu",
@@ -487,7 +513,7 @@ export const translations = {
     afternoon: "Afternoon",
     night: "Night",
     color: "Color",
-    icon_label: "Icon", // <--- Nueva modificación
+    icon_label: "Icon",
     create_habit_btn: "Create Habit",
     save_changes_btn: "Save Changes",
     confirm_delete: "Are you sure you want to delete this habit and its history?",
@@ -636,6 +662,7 @@ export const translations = {
     test_mode_title: "Test mode",
     test_reset_tutorial: "Reset tutorial",
     test_reset_updates: "See updates again",
+
     // Hard Day Mode
     hard_day_title: "Hard Day",
     hard_day_desc: "Focus only on the essentials",
@@ -738,15 +765,11 @@ export const translations = {
     history_days_pro: "Last 90 days",
 
     all_done: 'All done!',
-
     days: "days",
     weekly_summary_title: "Weekly summary",
     weekly_summary_rate: "Consistency this week",
     weekly_summary_empty: "No activity this week",
     weekly_summary_cta: "Upgrade to Pro",
-
     this_week_title: "This week",
-
-
   }
-}
+};
