@@ -47,21 +47,41 @@ export default function Stats({ user, isPro, onUpgrade }) {
     async function calculateStats() {
       if (!user) return;
 
-      // CORRECCIÓN: Se añade 'data: logs' para extraer correctamente la información
+      // Logs completados (para streak, totales y semana)
       const { data: logs, error } = await supabase
         .from("daily_logs")
         .select("created_at, status, habit_id, habits(title)")
         .eq("user_id", user.id)
         .eq("status", "completed")
         .order("created_at", { ascending: false });
-        
+
       if (error || !logs) { setLoading(false); return; }
+
+      // Todos los logs de los últimos 28 días (para calcular % real en heatmap)
+      const today = new Date();
+      const startHeatmap = new Date(today);
+      startHeatmap.setDate(today.getDate() - 27);
+      const { data: allLogs } = await supabase
+        .from("daily_logs")
+        .select("created_at, status")
+        .eq("user_id", user.id)
+        .gte("created_at", startHeatmap.toISOString());
+
+      // Mapa de totales/completados por día para heatmap
+      const allLogsMap = {};
+      if (allLogs) {
+        allLogs.forEach((log) => {
+          const dateKey = formatDate(log.created_at);
+          if (!allLogsMap[dateKey]) allLogsMap[dateKey] = { completed: 0, total: 0 };
+          allLogsMap[dateKey].total++;
+          if (log.status === "completed") allLogsMap[dateKey].completed++;
+        });
+      }
 
       const activeDays = new Set(logs.map((log) => formatDate(log.created_at)));
       const protectedDays = new Set();
       protectorUses.forEach((dateStr) => protectedDays.add(dateStr));
 
-      const today = new Date();
       const todayStr = formatDate(today);
       const usesThisMonth = getUsesThisMonth(today);
       const yesterday = new Date(today);
@@ -178,15 +198,19 @@ export default function Stats({ user, isPro, onUpgrade }) {
         passedDays.length > 0 && passedDays.every((d) => d.count > 0)
       );
 
-      // ── Heatmap 28 días ───────────────────────────────────────
+      // ── Heatmap 28 días (con porcentaje real) ─────────────────
       const heatmap = [];
       for (let i = 27; i >= 0; i--) {
         const d = new Date(today);
         d.setDate(today.getDate() - i);
         const dateStr = formatDate(d);
+        const entry = allLogsMap[dateStr];
+        const hasData = !!entry && entry.total > 0;
+        const pct = hasData ? Math.round((entry.completed / entry.total) * 100) : null;
         heatmap.push({
           date: dateStr,
-          count: logs.filter((l) => formatDate(l.created_at) === dateStr).length,
+          hasData,
+          pct,
           isToday: dateStr === todayStr,
         });
       }
@@ -194,7 +218,7 @@ export default function Stats({ user, isPro, onUpgrade }) {
       setLoading(false);
     }
     calculateStats();
-  }, [user, protectorUses, t]); // Añadido t a dependencias
+  }, [user, protectorUses, t]);
 
   if (loading)
     return (
@@ -203,12 +227,15 @@ export default function Stats({ user, isPro, onUpgrade }) {
       </div>
     );
 
-  const getHeatColor = (count) => {
-    if (count === 0) return "bg-neutral-800";
-    if (count < 3) return "bg-emerald-900";
-    if (count < 6) return "bg-emerald-700";
-    return "bg-emerald-500";
+  // Color del heatmap por porcentaje
+  const getHeatColor = (pct, hasData) => {
+    if (!hasData) return "bg-neutral-800 border border-white/5";
+    if (pct === 0)  return "bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.5)]";
+    if (pct < 60)   return "bg-orange-500 shadow-[0_0_6px_rgba(249,115,22,0.5)]";
+    if (pct < 100)  return "bg-emerald-800 shadow-[0_0_6px_rgba(6,78,59,0.6)]";
+    return            "bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.7)]";
   };
+
   const getRateColor = (rate) => {
     if (rate >= 80) return "bg-emerald-500";
     if (rate >= 50) return "bg-amber-500";
@@ -350,8 +377,8 @@ export default function Stats({ user, isPro, onUpgrade }) {
                         initial={{ height: 0 }}
                         animate={{ height: `${height}%` }}
                         className={`w-full rounded-xl min-h-[6px] ${
-                          d.isFuture ? "bg-neutral-800/50" 
-                          : d.isToday ? "bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.3)]" 
+                          d.isFuture ? "bg-neutral-800/50"
+                          : d.isToday ? "bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.3)]"
                           : d.count > 0 ? "bg-neutral-600" : "bg-neutral-800"
                         }`}
                       />
@@ -370,7 +397,7 @@ export default function Stats({ user, isPro, onUpgrade }) {
 
         {/* Separador y Desglose Pro (Ya estaba gateado) */}
         <div className="h-px bg-white/5 my-5" />
-        
+
         {isPro ? (
           <div className="space-y-3">
             {weeklyHabitBreakdown.map((h, i) => (
@@ -410,16 +437,44 @@ export default function Stats({ user, isPro, onUpgrade }) {
             </span>
           )}
         </div>
+
         {isPro ? (
-          <div className="grid grid-cols-7 gap-1.5">
-            {heatmapData.map((d, i) => (
-              <div
-                key={i}
-                className={`h-8 w-full rounded-lg ${getHeatColor(d.count)} ${d.isToday ? "ring-2 ring-white/40" : ""}`}
-                title={`${d.date}: ${d.count}`}
-              />
-            ))}
-          </div>
+          <>
+            {/* Leyenda */}
+            <div className="flex items-center gap-3 flex-wrap mb-4">
+              <div className="flex items-center gap-1.5">
+                <span className="h-3 w-3 rounded-sm bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.7)] inline-block" />
+                <span className="text-[9px] text-neutral-400">100%</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="h-3 w-3 rounded-sm bg-emerald-800 inline-block" />
+                <span className="text-[9px] text-neutral-400">≥60%</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="h-3 w-3 rounded-sm bg-orange-500 inline-block" />
+                <span className="text-[9px] text-neutral-400">≥40%</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="h-3 w-3 rounded-sm bg-red-500 inline-block" />
+                <span className="text-[9px] text-neutral-400">0%</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="h-3 w-3 rounded-sm bg-neutral-800 border border-white/5 inline-block" />
+                <span className="text-[9px] text-neutral-400">{t("history_no_review") || "Sin revisión"}</span>
+              </div>
+            </div>
+
+            {/* Grid de celdas */}
+            <div className="grid grid-cols-7 gap-1.5">
+              {heatmapData.map((d, i) => (
+                <div
+                  key={i}
+                  className={`h-8 w-full rounded-lg transition-all ${getHeatColor(d.pct, d.hasData)} ${d.isToday ? "ring-2 ring-white/40" : ""}`}
+                  title={d.hasData ? `${d.date}: ${d.pct}%` : d.date}
+                />
+              ))}
+            </div>
+          </>
         ) : (
           <div className="relative">
             <div className="grid grid-cols-7 gap-1.5 blur-sm pointer-events-none select-none">

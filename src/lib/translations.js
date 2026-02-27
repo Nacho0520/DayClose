@@ -31,7 +31,7 @@ export const translations = {
     confirm_password: "Confirmar contraseña",
     reset_password_updated_hint: "Ya puedes iniciar sesión con tu nueva contraseña.",
     back_to_login: "Volver a iniciar sesión",
-    back: "Volver", // <-- Añadido
+    back: "Volver",
     avatar_title: "Foto de perfil",
     avatar_upload: "Subir imagen",
     avatar_uploading: "Subiendo...",
@@ -74,7 +74,7 @@ export const translations = {
     saved_success: "¡Guardado con éxito!",
     back_dashboard: "Volver",
     exit: "Salir",
-    notes_reflection: "Reflexiones de hoy", // <-- Añadido
+    notes_reflection: "Reflexiones de hoy",
     
     // Sidebar
     menu: "Menú",
@@ -149,6 +149,7 @@ export const translations = {
     perfect_week: "Semana perfecta",
     heatmap_title: "Mapa de Actividad",
     heatmap_unlock: "Desbloquea el mapa de calor con Pro",
+    history_no_review: "Sin revisión", // <-- NUEVO
     compare_day: "Hoy vs Ayer",
     compare_week: "Esta semana",
     compare_month: "Mes actual",
@@ -418,7 +419,7 @@ export const translations = {
     confirm_password: "Confirm password",
     reset_password_updated_hint: "You can now log in with your new password.",
     back_to_login: "Back to login",
-    back: "Back", // <-- Added
+    back: "Back",
     avatar_title: "Profile photo",
     avatar_upload: "Upload image",
     avatar_uploading: "Uploading...",
@@ -461,7 +462,7 @@ export const translations = {
     saved_success: "Saved successfully!",
     back_dashboard: "Go Back",
     exit: "Exit",
-    notes_reflection: "Today's reflections", // <-- Added
+    notes_reflection: "Today's reflections",
     
     // Sidebar
     menu: "Menu",
@@ -536,6 +537,7 @@ export const translations = {
     perfect_week: "Perfect week",
     heatmap_title: "Activity Map",
     heatmap_unlock: "Unlock the activity map with Pro",
+    history_no_review: "No review", // <-- NUEVO
     compare_day: "Today vs Yesterday",
     compare_week: "This week",
     compare_month: "Current month",
@@ -550,7 +552,7 @@ export const translations = {
     more_title: "More Features",
     more_subtitle: "We are preparing new tools for you.",
     more_premium_title: "More features",
-    more_premium_subtitle: "See what’s coming next",
+    more_premium_subtitle: "See what's coming next",
     more_section_title: "COMING SOON",
     more_friends_title: "Friends",
     more_friends_desc: "Gentle motivation with zero pressure.",
