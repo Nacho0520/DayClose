@@ -6,7 +6,8 @@ export const translations = {
     login_subtitle: "Inicia sesión para continuar",
     signup_subtitle: "Empieza a organizar tu rutina",
     success_verified: "¡Correo verificado con éxito! Ya puedes iniciar sesión.",
-    success_check_email: "¡Casi listo! Revisa tu email para confirmar tu cuenta y poder entrar.",
+    success_check_email:
+      "¡Casi listo! Revisa tu email para confirmar tu cuenta y poder entrar.",
     your_name: "Tu Nombre",
     name_placeholder: "Ej. Nacho",
     email_label: "Email",
@@ -19,8 +20,10 @@ export const translations = {
     switch_to_login: "¿Ya tienes cuenta? Inicia Sesión",
     switch_to_signup: "¿No tienes cuenta? Regístrate",
     reset_password: "¿Olvidaste tu contraseña?",
-    reset_password_sent: "Te enviamos un enlace para restablecer tu contraseña.",
-    reset_password_missing_email: "Introduce tu email para recuperar la contraseña.",
+    reset_password_sent:
+      "Te enviamos un enlace para restablecer tu contraseña.",
+    reset_password_missing_email:
+      "Introduce tu email para recuperar la contraseña.",
     reset_password_title: "Nueva contraseña",
     reset_password_subtitle: "Crea una contraseña segura",
     reset_password_update: "Actualizar contraseña",
@@ -29,7 +32,8 @@ export const translations = {
     reset_password_mismatch: "Las contraseñas no coinciden.",
     reset_password_updated: "Contraseña actualizada correctamente.",
     confirm_password: "Confirmar contraseña",
-    reset_password_updated_hint: "Ya puedes iniciar sesión con tu nueva contraseña.",
+    reset_password_updated_hint:
+      "Ya puedes iniciar sesión con tu nueva contraseña.",
     back_to_login: "Volver a iniciar sesión",
     back: "Volver",
     avatar_title: "Foto de perfil",
@@ -40,24 +44,32 @@ export const translations = {
     avatar_group_humans: "Humanos",
     avatar_group_fictional: "Ficticios",
     avatar_hint: "Máximo 2MB. PNG/JPG.",
-    avatar_upload_error: "No se pudo subir la imagen. Crea el bucket 'avatars' en Supabase.",
+    avatar_upload_error:
+      "No se pudo subir la imagen. Crea el bucket 'avatars' en Supabase.",
     avatar_too_large: "La imagen supera 2MB.",
     auth_session_missing: "Sesión caducada. Cierra sesión e inicia de nuevo.",
-    push_unavailable: "Notificaciones no disponibles. Reinstala la app y prueba de nuevo.",
-    push_requires_pwa: "Actívalas desde la app instalada en la pantalla de inicio.",
-    push_unavailable_alert: "Tu dispositivo no soporta notificaciones push. Reinstala la app desde Safari.",
-    
+    push_unavailable:
+      "Notificaciones no disponibles. Reinstala la app y prueba de nuevo.",
+    push_requires_pwa:
+      "Actívalas desde la app instalada en la pantalla de inicio.",
+    push_unavailable_alert:
+      "Tu dispositivo no soporta notificaciones push. Reinstala la app desde Safari.",
+
     // Landing Page (NUEVO)
     landing_badge: "Tu mejor versión empieza al cerrar el día",
-    landing_desc: "DayClose es el rastreador de hábitos minimalista diseñado para personas que buscan claridad, no distracciones.",
+    landing_desc:
+      "DayClose es el rastreador de hábitos minimalista diseñado para personas que buscan claridad, no distracciones.",
     landing_cta: "Empezar ahora",
     landing_pwa_hint: "Instalable en iOS & Android",
     feature_1_title: "Interfaz Zero-Friction",
-    feature_1_desc: "Diseñada para que completes tus hábitos en menos de 10 segundos.",
+    feature_1_desc:
+      "Diseñada para que completes tus hábitos en menos de 10 segundos.",
     feature_2_title: "Estadísticas Visuales",
-    feature_2_desc: "Mapas de calor y rachas que te motivan a no romper la cadena.",
+    feature_2_desc:
+      "Mapas de calor y rachas que te motivan a no romper la cadena.",
     feature_3_title: "Privacidad Total",
-    feature_3_desc: "Tus datos son tuyos. Sincronizados de forma segura en todos tus dispositivos.",
+    feature_3_desc:
+      "Tus datos son tuyos. Sincronizados de forma segura en todos tus dispositivos.",
 
     // Dashboard
     hello: "Hola,",
@@ -75,7 +87,7 @@ export const translations = {
     back_dashboard: "Volver",
     exit: "Salir",
     notes_reflection: "Reflexiones de hoy",
-    
+
     // Sidebar
     menu: "Menú",
     progress: "Progreso",
@@ -94,7 +106,7 @@ export const translations = {
     buy_coffee: "Invítame a un café",
     logout: "Cerrar Sesión",
     build_version: "Build v",
-    
+
     // SettingsModal
     settings_title: "Ajustes de Perfil",
     language_label: "Idioma",
@@ -106,7 +118,7 @@ export const translations = {
     save_changes: "Guardar Cambios",
     profile_updated: "¡Perfil actualizado!",
     password_changed: "Contraseña cambiada. Vuelve a iniciar sesión.",
-    
+
     // HabitCreator
     edit_habit: "Editar Hábito",
     new_habit: "Nuevo Hábito",
@@ -129,9 +141,10 @@ export const translations = {
     icon_label: "Icono",
     create_habit_btn: "Crear Hábito",
     save_changes_btn: "Guardar Cambios",
-    confirm_delete: "¿Seguro que quieres borrar este hábito y todo su historial?",
+    confirm_delete:
+      "¿Seguro que quieres borrar este hábito y todo su historial?",
     error_delete: "Error al borrar: ",
-    
+
     // Stats
     stats_title: "Mis Estadísticas",
     stats_subtitle: "Tus rachas y rendimiento aparecerán aquí pronto.",
@@ -155,7 +168,7 @@ export const translations = {
     compare_month: "Mes actual",
     compare_section_title: "Comparación personal",
     compare_section_desc: "Yo vs yo",
-    
+
     // Dock & More
     dock_home: "Inicio",
     dock_stats: "Stats",
@@ -282,7 +295,8 @@ export const translations = {
     hard_day_desc: "Enfócate solo en lo esencial",
     hard_day_help: "Marca hasta 3 hábitos críticos",
     hard_day_selected: "Seleccionados:",
-    hard_day_empty: "Actívalo y elige tus 3 prioridades para sobrevivir el día.",
+    hard_day_empty:
+      "Actívalo y elige tus 3 prioridades para sobrevivir el día.",
     hard_day_confirm: "¿Estás teniendo un día difícil?",
     hard_day_confirm_btn: "Continuar",
     hard_day_cancel: "Cancelar",
@@ -290,8 +304,9 @@ export const translations = {
     hard_day_selected_label: "Seleccionado",
     no_habits_today: "Hoy no tienes hábitos programados.",
     blocked_title: "Acceso bloqueado",
-    blocked_desc: "Tu cuenta está bloqueada temporalmente. Contacta con soporte si crees que es un error.",
-    
+    blocked_desc:
+      "Tu cuenta está bloqueada temporalmente. Contacta con soporte si crees que es un error.",
+
     // Admin
     maintenance: "Mantenimiento",
     emergency_close: "Cierre de emergencia",
@@ -301,7 +316,7 @@ export const translations = {
     users: "Usuarios",
     habits: "Hábitos",
     logs: "Registros",
-    
+
     // NoteModal
     what_happened: "¿Qué pasó?",
     habit_label: "Hábito:",
@@ -317,7 +332,8 @@ export const translations = {
 
     // Tutorial
     tut_welcome_title: "DayClose",
-    tut_welcome_desc: "La función de DayClose es hacer que tu vida sea más organizada cumpliendo 'mini-retos'.",
+    tut_welcome_desc:
+      "La función de DayClose es hacer que tu vida sea más organizada cumpliendo 'mini-retos'.",
     tut_teach_me: "¡ENSEÑAME!",
     tut_step1_title: "El gesto del éxito",
     tut_step1_desc: "Desliza para marcar hábitos como completados.",
@@ -334,10 +350,12 @@ export const translations = {
     push_tutorial_cta: "Entendido",
     push_steps_title: "Pasos rápidos para activar",
     push_ios_step1: "Abre DayClose en Safari.",
-    push_ios_step2: "Toca Compartir y baja hasta 'Añadir a la pantalla principal'.",
+    push_ios_step2:
+      "Toca Compartir y baja hasta 'Añadir a la pantalla principal'.",
     push_ios_step3: "Abre desde el icono y activa notificaciones.",
     push_android_step1: "Abre DayClose en Chrome.",
-    push_android_step2: "Toca los tres puntitos y 'Añadir a la pantalla principal'.",
+    push_android_step2:
+      "Toca los tres puntitos y 'Añadir a la pantalla principal'.",
     push_android_step3: "Abre desde el icono y activa notificaciones.",
     push_generic_step1: "Instala la app en pantalla de inicio.",
     push_generic_step2: "Activa las notificaciones desde Ajustes.",
@@ -363,10 +381,12 @@ export const translations = {
     pro_soft_banner: "Casi lleno — te queda 1 hábito libre.",
     pro_soft_cta: "Hazte Pro antes de necesitarlo →",
     pro_heatmap_title: "Historial visual",
-    pro_heatmap_desc: "Visualiza tu actividad de los últimos 28 días con el Plan Pro",
+    pro_heatmap_desc:
+      "Visualiza tu actividad de los últimos 28 días con el Plan Pro",
     pro_heatmap_cta: "Hazte Pro",
     pro_history_title: "Historial extendido",
-    pro_history_desc: "Con Pro accedes a los últimos 90 días de historial completo.",
+    pro_history_desc:
+      "Con Pro accedes a los últimos 90 días de historial completo.",
     pro_history_cta: "Ver con Plan Pro",
     pro_history_back: "Volver al mes actual",
     pro_letters_title: "Cartas del futuro",
@@ -378,7 +398,7 @@ export const translations = {
     history_days_free: "Últimos 30 días",
     history_days_pro: "Últimos 90 días",
 
-    all_done: '¡Todo listo!',
+    all_done: "¡Todo listo!",
 
     days: "días",
     weekly_summary_title: "Resumen semanal",
@@ -386,6 +406,27 @@ export const translations = {
     weekly_summary_empty: "Sin actividad esta semana",
     weekly_summary_cta: "Hazte Pro",
     this_week_title: "Esta semana",
+
+    // Pro modal
+    pro_modal_subtitle: "Lleva tu rutina al siguiente nivel",
+    pro_how_it_works: "Cómo funciona",
+    pro_step_1: "Hazte Pro",
+    pro_step_2: "Recibirás un código único por email",
+    pro_step_3: "Actívalo aquí y disfruta de Pro",
+    pro_kofi_cta: "Hazte Pro",
+    pro_have_code: "Ya tengo un código",
+    pro_continue_free: "Continuar con el plan gratuito",
+    pro_enter_code: "Introduce tu código",
+    pro_code_desc:
+      "Introduce el código que recibiste por email. Si no lo has recibido, contacta con soporte.",
+    pro_code_placeholder: "DAYCLOSE-PRO-XXXX-XXXX",
+    pro_activate_btn: "Activar Pro",
+    pro_activated: "¡Pro activado!",
+    pro_activated_desc: "Ya tienes acceso a todas las funciones Pro.",
+    pro_code_error: "Algo salió mal. Inténtalo de nuevo.",
+    pro_code_invalid: "Código no válido. Compruébalo e inténtalo de nuevo.",
+    pro_code_used: "Este código ya ha sido usado.",
+    pro_code_expired: "Este código ha caducado. Contacta con soporte.",
   },
   en: {
     // Auth & General
@@ -394,7 +435,8 @@ export const translations = {
     login_subtitle: "Log in to continue",
     signup_subtitle: "Start organizing your routine",
     success_verified: "Email verified successfully! You can now log in.",
-    success_check_email: "Almost there! Check your email to confirm your account.",
+    success_check_email:
+      "Almost there! Check your email to confirm your account.",
     your_name: "Your Name",
     name_placeholder: "Ex. John",
     email_label: "Email",
@@ -428,24 +470,30 @@ export const translations = {
     avatar_group_humans: "Humans",
     avatar_group_fictional: "Fictional",
     avatar_hint: "Max 2MB. PNG/JPG.",
-    avatar_upload_error: "Upload failed. Create the 'avatars' bucket in Supabase.",
+    avatar_upload_error:
+      "Upload failed. Create the 'avatars' bucket in Supabase.",
     avatar_too_large: "Image is larger than 2MB.",
     auth_session_missing: "Session expired. Please log out and log in again.",
-    push_unavailable: "Notifications unavailable. Reinstall the app and try again.",
+    push_unavailable:
+      "Notifications unavailable. Reinstall the app and try again.",
     push_requires_pwa: "Enable them from the installed Home Screen app.",
-    push_unavailable_alert: "Your device doesn't support push notifications. Reinstall from Safari.",
-    
+    push_unavailable_alert:
+      "Your device doesn't support push notifications. Reinstall from Safari.",
+
     // Landing Page (NEW)
     landing_badge: "Your best version starts at day close",
-    landing_desc: "DayClose is the minimalist habit tracker designed for people seeking clarity, not distractions.",
+    landing_desc:
+      "DayClose is the minimalist habit tracker designed for people seeking clarity, not distractions.",
     landing_cta: "Start now",
     landing_pwa_hint: "Installable on iOS & Android",
     feature_1_title: "Zero-Friction Interface",
-    feature_1_desc: "Designed for you to complete your habits in less than 10 seconds.",
+    feature_1_desc:
+      "Designed for you to complete your habits in less than 10 seconds.",
     feature_2_title: "Visual Statistics",
     feature_2_desc: "Heatmaps and streaks that motivate you to keep the chain.",
     feature_3_title: "Total Privacy",
-    feature_3_desc: "Your data is yours. Securely synced across all your devices.",
+    feature_3_desc:
+      "Your data is yours. Securely synced across all your devices.",
 
     // Dashboard
     hello: "Hello,",
@@ -463,7 +511,7 @@ export const translations = {
     back_dashboard: "Go Back",
     exit: "Exit",
     notes_reflection: "Today's reflections",
-    
+
     // Sidebar
     menu: "Menu",
     progress: "Progress",
@@ -482,7 +530,7 @@ export const translations = {
     buy_coffee: "Buy me a coffee",
     logout: "Log Out",
     build_version: "Build v",
-    
+
     // SettingsModal
     settings_title: "Profile Settings",
     language_label: "Language",
@@ -494,7 +542,7 @@ export const translations = {
     save_changes: "Save Changes",
     profile_updated: "Profile updated!",
     password_changed: "Password changed. Please log in again.",
-    
+
     // HabitCreator
     edit_habit: "Edit Habit",
     new_habit: "New Habit",
@@ -517,9 +565,10 @@ export const translations = {
     icon_label: "Icon",
     create_habit_btn: "Create Habit",
     save_changes_btn: "Save Changes",
-    confirm_delete: "Are you sure you want to delete this habit and its history?",
+    confirm_delete:
+      "Are you sure you want to delete this habit and its history?",
     error_delete: "Error deleting: ",
-    
+
     // Stats
     stats_title: "My Statistics",
     stats_subtitle: "Your streaks and performance will appear here soon.",
@@ -543,7 +592,7 @@ export const translations = {
     compare_month: "Current month",
     compare_section_title: "Personal comparison",
     compare_section_desc: "Me vs me",
-    
+
     // Dock & More
     dock_home: "Home",
     dock_stats: "Stats",
@@ -678,8 +727,9 @@ export const translations = {
     hard_day_selected_label: "Selected",
     no_habits_today: "You have no habits scheduled for today.",
     blocked_title: "Access blocked",
-    blocked_desc: "Your account is temporarily blocked. Contact support if you think this is a mistake.",
-    
+    blocked_desc:
+      "Your account is temporarily blocked. Contact support if you think this is a mistake.",
+
     // Admin
     maintenance: "Maintenance",
     emergency_close: "Emergency Shutdown",
@@ -689,7 +739,7 @@ export const translations = {
     users: "Users",
     habits: "Habits",
     logs: "Logs",
-    
+
     // NoteModal
     what_happened: "What happened?",
     habit_label: "Habit:",
@@ -705,7 +755,8 @@ export const translations = {
 
     // Tutorial
     tut_welcome_title: "DayClose",
-    tut_welcome_desc: "DayClose's function is to organize your life by fulfilling 'mini-challenges'.",
+    tut_welcome_desc:
+      "DayClose's function is to organize your life by fulfilling 'mini-challenges'.",
     tut_teach_me: "TEACH ME!",
     tut_step1_title: "The gesture of success",
     tut_step1_desc: "Swipe to mark habits as completed.",
@@ -751,7 +802,8 @@ export const translations = {
     pro_soft_banner: "Almost full — 1 free habit slot left.",
     pro_soft_cta: "Go Pro before you need it →",
     pro_heatmap_title: "Visual history",
-    pro_heatmap_desc: "Visualize your activity over the last 28 days with the Pro Plan",
+    pro_heatmap_desc:
+      "Visualize your activity over the last 28 days with the Pro Plan",
     pro_heatmap_cta: "Upgrade to Pro",
     pro_history_title: "Extended history",
     pro_history_desc: "With Pro you access the last 90 days of full history.",
@@ -766,12 +818,33 @@ export const translations = {
     history_days_free: "Last 30 days",
     history_days_pro: "Last 90 days",
 
-    all_done: 'All done!',
+    all_done: "All done!",
     days: "days",
     weekly_summary_title: "Weekly summary",
     weekly_summary_rate: "Consistency this week",
     weekly_summary_empty: "No activity this week",
     weekly_summary_cta: "Upgrade to Pro",
     this_week_title: "This week",
-  }
+
+    // Pro modal
+    pro_modal_subtitle: "Take your routine to the next level",
+    pro_how_it_works: "How it works",
+    pro_step_1: "Upgrade to Pro",
+    pro_step_2: "You'll receive a unique code by email",
+    pro_step_3: "Activate it here and enjoy Pro",
+    pro_kofi_cta: "Upgrade to Pro",
+    pro_have_code: "I already have a code",
+    pro_continue_free: "Continue with the free plan",
+    pro_enter_code: "Enter your code",
+    pro_code_desc:
+      "Enter the code you received by email. If you haven't received it, contact support.",
+    pro_code_placeholder: "DAYCLOSE-PRO-XXXX-XXXX",
+    pro_activate_btn: "Activate Pro",
+    pro_activated: "Pro activated!",
+    pro_activated_desc: "You now have access to all Pro features.",
+    pro_code_error: "Something went wrong. Please try again.",
+    pro_code_invalid: "Invalid code. Please check and try again.",
+    pro_code_used: "This code has already been used.",
+    pro_code_expired: "This code has expired. Please contact support.",
+  },
 };
