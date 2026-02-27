@@ -218,6 +218,18 @@ function App() {
 
   const currentHabit = reviewHabits[currentIndex]
 
+  const isTestAccount = session?.user?.email === TEST_EMAIL
+  const effectiveIsPro = isTestAccount ? testProOverride : isPro
+  const handleToggleTestPro = () => {
+    setTestProOverride(prev => {
+      const next = !prev
+      try {
+        localStorage.setItem('dayclose_simulate_free', next ? 'false' : 'true')
+      } catch {}
+      return next
+    })
+  }
+
   useEffect(() => {
     const handleVersionCheck = (dbVersion) => {
       if (dbVersion && dbVersion !== CURRENT_SOFTWARE_VERSION) {
@@ -613,13 +625,7 @@ function App() {
                 onResetUpdates={handleResetUpdates}
                 onOpenHistory={() => setMode('history')}
                 isPro={effectiveIsPro}
-                onToggleTestPro={() => {
-                   setTestProOverride(prev => {
-                     const next = !prev
-                     try { localStorage.setItem('dayclose_simulate_free', next ? 'false' : 'true') } catch {}
-                     return next
-                   })
-                }}
+                onToggleTestPro={handleToggleTestPro}
                 onUpgrade={() => setProModalOpen(true)}
               />
             </div>
