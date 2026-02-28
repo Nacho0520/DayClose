@@ -646,7 +646,7 @@ function App() {
             <div style={{ width: effectiveWidth }} className="shrink-0">
               <CommunityHub user={session.user} />
             </div>
-            <div style={{ width: effectiveWidth }} className="shrink-0">
+            <div style={{ width: effectiveWidth }} className="shrink-0" onPointerDownCapture={e => e.stopPropagation()}>
               <div className="flex flex-col items-center justify-center flex-1 text-white p-6 text-center">
                 <div className="w-full max-w-md space-y-6">
                   <ProgressComparison user={session.user} isPro={effectiveIsPro} onUpgrade={() => setProModalOpen(true)} />
