@@ -18,7 +18,7 @@ export default function Stats({ user, isPro, onUpgrade }) {
   const [heatmapData, setHeatmapData] = useState([]);
   const [protectorUses, setProtectorUses] = useState(() => {
     try {
-      const raw = localStorage.getItem("mivida_streak_protector_uses");
+      const raw = localStorage.getItem("dayclose_streak_protector_uses");
       const parsed = raw ? JSON.parse(raw) : [];
       return Array.isArray(parsed) ? parsed : [];
     } catch { return []; }
@@ -99,7 +99,7 @@ export default function Stats({ user, isPro, onUpgrade }) {
         const nextUses = Array.from(new Set([...protectorUses, yesterdayStr]));
         protectedDays.add(yesterdayStr);
         try {
-          localStorage.setItem("mivida_streak_protector_uses", JSON.stringify(nextUses));
+          localStorage.setItem("dayclose_streak_protector_uses", JSON.stringify(nextUses));
         } catch {}
         setProtectorUses(nextUses);
       }
