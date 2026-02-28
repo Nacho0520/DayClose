@@ -430,6 +430,8 @@ export const translations = {
     pro_step_1: "Únete al plan Pro",
     pro_step_2: "Recibirás un código único por email",
     pro_step_3: "Actívalo aquí y disfruta de Pro",
+
+    login_btn: "INICIAR SESIÓN",
   },
   en: {
     // Auth & General
@@ -852,5 +854,7 @@ export const translations = {
     pro_step_1: "Join the Pro plan",
     pro_step_2: "You'll receive a unique code by email",
     pro_step_3: "Activate it here and enjoy Pro",
+
+    login_btn: "LOG IN",
   },
 };
