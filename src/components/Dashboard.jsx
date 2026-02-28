@@ -118,14 +118,14 @@ function Dashboard({
   const [expandedHabitId, setExpandedHabitId] = useState(null);
   const [hardDayEnabled, setHardDayEnabled] = useState(() => {
     try {
-      return localStorage.getItem("mivida_hard_day_enabled") === "true";
+      return localStorage.getItem("dayclose_hard_day_enabled") === "true";
     } catch {
       return false;
     }
   });
   const [hardDayIds, setHardDayIds] = useState(() => {
     try {
-      const raw = localStorage.getItem("mivida_hard_day_ids");
+      const raw = localStorage.getItem("dayclose_hard_day_ids");
       return raw ? JSON.parse(raw) : [];
     } catch {
       return [];
@@ -152,13 +152,13 @@ function Dashboard({
 
   useEffect(() => {
     try {
-      localStorage.setItem("mivida_hard_day_enabled", String(hardDayEnabled));
+      localStorage.setItem("dayclose_hard_day_enabled", String(hardDayEnabled));
     } catch {}
   }, [hardDayEnabled]);
 
   useEffect(() => {
     try {
-      localStorage.setItem("mivida_hard_day_ids", JSON.stringify(hardDayIds));
+      localStorage.setItem("dayclose_hard_day_ids", JSON.stringify(hardDayIds));
     } catch {}
   }, [hardDayIds]);
 

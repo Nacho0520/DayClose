@@ -12,8 +12,7 @@ const MAX_FREE_LETTERS = 1;
 const loadLetters = () => {
   try {
     const saved = localStorage.getItem(LETTER_STORAGE_KEY);
-    const oldSaved = localStorage.getItem("mivida_future_letters");
-    const data = saved || oldSaved;
+    const data = saved;
     const parsed = data ? JSON.parse(data) : [];
     return Array.isArray(parsed) ? parsed : [];
   } catch (error) {

@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
-import { motion, useMotionValue, animate, AnimatePresence } from 'framer-motion'
+import { motion, useMotionValue, animate } from 'framer-motion'
 import SwipeCard from './components/SwipeCard'
 import NoteModal from './components/NoteModal'
 import Dashboard from './components/Dashboard'
@@ -22,7 +22,6 @@ import FutureLettersSection from './components/FutureLettersSection'
 import FeedbackSection from './components/FeedbackSection'
 import CommunityHub from './components/CommunityHub'
 import History from './components/History'
-import ProWelcomeModal from './components/ProWelcomeModal'
 import ProModal from './components/ProModal'
 import { useLanguage } from './context/LanguageContext' 
 
@@ -194,7 +193,6 @@ function App() {
   const [updatePayload, setUpdatePayload] = useState(null)
   const [updateOpen, setUpdateOpen] = useState(false)
   const [updateUnread, setUpdateUnread] = useState(false)
-  const [showCheckoutSuccessToast, setShowCheckoutSuccessToast] = useState(false)
   const [isPro, setIsPro] = useState(false)
   const [testProOverride, setTestProOverride] = useState(() => {
     try {
@@ -204,9 +202,9 @@ function App() {
 
   const reviewHabits = useMemo(() => {
     try {
-      const hardDayEnabled = localStorage.getItem('mivida_hard_day_enabled') === 'true'
+      const hardDayEnabled = localStorage.getItem('dayclose_hard_day_enabled') === 'true'
       if (!hardDayEnabled) return habits
-      const rawIds = localStorage.getItem('mivida_hard_day_ids')
+      const rawIds = localStorage.getItem('dayclose_hard_day_ids')
       const hardDayIds = rawIds ? JSON.parse(rawIds) : []
       if (!Array.isArray(hardDayIds) || hardDayIds.length === 0) return habits
       const allowed = new Set(hardDayIds)
@@ -315,7 +313,7 @@ function App() {
       if (!active) return
       setUpdatePayload(update || null)
       if (update?.id) {
-        const key = `mivida_update_seen_${update.id}`
+        const key = `dayclose_update_seen_${update.id}`
         const seen = localStorage.getItem(key) === 'true'
         setUpdateUnread(!seen)
       } else {
@@ -354,7 +352,7 @@ function App() {
   const handleCloseUpdate = () => {
     if (updatePayload?.id) {
       try {
-        localStorage.setItem(`mivida_update_seen_${updatePayload.id}`, 'true')
+        localStorage.setItem(`dayclose_update_seen_${updatePayload.id}`, 'true')
       } catch {
         // ignore
       }
@@ -406,7 +404,7 @@ function App() {
   const handleResetUpdates = () => {
     if (updatePayload?.id) {
       try {
-        localStorage.removeItem(`mivida_update_seen_${updatePayload.id}`)
+        localStorage.removeItem(`dayclose_update_seen_${updatePayload.id}`)
       } catch {
         // ignore
       }
@@ -414,14 +412,6 @@ function App() {
     setUpdateUnread(Boolean(updatePayload?.id))
     setUpdateOpen(true)
   }
-
-  useEffect(() => {
-    const checkout = new URLSearchParams(window.location.search).get('checkout')
-    if (checkout === 'success') {
-      setShowCheckoutSuccessToast(true)
-      window.history.replaceState({}, '', '/')
-    }
-  }, [])
 
   useEffect(() => {
     const initSession = async () => {
@@ -543,7 +533,6 @@ function App() {
   if (mode === 'tutorial') {
     return (
       <>
-        <ProWelcomeModal isOpen={showCheckoutSuccessToast} onClose={() => setShowCheckoutSuccessToast(false)} />
         <Tutorial user={session.user} onComplete={handleFinishTutorial} />
       </>
     )
@@ -551,7 +540,6 @@ function App() {
   if (mode === 'admin') {
     return (
       <>
-        <ProWelcomeModal isOpen={showCheckoutSuccessToast} onClose={() => setShowCheckoutSuccessToast(false)} />
         <AdminPanel onClose={() => setMode('dashboard')} version={CURRENT_SOFTWARE_VERSION} />
       </>
     )
@@ -560,7 +548,6 @@ function App() {
   if (mode === 'history') {
     return (
       <>
-        <ProWelcomeModal isOpen={showCheckoutSuccessToast} onClose={() => setShowCheckoutSuccessToast(false)} />
         <History user={session.user} onClose={() => setMode('dashboard')} isPro={effectiveIsPro} />
       </>
     )
@@ -569,7 +556,6 @@ function App() {
   if (mode === 'dashboard') {
     return (
       <div className="relative min-h-screen bg-neutral-900 overflow-x-hidden flex flex-col">
-        <ProWelcomeModal isOpen={showCheckoutSuccessToast} onClose={() => setShowCheckoutSuccessToast(false)} />
 
         {/* ✅ ProModal con user y onProActivated */}
         <ProModal
@@ -667,7 +653,6 @@ function App() {
 
   return (
     <div className={`app-screen flex items-center justify-center ${swipeStatus === 'done' ? 'bg-emerald-900' : swipeStatus === 'not-done' ? 'bg-red-900' : 'bg-neutral-900'} transition-colors duration-300 relative`}>
-      <ProWelcomeModal isOpen={showCheckoutSuccessToast} onClose={() => setShowCheckoutSuccessToast(false)} />
       <button onClick={() => window.location.reload()} className="fixed top-6 right-6 z-[100] flex items-center gap-1 px-4 py-2 bg-neutral-800/80 backdrop-blur-md border border-white/5 rounded-full text-neutral-400 hover:text-white transition-all shadow-lg">
         <X size={18} /> <span className="text-xs font-medium uppercase tracking-widest">{t('exit')}</span>
       </button>
