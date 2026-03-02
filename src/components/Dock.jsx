@@ -1,19 +1,25 @@
-import { motion, AnimatePresence } from 'framer-motion';
-import { Home, BarChart3, LayoutGrid, Users } from 'lucide-react';
-import { useLanguage } from '../context/LanguageContext';
+import { motion, AnimatePresence } from 'framer-motion'
+import { Home, BarChart3, LayoutGrid, Users } from 'lucide-react'
+import { useLanguage } from '../context/LanguageContext'
 
+// El Dock no usa React Router para navegar: las tabs son estado interno del
+// DashboardLayout (slider swipeable). Recibe activeTab y onTabChange como props,
+// igual que antes. Esto preserva el swipe nativo de Framer Motion al 100%.
 export default function Dock({ activeTab, onTabChange }) {
-  const { t } = useLanguage();
+  const { t } = useLanguage()
+
   const tabs = [
-    { id: 'home', icon: Home, label: t('dock_home') },
-    { id: 'stats', icon: BarChart3, label: t('dock_stats') },
-    { id: 'community', icon: Users, label: t('dock_community') },
-    { id: 'apps', icon: LayoutGrid, label: t('dock_more') },
-  ];
+    { id: 'home',      icon: Home,       label: t('dock_home')      || 'Inicio'    },
+    { id: 'stats',     icon: BarChart3,  label: t('dock_stats')     || 'Stats'     },
+    { id: 'community', icon: Users,      label: t('dock_community') || 'Comunidad' },
+    { id: 'apps',      icon: LayoutGrid, label: t('dock_more')      || 'Más'       },
+  ]
 
   return (
     <div className="fixed bottom-6 left-4 right-4 z-40 flex justify-center pointer-events-none">
-      <motion.nav 
+      <motion.nav
+        role="navigation"
+        aria-label={t('dock_nav_label') || 'Navegación principal'}
         initial={{ y: 50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         className="relative w-full max-w-md flex items-center justify-around bg-neutral-900/70 backdrop-blur-2xl py-4 radius-pill border border-white/5 shadow-apple pointer-events-auto overflow-hidden"
@@ -21,38 +27,42 @@ export default function Dock({ activeTab, onTabChange }) {
         <div className="absolute inset-0 bg-gradient-to-b from-neutral-900/80 via-neutral-900/60 to-neutral-800/40 pointer-events-none" />
         <div className="absolute inset-x-6 top-0 h-px bg-white/10 pointer-events-none" />
         <div className="absolute inset-0 shadow-[inset_0_0_40px_rgba(0,0,0,0.45)] pointer-events-none" />
-        {tabs.map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
 
+        {tabs.map((tab) => {
+          const Icon = tab.icon
+          const isActive = activeTab === tab.id
           return (
             <button
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
+              aria-label={tab.label}
+              aria-current={isActive ? 'page' : undefined}
               className="relative z-10 flex flex-col items-center flex-1 py-1 active:scale-90 transition-transform"
             >
-              <Icon 
-                size={24} 
+              <Icon
+                size={24}
                 strokeWidth={isActive ? 2.5 : 2}
+                aria-hidden="true"
                 className={`transition-all duration-300 ${
                   isActive ? 'text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]' : 'text-neutral-500'
-                }`} 
+                }`}
               />
               <AnimatePresence>
                 {isActive && (
-                  <motion.div 
+                  <motion.div
                     layoutId="dock-dot"
                     className="absolute -bottom-1.5 h-1 w-1 bg-white rounded-full"
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     exit={{ scale: 0 }}
+                    aria-hidden="true"
                   />
                 )}
               </AnimatePresence>
             </button>
-          );
+          )
         })}
       </motion.nav>
     </div>
-  );
+  )
 }

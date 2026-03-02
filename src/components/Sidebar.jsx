@@ -1,26 +1,50 @@
-import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useNavigate } from 'react-router-dom'
 import { X, LogOut, Settings, ShieldCheck, ChevronRight, Sparkles, Beaker, Archive, Zap } from 'lucide-react'
 import { useLanguage } from '../context/LanguageContext'
 
-export default function Sidebar({ isOpen, onClose, user, onLogout, onOpenSettings, onOpenProfile, version, onOpenAdmin, onOpenUpdates, hasUpdates, isTestAccount, onResetTutorial, onResetUpdates, onOpenHistory, isPro, onUpgradePro }) {
+export default function Sidebar({
+  isOpen, onClose, user, onLogout, onOpenSettings, onOpenProfile,
+  version, onOpenUpdates, hasUpdates, isTestAccount,
+  onResetTutorial, onResetUpdates, isPro, onUpgradePro, isAdmin,
+}) {
   const email = user?.email || ''
-  const isAdmin = email === 'hemmings.nacho@gmail.com'
   const { t } = useLanguage()
+  const navigate = useNavigate()
+
+  // Navegar a /history o /admin usando React Router —
+  // ya no necesitamos callbacks onOpenHistory / onOpenAdmin
+  const goTo = (path) => {
+    onClose()
+    navigate(path)
+  }
 
   return (
     <AnimatePresence>
       {isOpen && (
         <>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/70 z-40 backdrop-blur-md" />
-          <motion.div initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }} transition={{ type: 'spring', damping: 25, stiffness: 200 }} className="fixed top-0 left-0 bottom-0 w-64 bg-neutral-900 border-r border-white/5 z-50 p-6 shadow-apple" >
-            <div className="flex flex-col h-full"> 
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 bg-black/70 z-40 backdrop-blur-md"
+          />
+          <motion.div
+            initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="fixed top-0 left-0 bottom-0 w-64 bg-neutral-900 border-r border-white/5 z-50 p-6 shadow-apple"
+          >
+            <div className="flex flex-col h-full">
+              {/* Cabecera */}
               <div className="flex justify-between items-center mb-10">
                 <h2 className="text-xl font-black text-white uppercase tracking-tighter">{t('menu')}</h2>
-                <button onClick={onClose} className="text-neutral-500 hover:text-white transition-colors"> <X size={24} /> </button>
+                <button onClick={onClose} className="text-neutral-500 hover:text-white transition-colors">
+                  <X size={24} />
+                </button>
               </div>
+
+              {/* Botón de perfil */}
               <button
-                onClick={() => { onOpenProfile(); onClose(); }}
+                onClick={() => { onOpenProfile(); onClose() }}
                 className="w-full flex items-center gap-3 mb-10 p-4 bg-neutral-800/50 rounded-2xl border border-white/5 text-white hover:bg-neutral-800 transition-colors"
               >
                 <div className="h-10 w-10 rounded-full bg-neutral-800 flex items-center justify-center font-black flex-shrink-0 overflow-hidden">
@@ -37,15 +61,23 @@ export default function Sidebar({ isOpen, onClose, user, onLogout, onOpenSetting
                 </div>
                 <ChevronRight size={18} className="text-neutral-600" />
               </button>
+
+              {/* Navegación */}
               <nav className="premium-divider flex-1">
-                <button onClick={() => { onOpenSettings(); onClose(); }} className="w-full flex items-center gap-3 px-4 py-4 text-neutral-300 bg-neutral-800/60 hover:bg-neutral-800/80 hover:text-white rounded-2xl transition-all font-medium text-sm border border-white/5" >
+                {/* Ajustes */}
+                <button
+                  onClick={() => { onOpenSettings(); onClose() }}
+                  className="w-full flex items-center gap-3 px-4 py-4 text-neutral-300 bg-neutral-800/60 hover:bg-neutral-800/80 hover:text-white rounded-2xl transition-all font-medium text-sm border border-white/5"
+                >
                   <div className="h-9 w-9 rounded-xl bg-neutral-900/70 border border-white/5 flex items-center justify-center">
                     <Settings size={18} className="text-neutral-300" />
                   </div>
                   <span>{t('profile_settings')}</span>
                 </button>
+
+                {/* Historial — usa navigate('/history') */}
                 <button
-                  onClick={() => { onOpenHistory?.(); onClose(); }}
+                  onClick={() => goTo('/history')}
                   className="w-full flex items-center gap-3 px-4 py-4 text-neutral-300 bg-neutral-800/40 hover:bg-neutral-800/70 hover:text-white rounded-2xl transition-all font-medium text-sm border border-white/5"
                 >
                   <div className="h-9 w-9 rounded-xl bg-neutral-900/70 border border-white/5 flex items-center justify-center">
@@ -53,8 +85,10 @@ export default function Sidebar({ isOpen, onClose, user, onLogout, onOpenSetting
                   </div>
                   <span className="flex-1 text-left">{t('history_title')}</span>
                 </button>
+
+                {/* Novedades */}
                 <button
-                  onClick={() => { onOpenUpdates?.(); onClose(); }}
+                  onClick={() => { onOpenUpdates?.(); onClose() }}
                   className="w-full flex items-center gap-3 px-4 py-4 text-indigo-200 bg-indigo-500/10 hover:bg-indigo-500/20 rounded-2xl transition-all font-medium text-sm border border-indigo-500/20"
                 >
                   <div className="h-9 w-9 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
@@ -63,34 +97,40 @@ export default function Sidebar({ isOpen, onClose, user, onLogout, onOpenSetting
                   <span className="flex-1 text-left">{t('updates_title')}</span>
                   {hasUpdates && <span className="h-2 w-2 rounded-full bg-indigo-300" />}
                 </button>
+
+                {/* Zona de test */}
                 {isTestAccount && (
                   <div className="mt-2 rounded-2xl border border-white/5 bg-neutral-900/60 p-3">
                     <div className="flex items-center gap-2 mb-2 text-neutral-500 text-[10px] uppercase tracking-widest font-bold">
                       <Beaker size={12} /> {t('test_mode_title')}
                     </div>
                     <button
-                      onClick={() => { onResetTutorial?.(); onClose(); }}
+                      onClick={() => { onResetTutorial?.(); onClose() }}
                       className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-neutral-300 hover:bg-neutral-800/80 transition-colors"
-                    >
-                      {t('test_reset_tutorial')}
-                    </button>
+                    >{t('test_reset_tutorial')}</button>
                     <button
-                      onClick={() => { onResetUpdates?.(); onClose(); }}
+                      onClick={() => { onResetUpdates?.(); onClose() }}
                       className="mt-2 w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-neutral-300 hover:bg-neutral-800/80 transition-colors"
-                    >
-                      {t('test_reset_updates')}
-                    </button>
+                    >{t('test_reset_updates')}</button>
                   </div>
                 )}
+
+                {/* Admin — usa navigate('/admin'), solo visible si isAdmin */}
                 {isAdmin && (
-                  <button onClick={() => { onOpenAdmin(); onClose(); }} className="w-full flex items-center gap-3 px-4 py-4 bg-blue-500/5 text-blue-400 hover:bg-blue-500/10 rounded-2xl transition-all font-black text-sm border border-blue-500/5" >
-                    <ShieldCheck size={20} /> <span className="uppercase tracking-widest text-[10px]">{t('control_tower')}</span>
+                  <button
+                    onClick={() => goTo('/admin')}
+                    className="w-full flex items-center gap-3 px-4 py-4 bg-blue-500/5 text-blue-400 hover:bg-blue-500/10 rounded-2xl transition-all font-black text-sm border border-blue-500/5"
+                  >
+                    <ShieldCheck size={20} />
+                    <span className="uppercase tracking-widest text-[10px]">{t('control_tower')}</span>
                   </button>
                 )}
               </nav>
+
+              {/* CTA Pro */}
               {!isPro && (
                 <button
-                  onClick={() => { onUpgradePro?.(); onClose(); }}
+                  onClick={() => { onUpgradePro?.(); onClose() }}
                   className="mb-4 group flex items-center justify-between w-full px-5 py-5 bg-violet-500/10 border border-violet-500/20 rounded-[2rem] transition-all hover:bg-violet-500/20 active:scale-95 shadow-lg shadow-violet-500/5"
                 >
                   <div className="flex items-center gap-3">
@@ -105,12 +145,19 @@ export default function Sidebar({ isOpen, onClose, user, onLogout, onOpenSetting
                   <div className="h-2 w-2 rounded-full bg-violet-500 animate-pulse" />
                 </button>
               )}
+
+              {/* Footer: logout + versión */}
               <div className="mt-auto pt-6 border-t border-white/5">
-                <button onClick={onLogout} className="w-full flex items-center gap-3 px-4 py-4 text-red-400 hover:bg-red-900/20 rounded-2xl transition-all font-bold text-sm mb-6" >
+                <button
+                  onClick={onLogout}
+                  className="w-full flex items-center gap-3 px-4 py-4 text-red-400 hover:bg-red-900/20 rounded-2xl transition-all font-bold text-sm mb-6"
+                >
                   <LogOut size={20} /> <span>{t('logout')}</span>
                 </button>
                 <div className="text-center">
-                  <span className="text-[10px] font-black text-neutral-700 uppercase tracking-[0.2em]">{t('build_version')}{version || '1.0.0'}</span>
+                  <span className="text-[10px] font-black text-neutral-700 uppercase tracking-[0.2em]">
+                    {t('build_version')}{version || '1.0.0'}
+                  </span>
                 </div>
               </div>
             </div>
