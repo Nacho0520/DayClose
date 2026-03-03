@@ -10,6 +10,8 @@ import {
   Star,
   Frown,
   Zap,
+  Lock,       // ── [NUEVO] Para hábitos en hibernación
+  Sparkles,   // ── [NUEVO] Para banner de trial
 } from "lucide-react";
 import Sidebar from "./Sidebar";
 import SettingsModal from "./SettingsModal";
@@ -110,6 +112,9 @@ function Dashboard({
   onToggleTestPro,
   onUpgrade,
   isAdmin,
+  // ── [NUEVO] Props del trial ───────────────────────────────────────────────
+  isInTrial = false,
+  trialDaysLeft = 0,
 }) {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isSettingsOpen, setSettingsOpen] = useState(false);
@@ -137,7 +142,11 @@ function Dashboard({
 
   const { t } = useLanguage();
   const MAX_HARD_DAY = 3;
-  const MAX_FREE_HABITS = 5;
+
+  // ── [NUEVO] Límite dinámico: 7 durante trial, 5 en free normal ───────────
+  const MAX_FREE_HABITS = isInTrial ? 7 : 5;
+  // Umbral de hibernación: siempre 5 (hábitos >5 se congelan si no es Pro real)
+  const HIBERNATE_THRESHOLD = 5;
 
   const logsMap = new Map();
   (todayLogs || []).forEach((l) =>
@@ -276,6 +285,8 @@ function Dashboard({
         habitToEdit={editHabit}
         onHabitCreated={() => window.location.reload()}
         isPro={isPro}
+        // ── [NUEVO] Pasa el límite dinámico al creator ────────────────────
+        maxFreeHabits={MAX_FREE_HABITS}
       />
       <ProModal
         isOpen={isProModalOpen}
@@ -293,6 +304,24 @@ function Dashboard({
             {user?.user_metadata?.full_name || "Usuario"}
           </h1>
         </header>
+
+        {/* ── [NUEVO] Banner de Trial — aparece SOLO durante los primeros 14 días ── */}
+        {isInTrial && !atFreeLimit && (
+          <button
+            onClick={() => setProModalOpen(true)}
+            className="mb-4 w-full flex items-center justify-between px-4 py-3 rounded-2xl bg-gradient-to-r from-violet-500/15 to-amber-500/10 border border-violet-500/25 active:scale-98 transition-all group"
+          >
+            <div className="flex items-center gap-2">
+              <Sparkles size={14} className="text-violet-300 flex-shrink-0" />
+              <p className="text-[11px] text-violet-200/90 text-left">
+                {t("trial_banner_active", { days: trialDaysLeft })}
+              </p>
+            </div>
+            <span className="text-[10px] font-black text-amber-400/80 group-hover:text-amber-300 transition-colors whitespace-nowrap ml-2">
+              Pro →
+            </span>
+          </button>
+        )}
 
         {/* Banner suave — casi lleno */}
         {nearFreeLimit && (
@@ -356,18 +385,37 @@ function Dashboard({
           </div>
         ) : (
           <div className="premium-divider">
-            {visibleHabits.map((habit) => {
+            {visibleHabits.map((habit, habitIndex) => {
               const log = logsMap.get(habit.id);
               const isCritical = hardDayIds.includes(habit.id);
               const miniHabits = (habit.mini_habits || []).filter(Boolean);
               const isExpanded = expandedHabitId === habit.id;
+
+              // ── [NUEVO] Lógica de hibernación ────────────────────────────
+              // Un hábito entra en hibernación si:
+              //   - El usuario NO es Pro efectivo (ni real ni por trial)
+              //   - El hábito ocupa un índice > 4 (posición 6ª en adelante)
+              // IMPORTANTE: usamos el índice en el array COMPLETO de habits
+              // (no en visibleHabits filtrado por HardDay), para que la
+              // numeración sea consistente con la creación.
+              const globalIndex = (habits || []).findIndex(h => h.id === habit.id);
+              const isFrozen = !isPro && globalIndex >= HIBERNATE_THRESHOLD;
+
               return (
                 <div
                   key={habit.id}
-                  className="group radius-card border border-white/5 bg-neutral-800/30 p-4 backdrop-blur-md transition-all shadow-apple-soft cursor-pointer"
-                  onClick={() =>
-                    setExpandedHabitId(isExpanded ? null : habit.id)
-                  }
+                  // ── [NUEVO] Clases visuales para hábitos en hibernación ──
+                  className={`group radius-card border border-white/5 bg-neutral-800/30 p-4 backdrop-blur-md transition-all shadow-apple-soft cursor-pointer ${
+                    isFrozen ? "opacity-40 grayscale" : ""
+                  }`}
+                  onClick={() => {
+                    // ── [NUEVO] Click en congelado → abre ProModal ──────────
+                    if (isFrozen) {
+                      setProModalOpen(true);
+                      return;
+                    }
+                    setExpandedHabitId(isExpanded ? null : habit.id);
+                  }}
                 >
                   <div className="flex items-center gap-3">
                     <div
@@ -380,52 +428,60 @@ function Dashboard({
                         {habit.title}
                       </p>
                     </div>
-                    <div className="flex items-center gap-1 opacity-20 group-hover:opacity-100 transition-opacity pr-2">
-                      {hardDayEnabled && (
+                    {/* Botones de acción — ocultos en hábitos congelados */}
+                    {!isFrozen && (
+                      <div className="flex items-center gap-1 opacity-20 group-hover:opacity-100 transition-opacity pr-2">
+                        {hardDayEnabled && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleHardDayHabit(habit.id);
+                            }}
+                            className={`p-2 rounded-lg transition-colors ${isCritical ? "text-neutral-200" : "text-neutral-600 hover:text-neutral-300"}`}
+                          >
+                            <Star
+                              size={18}
+                              fill={isCritical ? "currentColor" : "none"}
+                            />
+                          </button>
+                        )}
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            toggleHardDayHabit(habit.id);
+                            setEditHabit(habit);
                           }}
-                          className={`p-2 rounded-lg transition-colors ${isCritical ? "text-neutral-200" : "text-neutral-600 hover:text-neutral-300"}`}
+                          className="p-2 text-neutral-400 hover:text-blue-400 rounded-lg"
                         >
-                          <Star
-                            size={18}
-                            fill={isCritical ? "currentColor" : "none"}
-                          />
+                          <Settings size={18} />
                         </button>
-                      )}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setEditHabit(habit);
-                        }}
-                        className="p-2 text-neutral-400 hover:text-blue-400 rounded-lg"
-                      >
-                        <Settings size={18} />
-                      </button>
-                      <button
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          if (confirm(t("confirm_delete"))) {
-                            await supabase
-                              .from("daily_logs")
-                              .delete()
-                              .eq("habit_id", habit.id);
-                            await supabase
-                              .from("habits")
-                              .delete()
-                              .eq("id", habit.id);
-                            window.location.reload();
-                          }
-                        }}
-                        className="p-2 text-neutral-400 hover:text-red-500 rounded-lg"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
+                        <button
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            if (confirm(t("confirm_delete"))) {
+                              await supabase
+                                .from("daily_logs")
+                                .delete()
+                                .eq("habit_id", habit.id);
+                              await supabase
+                                .from("habits")
+                                .delete()
+                                .eq("id", habit.id);
+                              window.location.reload();
+                            }
+                          }}
+                          className="p-2 text-neutral-400 hover:text-red-500 rounded-lg"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    )}
                     <div className="flex-shrink-0 ml-1">
-                      {log ? (
+                      {/* ── [NUEVO] Botón de completado vs. icono Lock ───── */}
+                      {isFrozen ? (
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5">
+                          <Lock className="h-5 w-5 text-neutral-500" />
+                        </div>
+                      ) : log ? (
                         <button
                           onClick={async (e) => {
                             e.stopPropagation();

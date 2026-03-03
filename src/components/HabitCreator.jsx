@@ -159,6 +159,8 @@ export default function HabitCreator({
   userId,
   onHabitCreated,
   habitToEdit = null,
+  // ── [NUEVO] Límite dinámico que pasa Dashboard (5 en free, 7 en trial) ──
+  maxFreeHabits = 5,
 }) {
   const [title, setTitle] = useState("");
   const [selectedDays, setSelectedDays] = useState(["L", "M", "X", "J", "V"]);
@@ -254,7 +256,8 @@ export default function HabitCreator({
           return Math.max(max, countWithNew);
         }, 0);
 
-        if (maxPerDay > 5) {
+        // ── [NUEVO] Usa maxFreeHabits dinámico en lugar del 5 hardcodeado ───
+        if (maxPerDay > maxFreeHabits) {
           setLoading(false);
           setShowProModal(true);
           return;
@@ -447,6 +450,7 @@ export default function HabitCreator({
                         )}
                     </p>
                     <p className="text-[10px] font-bold text-neutral-500">
+                      {/* ── [NUEVO] Usa t() con reemplazo para el hint ────── */}
                       {!effectiveIsPrivileged
                         ? t("free_limit_hint", { n: FREE_MINI_HABITS_LIMIT })
                         : t("mini_habits_hint")}
@@ -520,6 +524,29 @@ export default function HabitCreator({
                   ))}
                 </div>
               )}
+            </div>
+
+            {/* Momento del día */}
+            <div className="space-y-3">
+              <label className="flex items-center gap-2 text-xs font-black text-neutral-500 uppercase tracking-widest">
+                <Clock size={14} /> {t("time_of_day")}
+              </label>
+              <div className="flex gap-2 bg-neutral-900/60 p-2 rounded-2xl border border-white/5">
+                {["morning", "afternoon", "night"].map((tod) => (
+                  <button
+                    key={tod}
+                    type="button"
+                    onClick={() => setTimeOfDay(tod)}
+                    className={`flex-1 py-2 rounded-xl text-xs font-black transition-all ${
+                      timeOfDay === tod
+                        ? "bg-white text-black shadow-lg"
+                        : "text-neutral-500"
+                    }`}
+                  >
+                    {t(tod)}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Iconos */}
@@ -608,8 +635,8 @@ export default function HabitCreator({
                         selectedColor === color
                           ? "ring-2 ring-white scale-110"
                           : isLocked
-                            ? "opacity-30"
-                            : "opacity-60"
+                          ? "opacity-30"
+                          : "opacity-60"
                       }`}
                     >
                       {isLocked && (
