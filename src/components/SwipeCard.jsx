@@ -12,21 +12,26 @@ export default function SwipeCard({ habit, onSwipeComplete, onDrag }) {
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-25, 25]);
   const opacity = useTransform(x, [-200, -150, 0, 150, 200], [0, 1, 1, 1, 0]);
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
-  const TUTORIAL_KEY = "dayclose_swipe_tutorial_complete";
+  const TUTORIAL_KEY = `dayclose_swipe_tutorial_${language}`;
 
   // 1. Única declaración de estado, inicializada desde localStorage
   const [hasInteracted, setHasInteracted] = useState(() => {
-    return localStorage.getItem(TUTORIAL_KEY) === "true";
+    return localStorage.getItem(`dayclose_swipe_tutorial_${language}`) === "true";
   });
+
+  // Resync when language changes (in case key changed)
+  useEffect(() => {
+    setHasInteracted(localStorage.getItem(TUTORIAL_KEY) === "true");
+  }, [TUTORIAL_KEY]);
 
   // 2. Sincroniza el estado con localStorage cuando cambie
   useEffect(() => {
     if (hasInteracted) {
       localStorage.setItem(TUTORIAL_KEY, "true");
     }
-  }, [hasInteracted]);
+  }, [hasInteracted, TUTORIAL_KEY]);
 
   const background = useTransform(
     x,
@@ -50,7 +55,7 @@ export default function SwipeCard({ habit, onSwipeComplete, onDrag }) {
     <div className="relative h-96 w-full flex items-center justify-center perspective-1000">
       {/* TARJETA (Z-10) */}
       <motion.div
-        style={{ x, rotate, opacity, background, scale }}
+        style={{ x, rotate, opacity, background, scale, touchAction: 'pan-y', overscrollBehavior: 'none' }}
         drag="x"
         dragConstraints={{ left: 0, right: 0 }}
         dragElastic={0.6}

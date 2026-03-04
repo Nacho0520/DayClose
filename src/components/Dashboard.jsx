@@ -536,6 +536,30 @@ function Dashboard({
                 </div>
               );
             })}
+
+            {/* ── Ghost slot: tarjeta bloqueada cuando el usuario free está en el límite ── */}
+            {atFreeLimit && !isPro && (
+              <div
+                className="group radius-card border border-violet-500/20 bg-violet-500/5 p-4 backdrop-blur-md transition-all shadow-apple-soft cursor-pointer opacity-60"
+                onClick={() => setProModalOpen(true)}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-500/10 border border-violet-500/20 flex-shrink-0">
+                    <Plus className="h-5 w-5 text-violet-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-violet-400 truncate text-base tracking-tight">
+                      {t("ghost_slot_label") || "Añadir hábito Pro"}
+                    </p>
+                  </div>
+                  <div className="flex-shrink-0 ml-1">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-violet-500/10">
+                      <Lock className="h-5 w-5 text-violet-400" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

@@ -42,13 +42,12 @@ export default function FriendsSection({ user, onDataChange }) {
   const [friends,         setFriends]         = useState([])
   const [pendingIncoming, setPendingIncoming] = useState([])
   const [pendingOutgoing, setPendingOutgoing] = useState([])
-  const [pendingInvites,  setPendingInvites]  = useState([])   // recibidas por email
-  const [outgoingInvites, setOutgoingInvites] = useState([])   // enviadas por email
+  const [pendingInvites,  setPendingInvites]  = useState([])
+  const [outgoingInvites, setOutgoingInvites] = useState([])
   const [friendsLoading,  setFriendsLoading]  = useState(false)
-  const [friendTab,       setFriendTab]       = useState('email')
+  const [friendTab,       setFriendTab]       = useState('code')
 
   // ── Campos de formulario ──────────────────────────────────────────────────
-  const [inviteEmail,   setInviteEmail]   = useState('')
   const [searchEmail,   setSearchEmail]   = useState('')
   const [searchResult,  setSearchResult]  = useState(null)
   const [searchMessage, setSearchMessage] = useState('')
@@ -57,12 +56,12 @@ export default function FriendsSection({ user, onDataChange }) {
 
   // ── Estado de UX por tab ──────────────────────────────────────────────────
   // 'idle' | 'sending' | 'success' | 'error'
-  const [inviteStatus,   setInviteStatus]  = useState('idle')
-  const [inviteErrMsg,   setInviteErrMsg]  = useState('')
-  const [requestStatus,  setRequestStatus] = useState('idle')
-  const [requestErrMsg,  setRequestErrMsg] = useState('')
-  const [codeStatus,     setCodeStatus]    = useState('idle')
-  const [codeErrMsg,     setCodeErrMsg]    = useState('')
+  const [requestStatus,   setRequestStatus]  = useState('idle')
+  const [requestErrMsg,   setRequestErrMsg]  = useState('')
+  const [codeStatus,      setCodeStatus]     = useState('idle')
+  const [codeErrMsg,      setCodeErrMsg]     = useState('')
+  const [codeGenLoading,  setCodeGenLoading] = useState(false)
+  const [codeGenError,    setCodeGenError]   = useState('')
 
   const autoCloseRef = useRef(null)
 
@@ -134,6 +133,7 @@ export default function FriendsSection({ user, onDataChange }) {
   useEffect(() => {
     if (typeof window === 'undefined') return
     if (new URLSearchParams(window.location.search).get('open') === 'friends') {
+      setCodeGenError('')
       setIsFriendsOpen(true)
     }
   }, [])
@@ -144,9 +144,9 @@ export default function FriendsSection({ user, onDataChange }) {
   const closeModal = () => {
     if (autoCloseRef.current) clearTimeout(autoCloseRef.current)
     setIsFriendsOpen(false)
-    setInviteStatus('idle'); setInviteErrMsg('')
     setRequestStatus('idle'); setRequestErrMsg('')
     setCodeStatus('idle'); setCodeErrMsg('')
+    setCodeGenError('')
     setSearchResult(null); setSearchMessage('')
   }
 
@@ -178,20 +178,6 @@ export default function FriendsSection({ user, onDataChange }) {
   }
 
   // ── Handlers ──────────────────────────────────────────────────────────────
-  const handleInviteEmail = async () => {
-    if (!inviteEmail.trim() || inviteStatus === 'sending') return
-    setInviteStatus('sending'); setInviteErrMsg('')
-    try {
-      await createFriendInvite(inviteEmail.trim())
-      const found = await searchUserByEmail(inviteEmail.trim())
-      if (found?.user_id) await notifyFriendRequest(found.user_id)
-      triggerSuccess(setInviteStatus, () => setInviteEmail(''))
-    } catch (err) {
-      setInviteErrMsg(friendlyError(err, t))
-      setInviteStatus('error')
-    }
-  }
-
   const handleSearchEmail = async () => {
     if (!searchEmail.trim()) return
     setSearchMessage(''); setSearchResult(null)
@@ -215,11 +201,38 @@ export default function FriendsSection({ user, onDataChange }) {
     }
   }
 
+  // Genera un código de 8 caracteres sin letras/números confusos (O/0, I/1)
+  const generateLocalCode = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+    return Array.from({ length: 8 }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
+  }
+
   const handleGenerateCode = async () => {
+    if (codeGenLoading) return
+    setCodeGenLoading(true)
+    setCodeGenError('')
     try {
-      setFriendCode(await createFriendCode())
+      // Intentar RPC primero; si falla, upsert directo con código generado localmente
+      let newCode
+      try {
+        newCode = await createFriendCode()
+      } catch (rpcErr) {
+        console.error('[FriendsSection] RPC create_friend_code failed:', rpcErr?.message || rpcErr)
+        newCode = generateLocalCode()
+        const { error } = await supabase
+          .from('friend_codes')
+          .upsert({ user_id: user.id, code: newCode }, { onConflict: 'user_id' })
+        if (error) {
+          console.error('[FriendsSection] Direct upsert also failed:', error.message, '| code:', error.code)
+          throw error
+        }
+      }
+      setFriendCode(newCode)
     } catch (err) {
       console.error('[FriendsSection] generateCode:', err.message)
+      setCodeGenError(t('friends_code_gen_error') || 'No se pudo generar el código. Inténtalo de nuevo.')
+    } finally {
+      setCodeGenLoading(false)
     }
   }
 
@@ -227,7 +240,21 @@ export default function FriendsSection({ user, onDataChange }) {
     if (!codeInput.trim() || codeStatus === 'sending') return
     setCodeStatus('sending'); setCodeErrMsg('')
     try {
-      await acceptFriendCode(codeInput.trim().toUpperCase())
+      const code = codeInput.trim().toUpperCase()
+      // Buscar al dueño del código antes de aceptar (para notificarle)
+      const { data: codeRow } = await supabase
+        .from('friend_codes')
+        .select('user_id')
+        .eq('code', code)
+        .maybeSingle()
+
+      await acceptFriendCode(code)
+
+      // Notificar al dueño del código que alguien lo añadió
+      if (codeRow?.user_id) {
+        await notifyFriendRequest(codeRow.user_id)
+      }
+
       triggerSuccess(setCodeStatus, () => setCodeInput(''))
     } catch (err) {
       setCodeErrMsg(friendlyError(err, t))
@@ -318,7 +345,7 @@ export default function FriendsSection({ user, onDataChange }) {
             </span>
           )}
           <button
-            onClick={() => { setFriendTab('email'); setIsFriendsOpen(true) }}
+            onClick={() => { setFriendTab('code'); setCodeGenError(''); setIsFriendsOpen(true) }}
             className="text-[11px] font-semibold text-neutral-200 bg-white/8 border border-white/10 px-3 py-1.5 rounded-full hover:bg-white/15 transition-colors"
           >
             {t('more_friends_invite')}
@@ -472,7 +499,7 @@ export default function FriendsSection({ user, onDataChange }) {
       ══════════════════════════════════════════════════════════ */}
       {isFriendsOpen && renderPortal(
         <div
-          className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-black/75 backdrop-blur-sm p-4"
+          className="fixed inset-0 z-[9000] flex items-center justify-center bg-black/75 backdrop-blur-sm p-4"
           onClick={closeModal}
         >
           <MotionDiv
@@ -481,10 +508,10 @@ export default function FriendsSection({ user, onDataChange }) {
             exit={{    opacity: 0, y: 24, scale: 0.96 }}
             transition={{ type: 'spring', damping: 24, stiffness: 300 }}
             onClick={e => e.stopPropagation()}
-            className="w-full max-w-md bg-neutral-900/95 backdrop-blur-xl rounded-[2rem] border border-white/8 shadow-2xl overflow-hidden"
+            className="w-full max-w-md bg-neutral-900 rounded-[2rem] border border-white/10 shadow-2xl overflow-hidden"
           >
             {/* Franja de acento superior */}
-            <div className="h-[3px] w-full bg-gradient-to-r from-violet-500/0 via-violet-500/60 to-violet-500/0" />
+            <div className="h-1.5 w-full bg-gradient-to-r from-violet-500/50 via-indigo-500/50 to-violet-500/50" />
 
             <div className="p-5">
               {/* ── Cabecera ────────────────────────────────────── */}
@@ -500,20 +527,20 @@ export default function FriendsSection({ user, onDataChange }) {
                 </div>
                 <button
                   onClick={closeModal}
-                  className="h-8 w-8 rounded-full bg-white/5 border border-white/8 flex items-center justify-center text-neutral-500 hover:text-white transition-colors"
+                  className="h-8 w-8 rounded-full bg-white/5 border border-white/5 flex items-center justify-center text-neutral-500 hover:text-white transition-colors"
                 ><X size={15} /></button>
               </div>
 
-              {/* ── Tabs estilo Dashboard ────────────────────────── */}
+              {/* ── Tabs: Código y Buscar ─────────────────────────── */}
               <div className="flex gap-1.5 mb-5 bg-neutral-800/60 rounded-full p-1">
-                {['email', 'code', 'search'].map(tab => (
+                {['code', 'search'].map(tab => (
                   <button
                     key={tab}
                     onClick={() => {
                       setFriendTab(tab)
-                      setInviteStatus('idle'); setInviteErrMsg('')
                       setRequestStatus('idle'); setRequestErrMsg('')
                       setCodeStatus('idle'); setCodeErrMsg('')
+                      setCodeGenError('')
                       setSearchResult(null); setSearchMessage('')
                     }}
                     className={`flex-1 py-1.5 rounded-full text-[11px] font-black transition-all ${
@@ -527,36 +554,6 @@ export default function FriendsSection({ user, onDataChange }) {
                 ))}
               </div>
 
-              {/* ── Tab: Email ───────────────────────────────────── */}
-              {friendTab === 'email' && (
-                <AnimatePresence mode="wait">
-                  {inviteStatus === 'success' ? (
-                    <SuccessScreen key="ok" />
-                  ) : (
-                    <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-3">
-                      <p className="text-[11px] text-neutral-500">{t('friends_email_hint')}</p>
-                      <div className="flex gap-2">
-                        <input
-                          value={inviteEmail}
-                          onChange={e => { setInviteEmail(e.target.value); if (inviteStatus === 'error') { setInviteStatus('idle'); setInviteErrMsg('') } }}
-                          onKeyDown={e => e.key === 'Enter' && handleInviteEmail()}
-                          placeholder={t('friends_email_placeholder')}
-                          className="flex-1 rounded-xl bg-neutral-950/80 border border-white/8 px-3 py-2 text-sm text-white placeholder:text-neutral-700 focus:outline-none focus:border-violet-500/50"
-                        />
-                        <motion.button whileTap={{ scale: 0.95 }}
-                          onClick={handleInviteEmail}
-                          disabled={!inviteEmail.trim() || inviteStatus === 'sending'}
-                          className="rounded-xl bg-violet-600 hover:bg-violet-500 text-white px-4 text-xs font-black transition-colors disabled:opacity-40 min-w-[72px] flex items-center justify-center gap-1.5"
-                        >
-                          {inviteStatus === 'sending' ? <Loader2 size={13} className="animate-spin" /> : t('friends_send')}
-                        </motion.button>
-                      </div>
-                      {inviteStatus === 'error' && <ErrorBanner msg={inviteErrMsg} />}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              )}
-
               {/* ── Tab: Código ──────────────────────────────────── */}
               {friendTab === 'code' && (
                 <AnimatePresence mode="wait">
@@ -564,28 +561,35 @@ export default function FriendsSection({ user, onDataChange }) {
                     <SuccessScreen key="ok" />
                   ) : (
                     <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-3">
+                      <p className="text-[11px] text-neutral-500">{t('friends_code_hint') || 'Comparte tu código con un amigo o introduce el suyo para conectaros.'}</p>
                       {/* Tu código */}
-                      <div className="flex items-center justify-between rounded-xl bg-white/5 border border-white/8 px-3 py-2.5">
+                      <div className="flex items-center justify-between rounded-xl bg-neutral-800/40 border border-white/5 px-3 py-2.5">
                         <div>
                           <p className="text-[10px] text-neutral-500 font-medium">{t('friends_code_label')}</p>
                           <p className="text-sm font-black text-white tracking-[0.15em] mt-0.5">
                             {friendCode || <span className="text-neutral-600 normal-case tracking-normal font-medium text-xs">{t('friends_code_empty')}</span>}
                           </p>
                         </div>
-                        <button onClick={handleGenerateCode}
-                          className="text-[10px] font-semibold text-neutral-400 bg-neutral-800 border border-white/8 px-3 py-1.5 rounded-full hover:text-white transition-colors"
+                        <button
+                          onClick={handleGenerateCode}
+                          disabled={codeGenLoading}
+                          className="text-[10px] font-semibold text-neutral-400 bg-neutral-700/60 px-3 py-1.5 rounded-full hover:text-white transition-colors disabled:opacity-40 flex items-center gap-1.5"
                         >
-                          {friendCode ? t('friends_code_rotate') : t('friends_code_create')}
+                          {codeGenLoading
+                            ? <Loader2 size={11} className="animate-spin" />
+                            : (friendCode ? t('friends_code_rotate') : t('friends_code_create'))
+                          }
                         </button>
                       </div>
-                      {/* Introducir código ajeno */}
+                      {codeGenError && <ErrorBanner msg={codeGenError} />}
+                      {/* Introducir código de otro usuario */}
                       <div className="flex gap-2">
                         <input
                           value={codeInput}
                           onChange={e => { setCodeInput(e.target.value); if (codeStatus === 'error') { setCodeStatus('idle'); setCodeErrMsg('') } }}
                           onKeyDown={e => e.key === 'Enter' && handleAcceptCode()}
                           placeholder={t('friends_code_placeholder')}
-                          className="flex-1 rounded-xl bg-neutral-950/80 border border-white/8 px-3 py-2 text-sm text-white placeholder:text-neutral-700 focus:outline-none focus:border-violet-500/50 uppercase tracking-widest"
+                          className="flex-1 rounded-xl bg-neutral-800/60 border border-white/5 px-3 py-2 text-sm text-white placeholder:text-neutral-600 focus:outline-none focus:border-violet-500/40 uppercase tracking-widest"
                         />
                         <motion.button whileTap={{ scale: 0.95 }}
                           onClick={handleAcceptCode}
@@ -615,7 +619,7 @@ export default function FriendsSection({ user, onDataChange }) {
                           onChange={e => setSearchEmail(e.target.value)}
                           onKeyDown={e => e.key === 'Enter' && handleSearchEmail()}
                           placeholder={t('friends_search_placeholder')}
-                          className="flex-1 rounded-xl bg-neutral-950/80 border border-white/8 px-3 py-2 text-sm text-white placeholder:text-neutral-700 focus:outline-none focus:border-violet-500/50"
+                          className="flex-1 rounded-xl bg-neutral-800/60 border border-white/5 px-3 py-2 text-sm text-white placeholder:text-neutral-600 focus:outline-none focus:border-violet-500/40"
                         />
                         <motion.button whileTap={{ scale: 0.95 }}
                           onClick={handleSearchEmail}
@@ -626,7 +630,7 @@ export default function FriendsSection({ user, onDataChange }) {
                       </div>
                       {searchMessage && <p className="text-[11px] text-neutral-500">{searchMessage}</p>}
                       {searchResult && (
-                        <div className="flex items-center justify-between rounded-xl bg-white/5 border border-white/8 px-3 py-2.5">
+                        <div className="flex items-center justify-between rounded-xl bg-neutral-800/40 border border-white/5 px-3 py-2.5">
                           <div className="flex items-center gap-2">
                             <UserPlus size={13} className="text-neutral-500 shrink-0" />
                             <span className="text-sm font-semibold text-white">{searchResult.full_name || searchResult.email}</span>

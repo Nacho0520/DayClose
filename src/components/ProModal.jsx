@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import {
   X,
@@ -24,12 +24,31 @@ export default function ProModal({ isOpen, onClose, user, onProActivated }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [proCount, setProCount] = useState(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const startOfWeek = new Date();
+    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+    startOfWeek.setHours(0, 0, 0, 0);
+    supabase
+      .from("profiles")
+      .select("id", { count: "exact", head: true })
+      .eq("plan", "pro")
+      .gte("updated_at", startOfWeek.toISOString())
+      .then(({ count }) => {
+        if (count != null) setProCount(count);
+      });
+  }, [isOpen]);
 
   const features = [
-    { icon: Zap, text: t("pro_heatmap_title") || "Mapa de actividad 28 días" },
+    {
+      icon: Zap,
+      text: t("pro_heatmap_title") || "¿Estás progresando o engañándote a ti mismo?",
+    },
     {
       icon: History,
-      text: t("pro_history_title") || "Historial extendido 90 días",
+      text: t("pro_history_title") || "Tu historia completa, sin límites",
     },
     {
       icon: BarChart2,
@@ -141,6 +160,13 @@ export default function ProModal({ isOpen, onClose, user, onProActivated }) {
               <div className="p-6">
                 {step === "offer" ? (
                   <>
+                    {/* Social proof */}
+                    {proCount != null && proCount > 0 && (
+                      <p className="text-center text-xs text-indigo-300/80 font-medium mb-4">
+                        {t("pro_social_proof", { count: proCount })}
+                      </p>
+                    )}
+
                     {/* Features */}
                     <div className="space-y-3 mb-5">
                       {features.map(({ icon: Icon, text }) => (

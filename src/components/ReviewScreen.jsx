@@ -1,11 +1,12 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, SkipForward } from 'lucide-react'
+import { X, SkipForward, Zap } from 'lucide-react'
 import confetti from 'canvas-confetti'
 import { supabase } from '../lib/supabaseClient'
 import SwipeCard from './SwipeCard'
 import NoteModal from './NoteModal'
+import ProModal from './ProModal'
 import { useLanguage } from '../context/LanguageContext'
 
 const MotionDiv = motion.div
@@ -32,7 +33,7 @@ function getTimeBasedBgClass() {
 
 const REFLECTION_DURATION_MS = 3500
 
-export default function ReviewScreen({ habits, todayLogs, session, onReviewComplete, yesterdaySummary = null }) {
+export default function ReviewScreen({ habits, todayLogs, session, onReviewComplete, yesterdaySummary = null, isPro = false, isWeeklyClose = false }) {
   const navigate = useNavigate()
   const { t } = useLanguage()
   const confettiFired = useRef(false)
@@ -48,6 +49,22 @@ export default function ReviewScreen({ habits, todayLogs, session, onReviewCompl
   const [dayMood, setDayMood] = useState(null)
   const [saving, setSaving] = useState(false)
   const [hasSaved, setHasSaved] = useState(false)
+
+  // ── Modo Silencio Profundo ────────────────────────────────────────────────
+  const [silentMode, setSilentMode] = useState(false)
+
+  // ── Community check-in step ───────────────────────────────────────────────
+  const [communityDone, setCommunityDone] = useState(false)
+  const [communitySharing, setCommunitySharing] = useState(false)
+
+  // ── Cierre Semanal ────────────────────────────────────────────────────────
+  const [weeklyNote, setWeeklyNote] = useState('')
+  const [showWeeklyClose, setShowWeeklyClose] = useState(false)
+  const [weeklySaved, setWeeklySaved] = useState(false)
+
+  // ── Pro upsell post-cierre ────────────────────────────────────────────────
+  const [proModalOpen, setProModalOpen] = useState(false)
+  const showProUpsell = hasSaved && !isPro && (habits || []).length >= 5 && !proModalOpen
 
   const hasYesterdayData = yesterdaySummary?.score != null
   const [showReflection, setShowReflection] = useState(hasYesterdayData)
@@ -87,8 +104,12 @@ export default function ReviewScreen({ habits, todayLogs, session, onReviewCompl
     if (allSwiped && !showReflection && !showDaySummary && !confettiFired.current && reviewHabits.length > 0) {
       confettiFired.current = true
       setTimeout(launchConfetti, 300)
+      // Silent mode: skip community + score/mood, save immediately
+      if (silentMode) {
+        setShowDaySummary(true)
+      }
     }
-  }, [allSwiped, showReflection, showDaySummary, reviewHabits.length])
+  }, [allSwiped, showReflection, showDaySummary, reviewHabits.length, silentMode])
 
   // ── [FIX] Guardado de resultados movido a useEffect ──────────────────────
   const saveResults = useCallback(async () => {
@@ -128,6 +149,51 @@ export default function ReviewScreen({ habits, todayLogs, session, onReviewCompl
       saveResults()
     }
   }, [showDaySummary, hasSaved, saving, saveResults])
+
+  // Después de guardar, mostrar Cierre Semanal si aplica
+  useEffect(() => {
+    if (hasSaved && isWeeklyClose && !weeklySaved) {
+      setShowWeeklyClose(true)
+    }
+  }, [hasSaved, isWeeklyClose, weeklySaved])
+
+  const handleCommunityShare = async () => {
+    if (communitySharing || !session?.user?.id) return
+    setCommunitySharing(true)
+    try {
+      // Verificar si ya hizo check-in hoy para no duplicar
+      const today = new Date().toISOString().split('T')[0]
+      const { data: existing } = await supabase
+        .from('community_checkins')
+        .select('id')
+        .eq('user_id', session.user.id)
+        .gte('created_at', `${today}T00:00:00.000Z`)
+        .lte('created_at', `${today}T23:59:59.999Z`)
+        .maybeSingle()
+      if (!existing) {
+        await supabase.from('community_checkins').insert({
+          user_id: session.user.id,
+          mood_emoji: null,
+        })
+      }
+    } catch { /* silent fail */ }
+    setCommunitySharing(false)
+    setCommunityDone(true)
+  }
+
+  const handleSaveWeeklyNote = async () => {
+    if (weeklyNote.trim() && session) {
+      await supabase.from('daily_logs').insert({
+        user_id: session.user.id,
+        habit_id: null,
+        status: 'weekly_summary',
+        note: weeklyNote.trim(),
+        created_at: new Date().toISOString()
+      })
+    }
+    setWeeklySaved(true)
+    setShowWeeklyClose(false)
+  }
 
   if (!habits) return <div className="min-h-screen bg-neutral-900" />
 
@@ -180,10 +246,48 @@ export default function ReviewScreen({ habits, todayLogs, session, onReviewCompl
                 }}
                 onDrag={(x) => setSwipeStatus(x > 100 ? 'done' : x < -100 ? 'not-done' : null)}
               />
+              {/* Botón de Modo Silencio — sutil, no prominente */}
+              {!silentMode && (
+                <div className="mt-6 flex justify-center">
+                  <button
+                    onClick={() => setSilentMode(true)}
+                    className="text-[11px] text-neutral-600 hover:text-neutral-400 transition-colors uppercase tracking-widest font-bold py-2 px-4"
+                  >
+                    {t('silent_mode_btn') || 'Día difícil — modo mínimo'}
+                  </button>
+                </div>
+              )}
             </motion.div>
           )}
 
-          {!showReflection && allSwiped && !showDaySummary && !hasSaved && (
+          {/* ── Community check-in step (entre swipes y score/mood) ── */}
+          {!showReflection && allSwiped && !communityDone && !silentMode && !showDaySummary && !hasSaved && (
+            <MotionDiv key="community" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="w-full max-sm mx-auto">
+              <div className="bg-neutral-800/60 rounded-[2rem] border border-white/5 p-6 text-center shadow-xl">
+                <p className="text-3xl mb-3">👥</p>
+                <p className="text-base font-black text-white mb-2">{t('community_share_prompt') || '¿Compartir tu cierre con tu círculo?'}</p>
+                <p className="text-[11px] text-neutral-500 mb-6">{t('community_checkin_desc')}</p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleCommunityShare}
+                    disabled={communitySharing}
+                    className="flex-1 py-4 bg-white text-black font-black rounded-2xl text-sm active:scale-95 transition-all disabled:opacity-50"
+                  >
+                    {communitySharing ? '...' : `✓ ${t('community_share_yes') || 'Compartir'}`}
+                  </button>
+                  <button
+                    onClick={() => setCommunityDone(true)}
+                    className="flex-1 py-4 bg-neutral-700/50 text-neutral-400 font-bold rounded-2xl text-sm border border-white/5 active:scale-95 transition-all"
+                  >
+                    {t('community_share_skip') || 'Pasar'}
+                  </button>
+                </div>
+              </div>
+            </MotionDiv>
+          )}
+
+          {/* ── Score / mood ── */}
+          {!showReflection && allSwiped && (communityDone || silentMode) && !showDaySummary && !hasSaved && !silentMode && (
             <MotionDiv key="summary" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="w-full max-sm mx-auto">
               <div className="bg-neutral-800/60 rounded-[2rem] border border-white/5 p-6 text-center shadow-xl">
                 <p className="text-3xl mb-1">✅</p>
@@ -209,10 +313,50 @@ export default function ReviewScreen({ habits, todayLogs, session, onReviewCompl
             </MotionDiv>
           )}
 
-          {hasSaved && (
+          {/* ── Cierre Semanal (viernes) ── */}
+          {showWeeklyClose && hasSaved && (
+            <MotionDiv key="weekly" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="rounded-[2rem] bg-neutral-800/80 p-6 text-center border border-white/5">
+              <p className="text-3xl mb-2">📆</p>
+              <p className="text-lg font-black text-white mb-1">{t('weekly_close_title') || 'Semana completada'}</p>
+              <p className="text-[11px] text-neutral-500 mb-5">{t('weekly_close_prompt') || '¿Una cosa que fue bien esta semana?'}</p>
+              <textarea
+                value={weeklyNote}
+                onChange={e => setWeeklyNote(e.target.value)}
+                placeholder={t('weekly_close_placeholder') || 'Escribe algo...'}
+                maxLength={300}
+                className="w-full h-24 bg-neutral-900/70 border border-white/10 rounded-2xl p-4 text-sm text-neutral-200 placeholder:text-neutral-700 focus:outline-none focus:border-violet-500/40 resize-none mb-4"
+              />
+              <button onClick={handleSaveWeeklyNote} className="w-full py-4 bg-white text-black font-black rounded-2xl text-sm active:scale-95 transition-all mb-2">
+                {t('weekly_close_save') || 'Guardar y cerrar'}
+              </button>
+              <button onClick={() => { setWeeklySaved(true); setShowWeeklyClose(false) }} className="w-full py-2 text-neutral-500 text-xs">
+                {t('weekly_close_skip') || 'Saltar'}
+              </button>
+            </MotionDiv>
+          )}
+
+          {hasSaved && !showWeeklyClose && (
             <MotionDiv key="success" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="rounded-[2rem] bg-neutral-800 p-6 text-center border border-white/5">
-              <p className="text-xl font-bold mb-2">{t('review_completed')}</p>
+              <p className="text-xl font-bold mb-2">
+                {silentMode ? t('silent_mode_done') || 'Cerraste el día. Eso es suficiente.' : t('review_completed')}
+              </p>
               <p className="text-sm text-emerald-400 mb-6">{t('saved_success')}</p>
+
+              {/* Pro upsell post-cierre: solo si el usuario no es Pro y tiene 5 hábitos */}
+              {!isPro && (habits || []).length >= 5 && (
+                <div className="mb-5 p-4 rounded-2xl bg-violet-500/10 border border-violet-500/20 text-left">
+                  <p className="text-sm font-bold text-violet-300 mb-2">
+                    {t('pro_upsell_post_close') || 'Cerraste tu día. Imagina esto con los hábitos que aún no has añadido.'}
+                  </p>
+                  <button
+                    onClick={() => setProModalOpen(true)}
+                    className="flex items-center gap-2 text-xs font-black text-violet-400 uppercase tracking-widest"
+                  >
+                    <Zap size={12} fill="currentColor" />
+                    {t('pro_upsell_post_close_cta') || 'Explorar Pro'}
+                  </button>
+                </div>
+              )}
               
               <button onClick={() => navigate('/')} className="w-full py-4 bg-white text-black font-bold rounded-2xl active:scale-95 transition-all">
                 {t('back_dashboard')}
@@ -223,6 +367,13 @@ export default function ReviewScreen({ habits, todayLogs, session, onReviewCompl
       </div>
 
       <NoteModal isOpen={isModalOpen} habitTitle={pendingHabit?.title} onSave={(note) => { setResults(p => [...p, { id: pendingHabit.id, status: 'skipped', note }]); setIsModalOpen(false); setCurrentIndex(c => c + 1); }} onSkip={() => { setResults(p => [...p, { id: pendingHabit.id, status: 'skipped' }]); setIsModalOpen(false); setCurrentIndex(c => c + 1); }} />
+
+      <ProModal
+        isOpen={proModalOpen}
+        onClose={() => setProModalOpen(false)}
+        user={session?.user}
+        onProActivated={() => setProModalOpen(false)}
+      />
     </div>
   )
 }

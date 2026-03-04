@@ -244,6 +244,8 @@ export const translations = {
     friends_search_error: "No se pudo buscar ahora.",
     friends_send_request: "Enviar solicitud",
     friends_error: "No se pudo cargar Amigos silenciosos.",
+    friends_code_hint: "Comparte tu código con un amigo o introduce el suyo para conectaros.",
+    friends_code_gen_error: "No se pudo generar el código. Inténtalo de nuevo.",
     friends_push_title: "Nueva solicitud de amistad",
     friends_push_body: "{name} quiere ser tu amigo en DayClose.",
     feedback_title: "Reportar a DayClose",
@@ -393,11 +395,11 @@ export const translations = {
     pro_habit_limit_suffix: "para añadir más.",
     pro_soft_banner: "Casi lleno — te queda 1 hábito libre.",
     pro_soft_cta: "Hazte Pro antes de necesitarlo →",
-    pro_heatmap_title: "Historial visual",
+    pro_heatmap_title: "¿Estás progresando o engañándote a ti mismo?",
     pro_heatmap_desc:
       "Visualiza tu actividad de los últimos 28 días con el Plan Pro",
     pro_heatmap_cta: "Hazte Pro",
-    pro_history_title: "Historial extendido",
+    pro_history_title: "Tu historia completa, sin límites",
     pro_history_desc:
       "Con Pro accedes a los últimos 90 días de historial completo.",
     pro_history_cta: "Ver con Plan Pro",
@@ -519,6 +521,39 @@ export const translations = {
     yesterday_reflection_title: "Ayer pusiste",
     trial_banner_active: "Estás explorando Pro — quedan {{days}} días",
     pause_habit_title: "Pausar hábito",
+
+    // Modo Silencio Profundo
+    silent_mode_btn: "Día difícil — modo mínimo",
+    silent_mode_done: "Cerraste el día. Eso es suficiente.",
+
+    // Community check-in en ReviewScreen
+    community_share_prompt: "¿Compartir tu cierre con tu círculo?",
+    community_share_yes: "Compartir",
+    community_share_skip: "Pasar",
+
+    // Upsell Pro post-cierre
+    pro_upsell_post_close: "Cerraste tu día. Imagina esto con los hábitos que aún no has añadido.",
+    pro_upsell_post_close_cta: "Explorar Pro",
+
+    // Slot fantasma en Dashboard
+    ghost_slot_label: "Añadir hábito Pro",
+
+    // Cierre Semanal
+    weekly_close_title: "Semana completada",
+    weekly_close_prompt: "¿Una cosa que fue bien esta semana?",
+    weekly_close_placeholder: "Escribe algo...",
+    weekly_close_save: "Guardar y cerrar",
+    weekly_close_skip: "Saltar",
+
+    // Future Letters gate
+    future_letter_locked: "Tu carta del pasado te espera — Activa Pro para leerla.",
+    future_letter_locked_cta: "Activar Pro",
+
+    // Social proof en ProModal
+    pro_social_proof: "{{count}} personas tienen Pro activo esta semana",
+
+    // Heatmap borroso
+    pro_heatmap_blur_label: "Tus últimos 28 días — desbloquea para ver en detalle",
   },
   en: {
     // Auth & General
@@ -760,6 +795,8 @@ export const translations = {
     friends_search_error: "Search failed.",
     friends_send_request: "Send request",
     friends_error: "Could not load Silent friends.",
+    friends_code_hint: "Share your code with a friend or enter theirs to connect.",
+    friends_code_gen_error: "Could not generate the code. Please try again.",
     friends_push_title: "New friend request",
     friends_push_body: "{name} wants to connect on DayClose.",
     feedback_title: "Report to DayClose",
@@ -906,11 +943,11 @@ export const translations = {
     pro_habit_limit_suffix: "to add more.",
     pro_soft_banner: "Almost full — 1 free habit slot left.",
     pro_soft_cta: "Go Pro before you need it →",
-    pro_heatmap_title: "Visual history",
+    pro_heatmap_title: "Are you progressing or fooling yourself?",
     pro_heatmap_desc:
       "Visualize your activity over the last 28 days with the Pro Plan",
     pro_heatmap_cta: "Upgrade to Pro",
-    pro_history_title: "Extended history",
+    pro_history_title: "Your complete history, no limits",
     pro_history_desc: "With Pro you access the last 90 days of full history.",
     pro_history_cta: "View with Pro Plan",
     pro_history_back: "Back to current month",
@@ -1031,5 +1068,38 @@ export const translations = {
     yesterday_reflection_title: "Yesterday you scored",
     trial_banner_active: "You're exploring Pro — {{days}} days left",
     pause_habit_title: "Pause habit",
+
+    // Silent Mode
+    silent_mode_btn: "Hard day — minimal mode",
+    silent_mode_done: "You closed the day. That's enough.",
+
+    // Community check-in in ReviewScreen
+    community_share_prompt: "Share your close with your circle?",
+    community_share_yes: "Share",
+    community_share_skip: "Skip",
+
+    // Pro upsell post-close
+    pro_upsell_post_close: "You closed your day. Imagine this with the habits you haven't added yet.",
+    pro_upsell_post_close_cta: "Explore Pro",
+
+    // Ghost slot in Dashboard
+    ghost_slot_label: "Add Pro habit",
+
+    // Weekly Close
+    weekly_close_title: "Week completed",
+    weekly_close_prompt: "One thing that went well this week?",
+    weekly_close_placeholder: "Write something...",
+    weekly_close_save: "Save and close",
+    weekly_close_skip: "Skip",
+
+    // Future Letters gate
+    future_letter_locked: "Your past letter is waiting — Activate Pro to read it.",
+    future_letter_locked_cta: "Activate Pro",
+
+    // Social proof in ProModal
+    pro_social_proof: "{{count}} people have Pro active this week",
+
+    // Blurred heatmap
+    pro_heatmap_blur_label: "Your last 28 days — unlock to see in detail",
   },
 };

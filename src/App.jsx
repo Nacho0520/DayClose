@@ -300,6 +300,25 @@ export default function App() {
   const [proModalOpen, setProModalOpen] = useState(false);
   const [updateOpen, setUpdateOpen] = useState(false);
 
+  // ── Cierre Semanal: es viernes y el usuario completó ≥4 días esta semana ──
+  const [isWeeklyClose, setIsWeeklyClose] = useState(false);
+  useEffect(() => {
+    const today = new Date();
+    if (today.getDay() !== 5 || !session?.user?.id) return;
+    const weekStart = new Date(today);
+    weekStart.setDate(today.getDate() - 4); // lunes de esta semana
+    weekStart.setHours(0, 0, 0, 0);
+    supabase
+      .from('daily_logs')
+      .select('created_at')
+      .eq('user_id', session.user.id)
+      .eq('status', 'summary')
+      .gte('created_at', weekStart.toISOString())
+      .then(({ data }) => {
+        if (data && data.length >= 4) setIsWeeklyClose(true);
+      });
+  }, [session?.user?.id]);
+
   // Lógica de Metas Semanales
   const [weeklyGoals, setWeeklyGoals] = useState([]);
 
@@ -443,7 +462,9 @@ export default function App() {
               todayLogs={todayLogs}
               session={session}
               onReviewComplete={fetchTodayLogs}
-              yesterdaySummary={yesterdaySummary} // Ahora sí está definido
+              yesterdaySummary={yesterdaySummary}
+              isPro={effectiveIsPro}
+              isWeeklyClose={isWeeklyClose}
             />
           }
         />

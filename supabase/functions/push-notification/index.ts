@@ -35,8 +35,8 @@ serve(async (req) => {
     // 3. Leer payload (personalización)
     const payloadRequest = await req.json().catch(() => ({}))
     const {
-      title = '🌙 Momento de reflexión',
-      body = '¿Qué tal ha ido el día? Entra en DayClose para cerrar tus hábitos.',
+      title = null,
+      body = null,
       icon = '/pwa-192x192.png',
       badge = '/pwa-192x192.png',
       url = 'https://dayclose.vercel.app',
@@ -78,9 +78,15 @@ serve(async (req) => {
       if (max_version && sub.app_version && compareVersions(sub.app_version, max_version) > 0) {
         continue
       }
+      const isEn = sub.language === 'en'
+      const localTitle = title ?? (isEn ? '🌙 Time to reflect' : '🌙 Momento de reflexión')
+      const localBody  = body  ?? (isEn
+        ? 'How did your day go? Open DayClose to close your habits.'
+        : '¿Qué tal ha ido el día? Entra en DayClose para cerrar tus hábitos.')
+
       const payload = JSON.stringify({
-        title,
-        body,
+        title: localTitle,
+        body: localBody,
         icon,
         badge,
         url

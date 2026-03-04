@@ -19,6 +19,8 @@ export function LanguageProvider({ children }) {
   }, []);
 
   const switchLanguage = (lang) => {
+    // Reset swipe tutorial for new language so user sees it in correct language
+    localStorage.removeItem(`dayclose_swipe_tutorial_${language}`);
     setLanguage(lang);
     localStorage.setItem("appLanguage", lang);
   };

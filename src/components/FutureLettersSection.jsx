@@ -51,13 +51,14 @@ function formatDeliverDate(isoDate, language) {
 export default function FutureLettersSection({ isPro, onUpgrade, user }) {
   const { t, language } = useLanguage()
 
-  const [letters,      setLetters]      = useState([])
-  const [loading,      setLoading]      = useState(true)
-  const [showWriter,   setShowWriter]   = useState(false)
-  const [activeLetter, setActiveLetter] = useState(null)
-  const [letterText,   setLetterText]   = useState('')
-  const [letterDelay,  setLetterDelay]  = useState(7)
-  const [saving,       setSaving]       = useState(false)
+  const [letters,           setLetters]           = useState([])
+  const [loading,           setLoading]           = useState(true)
+  const [showWriter,        setShowWriter]         = useState(false)
+  const [activeLetter,      setActiveLetter]       = useState(null)
+  const [showLetterProGate, setShowLetterProGate]  = useState(false)
+  const [letterText,        setLetterText]         = useState('')
+  const [letterDelay,       setLetterDelay]        = useState(7)
+  const [saving,            setSaving]             = useState(false)
 
   // ── Carga desde Supabase ──────────────────────────────────────────────────
   const loadLetters = useCallback(async () => {
@@ -154,7 +155,11 @@ export default function FutureLettersSection({ isPro, onUpgrade, user }) {
             return (
               <div 
                 key={letter.id} 
-                onClick={() => unlocked && setActiveLetter(letter)}
+                onClick={() => {
+                  if (!unlocked) return
+                  if (!isPro) { setShowLetterProGate(true); return }
+                  setActiveLetter(letter)
+                }}
                 className={`flex items-center gap-4 p-4 rounded-[1.5rem] border transition-all ${
                   unlocked 
                     ? 'bg-emerald-500/5 border-emerald-500/20 cursor-pointer shadow-lg' 
@@ -255,6 +260,46 @@ export default function FutureLettersSection({ isPro, onUpgrade, user }) {
                     <button onClick={() => setActiveLetter(null)} className="flex-1 py-4 bg-neutral-800 text-white text-xs font-black rounded-2xl">{t('more_letters_close')}</button>
                     <button onClick={() => handleDeleteLetter(activeLetter.id)} className="px-5 py-4 bg-red-500/10 text-red-500 rounded-2xl border border-red-500/10 active:scale-95"><Trash2 size={18} /></button>
                   </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+          {showLetterProGate && (
+            <motion.div
+              variants={backdropAnim}
+              initial="hidden" animate="visible" exit="exit"
+              className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/85 backdrop-blur-md p-6"
+              onClick={() => setShowLetterProGate(false)}
+            >
+              <motion.div
+                variants={paperUnfold}
+                className="w-full max-w-sm bg-neutral-900 rounded-[2.5rem] border border-white/10 shadow-2xl overflow-hidden"
+                onClick={e => e.stopPropagation()}
+              >
+                <div className="h-1.5 w-full bg-gradient-to-r from-violet-500 via-indigo-500 to-violet-500" />
+                <div className="p-8 text-center">
+                  <div className="w-16 h-16 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center mx-auto mb-5">
+                    <Lock size={28} className="text-violet-400" />
+                  </div>
+                  <h3 className="text-white font-black text-base mb-2">
+                    {t('future_letter_locked') || 'Tu carta del pasado te espera — Activa Pro para leerla.'}
+                  </h3>
+                  <p className="text-neutral-500 text-xs mb-6">
+                    {t('more_letters_modal_subtitle')}
+                  </p>
+                  <button
+                    onClick={() => { setShowLetterProGate(false); onUpgrade?.() }}
+                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-bold py-4 rounded-2xl text-sm active:scale-95 shadow-lg shadow-indigo-500/30 mb-3"
+                  >
+                    <Zap size={15} fill="white" />
+                    {t('future_letter_locked_cta') || 'Activar Pro'}
+                  </button>
+                  <button
+                    onClick={() => setShowLetterProGate(false)}
+                    className="w-full text-neutral-500 text-xs py-2"
+                  >
+                    {t('back') || 'Volver'}
+                  </button>
                 </div>
               </motion.div>
             </motion.div>

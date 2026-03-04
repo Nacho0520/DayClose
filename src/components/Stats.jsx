@@ -544,12 +544,12 @@ export default function Stats({ user, isPro, onUpgrade }) {
           </>
         ) : (
           <div className="relative">
+            <p className="text-[10px] text-neutral-500 text-center mb-3">
+              {t("pro_heatmap_blur_label") || "Tus últimos 28 días — desbloquea para ver en detalle"}
+            </p>
             <div className="grid grid-cols-7 gap-1.5 blur-sm pointer-events-none select-none">
-              {[0,2,0,1,3,0,2,1,0,3,2,0,1,0,0,1,2,0,3,1,0,2,0,1,0,2,3,1].map((level, i) => (
-                <div key={i} className={`h-8 w-full rounded-lg ${
-                  level === 0 ? "bg-neutral-800" : level === 1 ? "bg-emerald-900"
-                  : level === 2 ? "bg-emerald-700" : "bg-emerald-500"
-                }`} />
+              {heatmapData.map((d, i) => (
+                <div key={i} className={`h-8 w-full rounded-lg ${getHeatColor(d.pct, d.hasData)}`} />
               ))}
             </div>
             <div className="absolute inset-0 flex items-center justify-center">

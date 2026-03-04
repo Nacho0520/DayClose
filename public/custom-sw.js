@@ -5,7 +5,7 @@ self.addEventListener('push', (event) => {
     
     const title = data.title || 'DayClose';
     const options = {
-      body: data.body || 'Tienes un nuevo mensaje',
+      body: data.body || 'DayClose 🌙',
       icon: '/pwa-192x192.png',
       badge: '/pwa-192x192.png',
       data: { url: data.url || '/' } // Guardamos la URL para luego

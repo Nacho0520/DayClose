@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Users, Sparkles, HeartHandshake, Trophy,
@@ -97,15 +98,15 @@ export default function CommunityHub({ user, friends = [], isPro = false, onUpgr
         .from('community_checkins')
         .select('id')
         .eq('user_id', user.id)
-        .gte('checked_at', `${todayUTC()}T00:00:00.000Z`)
-        .lte('checked_at', `${todayUTC()}T23:59:59.999Z`)
+        .gte('created_at', `${todayUTC()}T00:00:00.000Z`)
+        .lte('created_at', `${todayUTC()}T23:59:59.999Z`)
         .maybeSingle()
       setCheckedInToday(!!myRow)
 
       const { count } = await supabase
         .from('community_checkins')
         .select('id', { count: 'exact', head: true })
-        .gte('checked_at', last24hISO())
+        .gte('created_at', last24hISO())
       setActiveCount(count ?? 0)
     } catch (err) {
       console.error('[CommunityHub] checkin data:', err.message)
@@ -560,197 +561,207 @@ export default function CommunityHub({ user, friends = [], isPro = false, onUpgr
       <FriendsSection user={user} />
 
       {/* ══════════════════════════════════════════════════════════════
-          MODAL: Apoyo en un toque
-      ══════════════════════════════════════════════════════════════ */}
-      <AnimatePresence>
-        {supportMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[9000] flex items-end justify-center bg-black/70 backdrop-blur-sm p-4"
-            onClick={() => { setSupportMenuOpen(false); setSupportTarget(null) }}
-          >
-            <motion.div
-              initial={{ y: 60, opacity: 0 }}
-              animate={{ y: 0,  opacity: 1 }}
-              exit={{ y: 60, opacity: 0 }}
-              transition={{ type: 'spring', damping: 22, stiffness: 280 }}
-              onClick={e => e.stopPropagation()}
-              className="w-full max-w-sm bg-neutral-900 rounded-[2rem] border border-white/10 p-6 shadow-2xl"
-            >
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-500 mb-4">
-                {t('community_support_modal_title')}
-              </p>
-
-              {/* Selector de amigo */}
-              {friends.length > 1 && (
-                <div className="flex gap-2 flex-wrap mb-4">
-                  {friends.map(f => (
-                    <button
-                      key={f.friend_id}
-                      onClick={() => setSupportTarget({ id: f.friend_id, name: f.display_name })}
-                      className={`text-[11px] px-3 py-1.5 rounded-full border transition-colors ${
-                        supportTarget?.id === f.friend_id
-                          ? 'bg-white text-black border-white'
-                          : 'bg-white/5 border-white/10 text-neutral-300'
-                      }`}
-                    >
-                      {f.display_name}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {/* Emojis de apoyo */}
-              <div className="grid grid-cols-3 gap-3 mb-4">
-                {SUPPORT_EMOJIS.map(({ type, emoji, label }) => {
-                  const alreadySent = sentToday.has(supportTarget?.id)
-                  return (
-                    <motion.button
-                      key={type}
-                      whileTap={{ scale: 0.88 }}
-                      disabled={supportSending || alreadySent}
-                      onClick={() => handleSendSupport(type)}
-                      className="flex flex-col items-center gap-1 p-4 rounded-[1.5rem] bg-neutral-800/60 border border-white/5 hover:border-white/15 transition-all disabled:opacity-40"
-                    >
-                      <span className="text-3xl">{emoji}</span>
-                      <span className="text-[10px] text-neutral-500 font-medium text-center leading-tight">
-                        {label}
-                      </span>
-                    </motion.button>
-                  )
-                })}
-              </div>
-
-              {sentToday.has(supportTarget?.id) && (
-                <p className="text-[11px] text-emerald-400 text-center font-semibold">
-                  ✓ {t('community_support_sent')}
-                </p>
-              )}
-
-              <button
-                onClick={() => { setSupportMenuOpen(false); setSupportTarget(null) }}
-                className="w-full mt-3 py-3 text-[11px] text-neutral-600 hover:text-neutral-400 transition-colors"
-              >
-                {t('community_support_cancel')}
-              </button>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ══════════════════════════════════════════════════════════════
-          MODAL: Momento compartido
-      ══════════════════════════════════════════════════════════════ */}
-      <AnimatePresence>
-        {momentModalOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[9000] flex items-center justify-center bg-black/75 backdrop-blur-sm p-4"
-            onClick={() => setMomentModalOpen(false)}
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: -16 }}
-              animate={{ opacity: 1, scale: 1,   y: 0   }}
-              exit={{    opacity: 0, scale: 0.9, y: -16  }}
-              transition={{ type: 'spring', damping: 22, stiffness: 260 }}
-              onClick={e => e.stopPropagation()}
-              className="w-full max-w-sm bg-neutral-900 rounded-[2rem] border border-white/10 overflow-hidden shadow-2xl"
-              style={{ transformOrigin: 'top center' }}
-            >
-              {/* Franja decorativa */}
-              <div className="h-1.5 w-full bg-gradient-to-r from-violet-500/50 via-fuchsia-500/50 to-violet-500/50" />
-
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-5">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center shrink-0">
-                      <Sparkles size={16} className="text-violet-400" />
-                    </div>
-                    <div>
-                      <h3 className="text-white font-black text-sm leading-none">
-                        {t('community_moment_modal_title')}
-                      </h3>
-                      <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest mt-0.5">
-                        {t('community_moment_modal_subtitle')}
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setMomentModalOpen(false)}
-                    className="h-8 w-8 rounded-full border border-white/10 flex items-center justify-center text-neutral-500 hover:text-white transition-colors"
-                  >
-                    <X size={14} />
-                  </button>
-                </div>
-
-                {/* Selector de emoji */}
-                <div className="flex gap-2 flex-wrap mb-3">
-                  {MOMENT_EMOJIS.map(e => (
-                    <button
-                      key={e}
-                      onClick={() => setMomentEmoji(e)}
-                      className={`text-xl p-1.5 rounded-xl transition-all ${
-                        momentEmoji === e
-                          ? 'bg-white/15 scale-110'
-                          : 'opacity-50 hover:opacity-100'
-                      }`}
-                    >
-                      {e}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Input */}
-                <div className="relative mb-4">
-                  <input
-                    autoFocus
-                    value={momentInput}
-                    onChange={e => setMomentInput(e.target.value.slice(0, 50))}
-                    placeholder={t('community_moment_placeholder')}
-                    className="w-full bg-neutral-950/60 border border-white/8 rounded-2xl px-4 py-3 text-sm text-neutral-200 placeholder:text-neutral-700 focus:outline-none focus:border-violet-500/40 pr-12"
-                    onKeyDown={e => e.key === 'Enter' && handlePostMoment()}
-                  />
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] text-neutral-600 tabular-nums">
-                    {momentInput.length}/50
-                  </span>
-                </div>
-
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setMomentModalOpen(false)}
-                    className="flex-1 py-3 text-xs font-black text-neutral-600 hover:text-neutral-400 transition-colors"
-                  >
-                    {t('community_moment_cancel')}
-                  </button>
-                  <motion.button
-                    whileTap={{ scale: 0.95 }}
-                    onClick={handlePostMoment}
-                    disabled={!momentInput.trim() || momentSaving}
-                    className="flex-1 py-3 bg-white text-black text-xs font-black rounded-2xl active:scale-95 transition-all disabled:opacity-30 disabled:pointer-events-none flex items-center justify-center gap-2"
-                  >
-                    {momentSaving
-                      ? <Loader2 size={14} className="animate-spin" />
-                      : <><Send size={12} /> {t('community_moment_publish')}</>
-                    }
-                  </motion.button>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ══════════════════════════════════════════════════════════════
           TOASTS: Apoyos recibidos
       ══════════════════════════════════════════════════════════════ */}
       <SupportToast
         items={supportToasts}
         onDismiss={(id) => setSupportToasts(prev => prev.filter(t => t.id !== id))}
       />
+
+      {/* ══════════════════════════════════════════════════════════════
+          MODAL: Apoyo en un toque
+          Usa createPortal para evitar que el transform del tab-slider
+          rompa el posicionamiento fixed.
+      ══════════════════════════════════════════════════════════════ */}
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {supportMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[9000] flex items-end justify-center bg-black/70 backdrop-blur-sm p-4"
+              onClick={() => { setSupportMenuOpen(false); setSupportTarget(null) }}
+            >
+              <motion.div
+                initial={{ y: 60, opacity: 0 }}
+                animate={{ y: 0,  opacity: 1 }}
+                exit={{ y: 60, opacity: 0 }}
+                transition={{ type: 'spring', damping: 22, stiffness: 280 }}
+                onClick={e => e.stopPropagation()}
+                className="w-full max-w-sm bg-neutral-900 rounded-[2rem] border border-white/10 p-6 shadow-2xl"
+              >
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-500 mb-4">
+                  {t('community_support_modal_title')}
+                </p>
+
+                {/* Selector de amigo */}
+                {friends.length > 1 && (
+                  <div className="flex gap-2 flex-wrap mb-4">
+                    {friends.map(f => (
+                      <button
+                        key={f.friend_id}
+                        onClick={() => setSupportTarget({ id: f.friend_id, name: f.display_name })}
+                        className={`text-[11px] px-3 py-1.5 rounded-full border transition-colors ${
+                          supportTarget?.id === f.friend_id
+                            ? 'bg-white text-black border-white'
+                            : 'bg-white/5 border-white/10 text-neutral-300'
+                        }`}
+                      >
+                        {f.display_name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Emojis de apoyo */}
+                <div className="grid grid-cols-3 gap-3 mb-4">
+                  {SUPPORT_EMOJIS.map(({ type, emoji, label }) => {
+                    const alreadySent = sentToday.has(supportTarget?.id)
+                    return (
+                      <motion.button
+                        key={type}
+                        whileTap={{ scale: 0.88 }}
+                        disabled={supportSending || alreadySent}
+                        onClick={() => handleSendSupport(type)}
+                        className="flex flex-col items-center gap-1 p-4 rounded-[1.5rem] bg-neutral-800/60 border border-white/5 hover:border-white/15 transition-all disabled:opacity-40"
+                      >
+                        <span className="text-3xl">{emoji}</span>
+                        <span className="text-[10px] text-neutral-500 font-medium text-center leading-tight">
+                          {label}
+                        </span>
+                      </motion.button>
+                    )
+                  })}
+                </div>
+
+                {sentToday.has(supportTarget?.id) && (
+                  <p className="text-[11px] text-emerald-400 text-center font-semibold">
+                    ✓ {t('community_support_sent')}
+                  </p>
+                )}
+
+                <button
+                  onClick={() => { setSupportMenuOpen(false); setSupportTarget(null) }}
+                  className="w-full mt-3 py-3 text-[11px] text-neutral-600 hover:text-neutral-400 transition-colors"
+                >
+                  {t('community_support_cancel')}
+                </button>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════
+          MODAL: Momento compartido
+          Usa createPortal para evitar que el transform del tab-slider
+          rompa el posicionamiento fixed.
+      ══════════════════════════════════════════════════════════════ */}
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {momentModalOpen && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[9000] flex items-center justify-center bg-black/75 backdrop-blur-sm p-4"
+              onClick={() => setMomentModalOpen(false)}
+            >
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: -16 }}
+                animate={{ opacity: 1, scale: 1,   y: 0   }}
+                exit={{    opacity: 0, scale: 0.9, y: -16  }}
+                transition={{ type: 'spring', damping: 22, stiffness: 260 }}
+                onClick={e => e.stopPropagation()}
+                className="w-full max-w-sm bg-neutral-900 rounded-[2rem] border border-white/10 overflow-hidden shadow-2xl"
+                style={{ transformOrigin: 'top center' }}
+              >
+                {/* Franja decorativa */}
+                <div className="h-1.5 w-full bg-gradient-to-r from-violet-500/50 via-fuchsia-500/50 to-violet-500/50" />
+
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-5">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center shrink-0">
+                        <Sparkles size={16} className="text-violet-400" />
+                      </div>
+                      <div>
+                        <h3 className="text-white font-black text-sm leading-none">
+                          {t('community_moment_modal_title')}
+                        </h3>
+                        <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest mt-0.5">
+                          {t('community_moment_modal_subtitle')}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setMomentModalOpen(false)}
+                      className="h-8 w-8 rounded-full border border-white/10 flex items-center justify-center text-neutral-500 hover:text-white transition-colors"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+
+                  {/* Selector de emoji */}
+                  <div className="flex gap-2 flex-wrap mb-3">
+                    {MOMENT_EMOJIS.map(e => (
+                      <button
+                        key={e}
+                        onClick={() => setMomentEmoji(e)}
+                        className={`text-xl p-1.5 rounded-xl transition-all ${
+                          momentEmoji === e
+                            ? 'bg-white/15 scale-110'
+                            : 'opacity-50 hover:opacity-100'
+                        }`}
+                      >
+                        {e}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Input */}
+                  <div className="relative mb-4">
+                    <input
+                      autoFocus
+                      value={momentInput}
+                      onChange={e => setMomentInput(e.target.value.slice(0, 50))}
+                      placeholder={t('community_moment_placeholder')}
+                      className="w-full bg-neutral-950/60 border border-white/8 rounded-2xl px-4 py-3 text-sm text-neutral-200 placeholder:text-neutral-700 focus:outline-none focus:border-violet-500/40 pr-12"
+                      onKeyDown={e => e.key === 'Enter' && handlePostMoment()}
+                    />
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] text-neutral-600 tabular-nums">
+                      {momentInput.length}/50
+                    </span>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setMomentModalOpen(false)}
+                      className="flex-1 py-3 text-xs font-black text-neutral-600 hover:text-neutral-400 transition-colors"
+                    >
+                      {t('community_moment_cancel')}
+                    </button>
+                    <motion.button
+                      whileTap={{ scale: 0.95 }}
+                      onClick={handlePostMoment}
+                      disabled={!momentInput.trim() || momentSaving}
+                      className="flex-1 py-3 bg-white text-black text-xs font-black rounded-2xl active:scale-95 transition-all disabled:opacity-30 disabled:pointer-events-none flex items-center justify-center gap-2"
+                    >
+                      {momentSaving
+                        ? <Loader2 size={14} className="animate-spin" />
+                        : <><Send size={12} /> {t('community_moment_publish')}</>
+                      }
+                    </motion.button>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   )
 }
