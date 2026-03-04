@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Zap, ShieldAlert, UserCheck, Wrench, Globe, Trash2, Megaphone,
   Sparkles, ShieldCheck, Flame, Star, Bell, ListChecks, Clock, Heart, Wand2,
-  Bug, ChevronDown, ChevronUp
+  Bug, ChevronDown, ChevronUp, Tag
 } from 'lucide-react'
 
 function PingBlock({ onPingSupabase }) {
@@ -112,6 +112,7 @@ export default function SystemPulse({
   appMetrics, feedbackReports, maintenance, maintenanceMessage, whitelist, whitelistInput,
   setMaintenance, setMaintenanceMessage, setWhitelistInput, onSaveMaintenanceMessage,
   onAddWhitelist, onRemoveWhitelist, onPingSupabase,
+  appVersion, setAppVersion,
   bannerTextES, setBannerTextES, bannerTextEN, setBannerTextEN,
   updateId, setUpdateId, updateTitleES, setUpdateTitleES, updateSubtitleES, setUpdateSubtitleES,
   updateItemsES, setUpdateItemsES, updateTitleEN, setUpdateTitleEN, updateSubtitleEN, setUpdateSubtitleEN,
@@ -129,6 +130,23 @@ export default function SystemPulse({
         <p className="text-[10px] font-black uppercase tracking-widest text-neutral-600">Estado del sistema</p>
         <PingBlock onPingSupabase={onPingSupabase} />
         <ErrorsBlock feedbackReports={feedbackReports} />
+
+        {/* Versión de la app */}
+        <div className="bg-neutral-900/60 rounded-2xl border border-white/5 p-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <Tag size={18} className="text-neutral-500" />
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-neutral-500">Versión de la app</p>
+              <p className="text-sm font-black text-neutral-400">Se aplica al ejecutar órdenes</p>
+            </div>
+          </div>
+          <input
+            value={appVersion || ''}
+            onChange={e => setAppVersion(e.target.value)}
+            className="bg-neutral-900 border border-neutral-800/60 rounded-xl px-3 py-2 text-sm font-black text-white text-right outline-none focus:border-neutral-400/50 transition-colors w-24"
+            placeholder="1.0.0"
+          />
+        </div>
 
         {/* Modo mantenimiento — toggle prominente */}
         <div className={`bg-neutral-900/60 rounded-2xl border p-4 flex items-center justify-between transition-colors ${

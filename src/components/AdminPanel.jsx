@@ -340,6 +340,8 @@ export default function AdminPanel({ onClose, version }) {
   return (
     <AdminDashboard
       version={version}
+      appVersion={appVersion}
+      setAppVersion={setAppVersion}
       onClose={onClose}
       stats={stats}
       users={users}
