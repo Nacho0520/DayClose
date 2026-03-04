@@ -53,6 +53,7 @@ import { useSession } from "./hooks/useSession";
 import { useAppSettings } from "./hooks/useAppSettings";
 import { useHabits } from "./hooks/useHabits";
 import { useProPlan } from "./hooks/useProPlan";
+import { usePushSubscription } from "./hooks/usePushSubscription";
 
 const CURRENT_SOFTWARE_VERSION = "2.0.3";
 const TABS = ["home", "stats", "community", "apps"];
@@ -265,6 +266,9 @@ export default function App() {
     isWhitelisted,
     checkWhitelist,
   } = useSession();
+
+  // Registrar suscripción push cuando el usuario tiene sesión activa
+  usePushSubscription(session, language);
 
   const isTestAccount = useMemo(
     () => session?.user?.email === import.meta.env.VITE_TEST_EMAIL,

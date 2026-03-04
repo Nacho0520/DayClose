@@ -101,13 +101,14 @@ serve(async (req) => {
         await webpush.sendNotification(pushSubscription, payload)
         results.push({ status: 'success', id: sub.id })
       } catch (err) {
-        console.error(`Error enviando a ${sub.id}:`, err)
-        
-        // Si el usuario ya no existe (error 410/404), borramos la suscripción sucia
-        if (err.statusCode === 410 || err.statusCode === 404) {
+        console.error(`Error enviando a suscripción ${sub.id} (status ${err.statusCode}):`, err.message)
+
+        // Suscripción expirada o inválida — limpiar para no reintentarla
+        if (err.statusCode === 410 || err.statusCode === 404 || err.statusCode === 401) {
           await supabase.from('push_subscriptions').delete().eq('id', sub.id)
+          console.log(`Suscripción ${sub.id} eliminada (inválida/expirada)`)
         }
-        results.push({ status: 'failed', id: sub.id, error: err.message })
+        results.push({ status: 'failed', id: sub.id, error: err.message, statusCode: err.statusCode })
       }
     }
 

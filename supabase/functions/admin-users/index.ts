@@ -11,14 +11,37 @@ serve(async (req) => {
     return new Response("ok", { headers: corsHeaders })
   }
 
+  const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? ""
+  const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+  const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+
   try {
+    // Verificar que el caller tiene JWT válido y es admin
+    const authHeader = req.headers.get("Authorization")
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401,
+      })
+    }
+
+    const callerClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    })
+
+    const { data: isAdmin, error: adminCheckError } = await callerClient.rpc("is_admin")
+    if (adminCheckError || !isAdmin) {
+      return new Response(JSON.stringify({ error: "Forbidden: admin access required" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 403,
+      })
+    }
+
     const { action, user_id } = await req.json()
     if (!user_id || !action) {
       throw new Error("Faltan parámetros (action, user_id)")
     }
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? ""
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     const supabase = createClient(supabaseUrl, supabaseKey)
 
     if (action === "delete_data" || action === "delete_user") {

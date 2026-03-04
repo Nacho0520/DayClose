@@ -263,13 +263,45 @@ export default function FriendsSection({ user, onDataChange }) {
   }
 
   const handleRespondRequest = async (id, accept) => {
-    try { await respondFriendRequest(id, accept); await loadFriends() }
-    catch (err) { console.error('[FriendsSection] respondRequest:', err.message) }
+    try {
+      await respondFriendRequest(id, accept)
+      // Notificar al solicitante solo si aceptamos
+      if (accept) {
+        const req = pendingIncoming.find(r => r.id === id)
+        if (req?.requester_id) {
+          const myName = user?.user_metadata?.full_name || user?.email || t('friends_request_unknown')
+          await supabase.functions.invoke('push-notification', {
+            body: {
+              title:    t('friends_accepted_push_title'),
+              body:     t('friends_accepted_push_body').replace('{name}', myName),
+              url:      'https://dayclose.vercel.app/?open=friends',
+              user_ids: [req.requester_id],
+            }
+          }).catch(() => {})
+        }
+      }
+      await loadFriends()
+    } catch (err) { console.error('[FriendsSection] respondRequest:', err.message) }
   }
 
   const handleAcceptInvite = async (id) => {
-    try { await acceptFriendInvite(id); await loadFriends() }
-    catch (err) { console.error('[FriendsSection] acceptInvite:', err.message) }
+    try {
+      await acceptFriendInvite(id)
+      // Notificar al invitador
+      const invite = pendingInvites.find(inv => inv.id === id)
+      if (invite?.inviter_id) {
+        const myName = user?.user_metadata?.full_name || user?.email || t('friends_request_unknown')
+        await supabase.functions.invoke('push-notification', {
+          body: {
+            title:    t('friends_accepted_push_title'),
+            body:     t('friends_accepted_push_body').replace('{name}', myName),
+            url:      'https://dayclose.vercel.app/?open=friends',
+            user_ids: [invite.inviter_id],
+          }
+        }).catch(() => {})
+      }
+      await loadFriends()
+    } catch (err) { console.error('[FriendsSection] acceptInvite:', err.message) }
   }
 
   const handleCancelRequest = async (id) => {
