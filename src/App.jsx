@@ -55,7 +55,7 @@ import { useHabits } from "./hooks/useHabits";
 import { useProPlan } from "./hooks/useProPlan";
 import { usePushSubscription } from "./hooks/usePushSubscription";
 
-const CURRENT_SOFTWARE_VERSION = "2.1.1";
+const CURRENT_SOFTWARE_VERSION = "2.1.2";
 const TABS = ["home", "stats", "community", "apps"];
 const MotionDiv = motion.div;
 
@@ -284,7 +284,7 @@ export default function App() {
     setUpdateUnread,
     markUpdateSeen,
     resetUpdateSeen,
-  } = useAppSettings({ session, loadingSession, language });
+  } = useAppSettings({ session, loadingSession, language, version: CURRENT_SOFTWARE_VERSION });
 
   const mode = location.pathname === "/review" ? "reviewing" : "dashboard";
 

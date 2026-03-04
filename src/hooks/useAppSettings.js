@@ -1,13 +1,11 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 
-const CURRENT_SOFTWARE_VERSION = '2.1.0'
-
 /**
  * Gestiona la configuración global de la app:
  * mantenimiento, versión, mensaje de mantenimiento y anuncios.
  */
-export function useAppSettings({ session, loadingSession, language }) {
+export function useAppSettings({ session, loadingSession, language, version }) {
   const [isMaintenance, setIsMaintenance] = useState(false)
   const [maintenanceMessage, setMaintenanceMessage] = useState('')
   const [updateAvailable, setUpdateAvailable] = useState(false)
@@ -15,12 +13,12 @@ export function useAppSettings({ session, loadingSession, language }) {
   const [updateUnread, setUpdateUnread] = useState(false)
 
   const handleVersionCheck = (dbVersion) => {
-    if (dbVersion && dbVersion !== CURRENT_SOFTWARE_VERSION) {
+    if (dbVersion && version && dbVersion !== version) {
       setUpdateAvailable(true)
       return
     }
     setUpdateAvailable(false)
-    if (dbVersion === CURRENT_SOFTWARE_VERSION) {
+    if (dbVersion && dbVersion === version) {
       localStorage.removeItem('last_version_reload')
     }
   }
